@@ -1,22 +1,21 @@
 # Languages
-#   Create a section for each of your site's languages.
 #   Documentation: https://docs.hugoblox.com/reference/language/
 
-# Default language
+# Default language: Traditional Chinese
+zh-Hant:
+  locale: zh-TW
+  languageName: 繁體中文
+  contentDir: content/zh-Hant
+  weight: 1
+  title: Lucille | 生命科學研究者
+  params:
+    description: 國防醫學大學生命科學研究所博士候選人，研究褐藻醣膠調控血小板活化促進傷口癒合的分子機制。
+
 en:
   locale: en-us
-  # Uncomment for multi-lingual sites, and move English content into `en` sub-folder.
-  #contentDir: content/en
-
-# Uncomment the lines below to configure your website in a second language.
-#zh:
-#  locale: zh-Hans
-#  contentDir: content/zh
-#  title: Chinese website title...
-#  params:
-#    description: Site description in Chinese...
-#  menu:
-#    main:
-#      - name: 传
-#        url: '#about'
-#        weight: 1
+  languageName: English
+  contentDir: content/en
+  weight: 2
+  title: Lucille | Life Sciences Researcher
+  params:
+    description: PhD candidate at National Defense Medical University researching fucoidan-mediated platelet activation and burn wound healing.
