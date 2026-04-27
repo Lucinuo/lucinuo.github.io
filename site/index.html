@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Lucille Huang — PhD Candidate | NDMU</title>
+    <title>Lucille Huang | PhD Candidate</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Lucille Huang — PhD Candidate in Life Sciences, National Defense Medical University">
+    <meta name="description" content="Personal academic website of Lucille Huang, PhD Candidate at National Defense Medical University, Taiwan.">
     <meta name="author" content="Lucille Huang">
-    <meta property="og:site_name" content="Lucille Huang | Personal Academic Website">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Lucille Huang Academic Website">
+    <meta property="og:title" content="Lucille Huang | PhD Candidate">
+    <meta property="og:description" content="Personal academic website of Lucille Huang, PhD Candidate in Life Sciences.">
     <meta property="og:url" content="https://lucinuo.github.io">
 
     <link href="css_yen/bootstrap.min.css" rel="stylesheet">
@@ -22,14 +25,16 @@
         * { font-family: 'Roboto', 'Noto Sans TC', sans-serif !important; }
         h1,h2,h3,h4,h5 { font-family: 'Roboto','Noto Sans TC',sans-serif !important; font-weight:700; }
 
+        /* Photo */
         .about-photo {
             width: 100%;
-            height: 100%;
             display: block;
             object-fit: cover;
             object-position: center 20%;
             min-height: 550px;
         }
+
+        /* Hero */
         .hero-content h1 { font-size: 3em; font-weight:700; }
         .typed { color: #c8a882; }
 
@@ -41,37 +46,33 @@
             color:#555; transition:all .2s;
             font-family:'Roboto','Noto Sans TC',sans-serif;
         }
-        .lang-switch button.active, .lang-switch button:hover {
-            background:#333; color:#fff; border-color:#333;
-        }
+        .lang-switch button.active,
+        .lang-switch button:hover { background:#333; color:#fff; border-color:#333; }
         .lang-switch span { color:#bbb; font-size:.8em; }
 
-        /* Sub-section accordions inside Research */
-        .subsection { margin-bottom: 2em; }
-        .subsection-title {
-            font-size: 1em; font-weight: 600; color: #555;
-            border-left: 3px solid #c8a882; padding-left: 10px;
-            margin-bottom: .8em; letter-spacing: .5px; text-transform: uppercase;
+        /* Interest / Skills list */
+        .simple-list { list-style:none; padding:0; margin:0; }
+        .simple-list li {
+            padding: .45em 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: .95em;
+            color: #555;
         }
-        .placeholder { color:#bbb; font-style:italic; font-size:.9em; }
+        .simple-list li:last-child { border-bottom: none; }
+        .simple-list li::before { content:'—'; margin-right:.6em; color:#c8a882; }
 
-        /* Aims grid */
-        .aims-grid { display:flex; gap:1em; flex-wrap:wrap; }
-        .aim-box {
-            flex:1; min-width:200px; border:1px solid #e0e0e0;
-            border-radius:4px; padding:1em 1.2em;
-        }
-        .aim-box h4 { font-size:.95em; font-weight:700; margin-bottom:.4em; }
-        .aim-box p { font-size:.85em; color:#777; margin:0; }
+        /* CV link */
+        .cv-link { font-size:.95em; color:#888; font-style:italic; }
+        .cv-link a { color:#c8a882; }
 
-        /* Notes cards */
-        .note-card {
-            border-left:3px solid #ddd; padding:.6em 1em;
-            margin-bottom:.8em; background:#fafafa;
-        }
-        .note-card .note-tag {
-            font-size:.72em; font-weight:600; text-transform:uppercase;
-            color:#aaa; letter-spacing:.5px;
+        /* Override absolute centering from template — causes overflow on narrow viewports */
+        .wrap-about { min-height: auto; display: flex; align-items: center; }
+        .wrap-about .w-content {
+            position: relative;
+            left: auto; top: auto;
+            transform: none; -webkit-transform: none; -moz-transform: none; -ms-transform: none;
+            padding: 2em 1.5em;
+            width: 100%;
         }
     </style>
 </head>
@@ -93,15 +94,17 @@
         <div class="menu-wrap">
             <nav class="menu">
                 <div class="menu-list">
-                    <a data-scroll="" href="#home"      class="active"><span data-en="Home"     data-zh="首頁">Home</span></a>
-                    <a data-scroll="" href="#about">            <span data-en="About"    data-zh="關於">About</span></a>
-                    <a data-scroll="" href="#research">         <span data-en="Research" data-zh="研究">Research</span></a>
-                    <a data-scroll="" href="#methods">          <span data-en="Methods"  data-zh="方法">Methods</span></a>
-                    <a data-scroll="" href="#notes">            <span data-en="Notes"    data-zh="筆記">Notes</span></a>
-                    <a data-scroll="" href="#contact">          <span data-en="Contact"  data-zh="聯絡">Contact</span></a>
+                    <a data-scroll="" href="#home"      class="active"><span data-en="Home"      data-zh="首頁">Home</span></a>
+                    <a data-scroll="" href="#about">            <span data-en="About"     data-zh="關於">About</span></a>
+                    <a data-scroll="" href="#education">        <span data-en="Education" data-zh="學歷">Education</span></a>
+                    <a data-scroll="" href="#interests">        <span data-en="Interests" data-zh="研究興趣">Interests</span></a>
+                    <a data-scroll="" href="#skills">           <span data-en="Skills"    data-zh="技能">Skills</span></a>
+                    <a data-scroll="" href="#cv">               <span data-en="CV"        data-zh="履歷">CV</span></a>
+                    <a data-scroll="" href="#contact">          <span data-en="Contact"   data-zh="聯絡">Contact</span></a>
                 </div>
             </nav>
-            <button class="close-button" id="close-button" data-en="Close Menu" data-zh="關閉選單">Close Menu</button>
+            <button class="close-button" id="close-button"
+                data-en="Close Menu" data-zh="關閉選單">Close Menu</button>
         </div>
         <button class="menu-button" id="open-button">
             <span></span><span></span><span></span>
@@ -110,7 +113,7 @@
 
     <div class="content-wrap"><div class="content">
 
-        <!-- ══ HOME ══════════════════════════════════════════════ -->
+        <!-- ══ HOME ══════════════════════════════════════════════════ -->
         <section id="home">
             <div class="container">
                 <div class="row">
@@ -126,228 +129,174 @@
             </div>
         </section>
 
-        <!-- ══ ABOUT ══════════════════════════════════════════════ -->
+        <!-- ══ ABOUT ═════════════════════════════════════════════════ -->
         <section id="about">
             <div class="col-md-6 col-xs-12 no-pad">
                 <img src="images_yen/lucille.jpg" alt="Lucille Huang" class="about-photo">
             </div>
             <div class="col-md-6 col-sm-12 col-xs-12 white-col">
                 <div class="row">
-                    <div class="owl-carousel2">
-
-                        <!-- Background + Interests -->
-                        <div class="col-md-12">
-                            <div class="wrap-about">
-                                <div class="w-content">
-                                    <div class="subsection">
-                                        <div class="subsection-title" data-en="Background" data-zh="背景">Background</div>
-                                        <p class="placeholder"><!-- Academic background: to be added --></p>
-                                    </div>
-                                    <div class="subsection">
-                                        <div class="subsection-title" data-en="Interests" data-zh="研究興趣">Interests</div>
-                                        <p class="placeholder"><!-- Research interests: to be added --></p>
-                                    </div>
-                                    <h5 class="name">Lucille Huang</h5>
-                                </div>
+                    <div class="col-md-10 col-md-offset-1 col-xs-12">
+                        <div class="wrap-about">
+                            <div class="w-content">
+                                <p>
+                                    Lucille Huang is a PhD Candidate at the Graduate Institute of Life Sciences,
+                                    National Defense Medical University, Taiwan. Her academic training focuses
+                                    on biomedical research, experimental design, and translational life sciences.
+                                </p>
+                                <br>
+                                <table class="w-content">
+                                    <tr>
+                                        <td class="title" data-en="Name"        data-zh="姓名">Name</td>
+                                        <td class="break">:</td>
+                                        <td>Lucille Huang</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title" data-en="Institution" data-zh="學校">Institution</td>
+                                        <td class="break">:</td>
+                                        <td data-en="National Defense Medical University, Taiwan"
+                                            data-zh="國防醫學大學，台灣">National Defense Medical University, Taiwan</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title" data-en="Department"  data-zh="系所">Department</td>
+                                        <td class="break">:</td>
+                                        <td data-en="Graduate Institute of Life Sciences"
+                                            data-zh="生命科學研究所">Graduate Institute of Life Sciences</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title" data-en="Email"       data-zh="信箱">Email</td>
+                                        <td class="break">:</td>
+                                        <td><a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a></td>
+                                    </tr>
+                                </table>
+                                <h5 class="name">Lucille Huang</h5>
                             </div>
                         </div>
-
-                        <!-- Skills + CV -->
-                        <div class="col-md-12 col-sm-12 col-xs-12 white-col">
-                            <div class="row">
-                                <div class="col-md-8 col-md-offset-2 col-sm-8 col-sm-offset-2 col-xs-12">
-                                    <div class="wrap-about">
-                                        <div class="subsection-title" data-en="Skills" data-zh="技能">Skills</div>
-                                        <table class="w-content" style="margin-bottom:1.2em;">
-                                            <tr>
-                                                <td class="title" data-en="Name"        data-zh="姓名">Name</td>
-                                                <td class="break">:</td>
-                                                <td>Lucille Huang</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="title" data-en="Institution" data-zh="學校">Institution</td>
-                                                <td class="break">:</td>
-                                                <td data-en="National Defense Medical University, Taiwan" data-zh="國防醫學大學，台灣">National Defense Medical University, Taiwan</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="title" data-en="Department"  data-zh="系所">Department</td>
-                                                <td class="break">:</td>
-                                                <td data-en="Graduate Institute of Life Sciences" data-zh="生命科學研究所">Graduate Institute of Life Sciences</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="title" data-en="Email"       data-zh="信箱">Email</td>
-                                                <td class="break">:</td>
-                                                <td>stu9500149@gmail.com</td>
-                                            </tr>
-                                        </table>
-                                        <p><a href="#" class="placeholder" data-en="[ CV — coming soon ]" data-zh="[ 履歷 — 即將上線 ]">[ CV — coming soon ]</a></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ══ RESEARCH ════════════════════════════════════════════ -->
-        <section class="grey-bg" id="research">
+        <!-- ══ EDUCATION ═════════════════════════════════════════════ -->
+        <section class="grey-bg" id="education">
             <div class="container">
                 <div class="row">
                     <div class="col-md-3">
-                        <h3 class="title-small"><span data-en="Research" data-zh="研究">Research</span></h3>
+                        <h3 class="title-small">
+                            <span data-en="Education" data-zh="學歷">Education</span>
+                        </h3>
                     </div>
                     <div class="col-md-9 content-right">
-
-                        <!-- Overview -->
-                        <div class="subsection">
-                            <div class="subsection-title" data-en="Overview" data-zh="研究概覽">Overview</div>
-                            <div class="aims-grid">
-                                <div class="aim-box">
-                                    <h4 data-en="Central Question" data-zh="核心問題">Central Question</h4>
-                                    <p class="placeholder"><!-- to be added --></p>
-                                </div>
-                                <div class="aim-box">
-                                    <h4 data-en="Core Hypothesis" data-zh="核心假說">Core Hypothesis</h4>
-                                    <p class="placeholder"><!-- to be added --></p>
-                                </div>
-                                <div class="aim-box">
-                                    <h4 data-en="Mechanistic Model" data-zh="機制模型">Mechanistic Model</h4>
-                                    <p class="placeholder"><!-- diagram: to be added --></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Projects / Aims -->
-                        <div class="subsection">
-                            <div class="subsection-title" data-en="Projects" data-zh="研究計畫">Projects</div>
-                            <ul class="listing-item">
-                                <li>
-                                    <div class="col-md-4 col-sm-4">
-                                        <div class="wrap-card">
-                                            <div class="card">
-                                                <h2 class="year" data-en="Aim 1" data-zh="目標一">Aim 1</h2>
-                                                <hr>
-                                                <div class="text-detail placeholder"><!-- to be added --></div>
+                        <ul class="listing-item">
+                            <li>
+                                <div class="col-md-8 col-sm-10">
+                                    <div class="wrap-card">
+                                        <div class="card">
+                                            <h2 class="year"
+                                                data-en="2023 – Present"
+                                                data-zh="2023 – 至今">2023 – Present</h2>
+                                            <hr>
+                                            <div class="text-detail">
+                                                <p data-en="PhD Candidate · Graduate Institute of Life Sciences · National Defense Medical University, Taiwan · Passed Qualifying Examination"
+                                                   data-zh="博士候選人 · 生命科學研究所 · 國防醫學大學，台灣 · 已通過資格考試">
+                                                    PhD Candidate · Graduate Institute of Life Sciences ·
+                                                    National Defense Medical University, Taiwan ·
+                                                    Passed Qualifying Examination
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                </li>
-                                <li>
-                                    <div class="col-md-4 col-sm-4">
-                                        <div class="wrap-card">
-                                            <div class="card">
-                                                <h2 class="year" data-en="Aim 2" data-zh="目標二">Aim 2</h2>
-                                                <hr>
-                                                <div class="text-detail placeholder"><!-- to be added --></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="col-md-4 col-sm-4">
-                                        <div class="wrap-card">
-                                            <div class="card">
-                                                <h2 class="year" data-en="Aim 3" data-zh="目標三">Aim 3</h2>
-                                                <hr>
-                                                <div class="text-detail placeholder"><!-- to be added --></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Unresolved + Future -->
-                        <div class="aims-grid" style="margin-bottom:2em;">
-                            <div class="aim-box">
-                                <h4 data-en="Unresolved Questions" data-zh="待解問題">Unresolved Questions</h4>
-                                <p class="placeholder"><!-- to be added --></p>
-                            </div>
-                            <div class="aim-box">
-                                <h4 data-en="Future Work" data-zh="未來方向">Future Work</h4>
-                                <p class="placeholder"><!-- to be added --></p>
-                            </div>
-                        </div>
-
-                        <!-- Publications -->
-                        <div class="subsection">
-                            <div class="subsection-title" data-en="Publications" data-zh="發表著作">Publications</div>
-                            <p class="placeholder"><!-- Publications list: to be added --></p>
-                        </div>
-
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ══ METHODS ═════════════════════════════════════════════ -->
-        <section class="white-bg" id="methods">
+        <!-- ══ ACADEMIC INTERESTS ════════════════════════════════════ -->
+        <section class="white-bg" id="interests">
             <div class="container">
                 <div class="row">
                     <div class="col-md-3">
-                        <h3 class="title-small"><span data-en="Methods" data-zh="方法">Methods</span></h3>
+                        <h3 class="title-small">
+                            <span data-en="Academic Interests" data-zh="研究興趣">Academic Interests</span>
+                        </h3>
                     </div>
                     <div class="col-md-9 content-right">
-                        <div class="aims-grid">
-                            <div class="aim-box">
-                                <h4 data-en="Experimental" data-zh="實驗方法">Experimental</h4>
-                                <p class="placeholder"><!-- e.g. Flow cytometry, LTA, Western Blot, Burn rat model: to be added --></p>
-                            </div>
-                            <div class="aim-box">
-                                <h4 data-en="Analytical" data-zh="分析方法">Analytical</h4>
-                                <p class="placeholder"><!-- e.g. Phosphoproteomics, IPA, statistical methods: to be added --></p>
-                            </div>
-                        </div>
+                        <ul class="simple-list">
+                            <li data-en="Biomedical research"    data-zh="生醫研究">Biomedical research</li>
+                            <li data-en="Platelet biology"       data-zh="血小板生物學">Platelet biology</li>
+                            <li data-en="Wound healing"          data-zh="傷口癒合">Wound healing</li>
+                            <li data-en="Molecular signaling"    data-zh="分子訊號傳遞">Molecular signaling</li>
+                            <li data-en="Translational medicine" data-zh="轉譯醫學">Translational medicine</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ══ NOTES ═══════════════════════════════════════════════ -->
-        <section class="grey-bg" id="notes">
+        <!-- ══ SKILLS / METHODS ══════════════════════════════════════ -->
+        <section class="grey-bg" id="skills">
             <div class="container">
                 <div class="row">
                     <div class="col-md-3">
-                        <h3 class="title-small"><span data-en="Notes" data-zh="筆記">Notes</span></h3>
-                        <p class="content-detail placeholder"><!-- Notes description: to be added --></p>
+                        <h3 class="title-small">
+                            <span data-en="Skills" data-zh="技能與方法">Skills</span>
+                        </h3>
                     </div>
                     <div class="col-md-9 content-right">
-                        <div class="subsection">
-                            <div class="subsection-title" data-en="Concept Notes" data-zh="概念筆記">Concept Notes</div>
-                            <div class="note-card">
-                                <div class="note-tag">concept</div>
-                                <p class="placeholder"><!-- Concept note title: to be added --></p>
-                            </div>
-                            <div class="note-card">
-                                <div class="note-tag">concept</div>
-                                <p class="placeholder"><!-- Concept note title: to be added --></p>
-                            </div>
-                        </div>
-                        <div class="subsection">
-                            <div class="subsection-title" data-en="Paper Summaries" data-zh="文獻摘要">Paper Summaries</div>
-                            <div class="note-card">
-                                <div class="note-tag">paper</div>
-                                <p class="placeholder"><!-- Paper summary: to be added --></p>
-                            </div>
-                            <div class="note-card">
-                                <div class="note-tag">paper</div>
-                                <p class="placeholder"><!-- Paper summary: to be added --></p>
-                            </div>
-                        </div>
+                        <ul class="simple-list">
+                            <li data-en="Experimental design"
+                                data-zh="實驗設計">Experimental design</li>
+                            <li data-en="Molecular biology techniques"
+                                data-zh="分子生物學技術">Molecular biology techniques</li>
+                            <li data-en="Cell-based assays"
+                                data-zh="細胞實驗分析">Cell-based assays</li>
+                            <li data-en="Data organization and scientific writing"
+                                data-zh="資料整理與科學寫作">Data organization and scientific writing</li>
+                            <li data-en="Literature review and academic presentation"
+                                data-zh="文獻回顧與學術報告">Literature review and academic presentation</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ══ CONTACT ════════════════════════════════════════════ -->
-        <section id="contact" class="white-bg">
+        <!-- ══ CV ════════════════════════════════════════════════════ -->
+        <section class="white-bg" id="cv">
             <div class="container">
                 <div class="row">
                     <div class="col-md-3">
-                        <h3 class="title-small"><span data-en="Contact" data-zh="聯絡">Contact</span></h3>
-                        <p class="content-detail placeholder"><!-- Contact details: to be added --></p>
+                        <h3 class="title-small">
+                            <span data-en="CV" data-zh="履歷">CV</span>
+                        </h3>
+                    </div>
+                    <div class="col-md-9 content-right">
+                        <p class="cv-link"
+                           data-en="Curriculum vitae available upon request."
+                           data-zh="履歷表請來信索取。">
+                            Curriculum vitae available upon request.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ CONTACT ═══════════════════════════════════════════════ -->
+        <section class="grey-bg" id="contact">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h3 class="title-small">
+                            <span data-en="Contact" data-zh="聯絡">Contact</span>
+                        </h3>
+                        <p class="content-detail">
+                            Graduate Institute of Life Sciences<br>
+                            National Defense Medical University<br>
+                            Taipei, Taiwan<br>
+                            <a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a>
+                        </p>
                     </div>
                     <div class="col-md-9 content-right">
                         <form method="post" action="MAILTO:stu9500149@gmail.com?subject=Hello from your website">
@@ -378,7 +327,9 @@
         <footer>
             <div class="footer-top">
                 <ul class="socials">
-                    <li class="gplus"><a href="https://github.com/lucinuo" data-hover="GitHub">GitHub</a></li>
+                    <li class="gplus">
+                        <a href="https://github.com/lucinuo" data-hover="GitHub">GitHub</a>
+                    </li>
                 </ul>
             </div>
         </footer>
@@ -399,8 +350,8 @@
 
     <script>
     var typedStrings = {
-        en: ["PhD Candidate in Life Sciences", "Platelet Biology Researcher", "Burn Wound Healing Research"],
-        zh: ["生命科學博士候選人", "血小板生物學研究者", "燒燙傷傷口癒合研究"]
+        en: ["PhD Candidate in Life Sciences", "National Defense Medical University, Taiwan"],
+        zh: ["生命科學博士候選人", "國防醫學大學，台灣"]
     };
     var typedInstance = null;
 
@@ -416,7 +367,7 @@
         document.querySelectorAll('[data-en],[data-zh]').forEach(function(el) {
             var val = el.getAttribute('data-' + lang);
             if (val === null) return;
-            if (el.tagName === 'INPUT') { el.value = val; }
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.value = val; }
             else { el.textContent = val; }
         });
         document.getElementById('btn-en').classList.toggle('active', lang === 'en');
