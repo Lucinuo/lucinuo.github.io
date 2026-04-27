@@ -6,6 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Lucille Huang — PhD Candidate in Life Sciences, National Defense Medical University">
+    <meta name="author" content="Lucille Huang">
+    <meta property="og:site_name" content="Lucille Huang | Personal Academic Website">
+    <meta property="og:url" content="https://lucinuo.github.io">
 
     <!-- styles -->
     <link href="css_yen/bootstrap.min.css" rel="stylesheet">
@@ -15,22 +18,63 @@
     <link href="css_yen/style.css" rel="stylesheet">
     <link href="css_yen/responsive.css" rel="stylesheet">
 
-    <!-- Google Fonts -->
-    <link href='https://fonts.googleapis.com/css?family=Roboto+Slab:400,700' rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+    <!-- Unified font: Roboto (EN) + Noto Sans TC (ZH) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* custom overrides */
+        /* ── Font unification ── */
+        * {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif !important;
+        }
+        h1, h2, h3, h4, h5 {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif !important;
+            font-weight: 700;
+        }
+
+        /* ── Photo ── */
         .bg-about {
             background-image: url('images_yen/lucille.jpg');
             background-size: cover;
             background-position: center top;
+            min-height: 400px;
         }
-        .hero-content h1 {
-            font-size: 3.2em;
+
+        /* ── Hero ── */
+        .hero-content h1 { font-size: 3em; font-weight: 700; }
+        .typed { color: #c8a882; }
+
+        /* ── Language switcher ── */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
         }
-        .typed {
-            color: #c8a882;
+        .lang-switch button {
+            background: none;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+            padding: 2px 8px;
+            font-size: 0.82em;
+            font-weight: 500;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.2s;
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+        }
+        .lang-switch button.active,
+        .lang-switch button:hover {
+            background: #333;
+            color: #fff;
+            border-color: #333;
+        }
+        .lang-switch span { color: #bbb; font-size: 0.8em; }
+
+        /* ── Placeholder empty card ── */
+        .card-empty {
+            color: #bbb;
+            font-size: 0.9em;
+            font-style: italic;
         }
     </style>
 </head>
@@ -38,30 +82,33 @@
 
     <!-- PRELOADER -->
     <div id="preloader">
-        <div id="status">
-            <img alt="logo" src="images_yen/ndmu_logo.png" onerror="this.style.display='none'">
-        </div>
+        <div id="status"></div>
     </div>
 
     <!-- HEADER -->
     <div class="header">
         <div class="for-sticky">
-            <div class="col-md-2 col-xs-6 logo">
-                <a href="lucille.html"><span style="font-family:'Roboto Slab',serif;font-size:1.3em;color:#333;font-weight:700;letter-spacing:2px;">L</span></a>
+            <div class="col-md-2 col-xs-6 logo" style="padding-top:8px;">
+                <div class="lang-switch">
+                    <button id="btn-en" class="active" onclick="setLang('en')">EN</button>
+                    <span>/</span>
+                    <button id="btn-zh" onclick="setLang('zh')">中</button>
+                </div>
             </div>
         </div>
         <div class="menu-wrap">
             <nav class="menu">
                 <div class="menu-list">
-                    <a data-scroll="" href="#home" class="active"><span>Home</span></a>
-                    <a data-scroll="" href="#about"><span>About</span></a>
-                    <a data-scroll="" href="#research"><span>Research</span></a>
-                    <a data-scroll="" href="#skill"><span>Skills</span></a>
-                    <a data-scroll="" href="#education"><span>Education</span></a>
-                    <a data-scroll="" href="#contact"><span>Contact</span></a>
+                    <a data-scroll="" href="#home"      class="active"><span data-en="Home"     data-zh="首頁">Home</span></a>
+                    <a data-scroll="" href="#about">            <span data-en="About"    data-zh="關於">About</span></a>
+                    <a data-scroll="" href="#research">         <span data-en="Research" data-zh="研究">Research</span></a>
+                    <a data-scroll="" href="#skill">            <span data-en="Skills"   data-zh="技能">Skills</span></a>
+                    <a data-scroll="" href="#education">        <span data-en="Education"data-zh="學歷">Education</span></a>
+                    <a data-scroll="" href="#contact">          <span data-en="Contact"  data-zh="聯絡">Contact</span></a>
                 </div>
             </nav>
-            <button class="close-button" id="close-button">Close Menu</button>
+            <button class="close-button" id="close-button"
+                data-en="Close Menu" data-zh="關閉選單">Close Menu</button>
         </div>
         <button class="menu-button" id="open-button">
             <span></span><span></span><span></span>
@@ -98,49 +145,44 @@
                 <div class="col-md-6 col-sm-12 col-xs-12 white-col">
                     <div class="row">
                         <div class="owl-carousel2">
+                            <!-- Bio slide -->
                             <div class="col-md-12">
                                 <div class="wrap-about">
                                     <div class="w-content">
-                                        <section>
-                                            <strong>Lucille Huang</strong> is a PhD Candidate at the Graduate Institute of Life Sciences,
-                                            National Defense Medical University (NDMU), Taiwan. Under the supervision of
-                                            Prof. Chih-Chin Shih, her doctoral research investigates the molecular mechanisms
-                                            by which <em>Saccharina japonica</em>-derived fucoidan (SJF) modulates early platelet
-                                            activation to promote burn wound healing.
-                                        </section>
-                                        <br>
-                                        <section>
-                                            Her work bridges hemostasis, coagulation biology, and regenerative medicine,
-                                            combining in vitro platelet function assays with in vivo burn animal models
-                                            to elucidate novel therapeutic pathways.
+                                        <section id="about-bio">
+                                            <!-- Bio content: to be added -->
                                         </section>
                                         <h5 class="name">Lucille Huang</h5>
                                     </div>
                                 </div>
                             </div>
-
+                            <!-- Info table slide -->
                             <div class="col-md-12 col-sm-12 col-xs-12 white-col">
                                 <div class="row">
                                     <div class="col-md-8 col-md-offset-2 col-sm-8 col-sm-offset-2 col-xs-12">
                                         <div class="wrap-about">
                                             <table class="w-content">
                                                 <tr>
-                                                    <td class="title">Name </td>
+                                                    <td class="title" data-en="Name"        data-zh="姓名">Name</td>
                                                     <td class="break">:</td>
                                                     <td> Lucille Huang</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="title">Institution </td>
+                                                    <td class="title" data-en="Institution" data-zh="學校">Institution</td>
                                                     <td class="break">:</td>
-                                                    <td> National Defense Medical University, Taiwan</td>
+                                                    <td data-en="National Defense Medical University, Taiwan"
+                                                        data-zh="國防醫學大學，台灣">
+                                                        National Defense Medical University, Taiwan</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="title">Department </td>
+                                                    <td class="title" data-en="Department"  data-zh="系所">Department</td>
                                                     <td class="break">:</td>
-                                                    <td> Graduate Institute of Life Sciences</td>
+                                                    <td data-en="Graduate Institute of Life Sciences"
+                                                        data-zh="生命科學研究所">
+                                                        Graduate Institute of Life Sciences</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="title">Email </td>
+                                                    <td class="title" data-en="Email"       data-zh="信箱">Email</td>
                                                     <td class="break">:</td>
                                                     <td> stu9500149@gmail.com</td>
                                                 </tr>
@@ -159,9 +201,11 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-3">
-                            <h3 class="title-small"><span>Research</span></h3>
-                            <p class="content-detail">
-                                Investigating fucoidan-mediated platelet activation as a therapeutic strategy for burn wound healing.
+                            <h3 class="title-small">
+                                <span data-en="Research" data-zh="研究">Research</span>
+                            </h3>
+                            <p class="content-detail" id="research-desc">
+                                <!-- Short research description: to be added -->
                             </p>
                         </div>
                         <div class="col-md-9 content-right">
@@ -171,15 +215,10 @@
                                         <div class="col-md-6 col-sm-6">
                                             <div class="wrap-card">
                                                 <div class="card">
-                                                    <h2 class="year">Current · NDMU</h2>
+                                                    <h2 class="year" data-en="Current · NDMU" data-zh="現職 · 國防醫學大學">Current · NDMU</h2>
                                                     <hr>
-                                                    <div class="text-detail">
-                                                        <p>
-                                                            PhD Research — Mechanistic investigation of how
-                                                            <em>Saccharina japonica</em>-derived fucoidan (SJF) modulates
-                                                            early platelet activation to enhance burn wound healing.
-                                                            Key pathways: NRP-1 → FAK → Akt signaling axis.
-                                                        </p>
+                                                    <div class="text-detail card-empty">
+                                                        <!-- Research description: to be added -->
                                                     </div>
                                                 </div>
                                             </div>
@@ -189,15 +228,10 @@
                                         <div class="col-md-6 col-sm-6">
                                             <div class="wrap-card">
                                                 <div class="card">
-                                                    <h2 class="year">Experimental Focus</h2>
+                                                    <h2 class="year" data-en="Experimental Focus" data-zh="實驗重點">Experimental Focus</h2>
                                                     <hr>
-                                                    <div class="text-detail">
-                                                        <p>
-                                                            Platelet aggregation · CD62P / PAC-1 expression ·
-                                                            Clot retraction · Platelet adhesion &amp; spreading ·
-                                                            PDGF / VEGF signaling · Phosphoproteomics (IPA) ·
-                                                            In vivo burn rat model
-                                                        </p>
+                                                    <div class="text-detail card-empty">
+                                                        <!-- Experimental methods: to be added -->
                                                     </div>
                                                 </div>
                                             </div>
@@ -215,9 +249,11 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-3">
-                            <h3 class="title-small"><span>Skills</span></h3>
-                            <p class="content-detail">
-                                Laboratory techniques and analytical methods applied in platelet biology and wound healing research.
+                            <h3 class="title-small">
+                                <span data-en="Skills" data-zh="技能">Skills</span>
+                            </h3>
+                            <p class="content-detail" id="skills-desc">
+                                <!-- Skills description: to be added -->
                             </p>
                         </div>
                         <div class="col-md-9 content-right">
@@ -227,11 +263,11 @@
                                     <div class="count-bar"><div class="count"></div></div>
                                 </div>
                                 <div class="skillbar" data-percent="90%">
-                                    <div class="title head-sm">Burn Rat Model (In Vivo)</div>
+                                    <div class="title head-sm" data-en="Burn Rat Model (In Vivo)" data-zh="燒燙傷動物模型（體內）">Burn Rat Model (In Vivo)</div>
                                     <div class="count-bar"><div class="count"></div></div>
                                 </div>
                                 <div class="skillbar" data-percent="88%">
-                                    <div class="title head-sm">Platelet Function Assay (LTA / Aggregation)</div>
+                                    <div class="title head-sm" data-en="Platelet Function Assay (LTA / Aggregation)" data-zh="血小板功能分析（LTA / 聚集）">Platelet Function Assay (LTA / Aggregation)</div>
                                     <div class="count-bar"><div class="count"></div></div>
                                 </div>
                                 <div class="skillbar" data-percent="85%">
@@ -239,7 +275,7 @@
                                     <div class="count-bar"><div class="count"></div></div>
                                 </div>
                                 <div class="skillbar" data-percent="80%">
-                                    <div class="title head-sm">Phosphoproteomics &amp; IPA Analysis</div>
+                                    <div class="title head-sm" data-en="Phosphoproteomics &amp; IPA Analysis" data-zh="磷酸蛋白體學 &amp; IPA 分析">Phosphoproteomics &amp; IPA Analysis</div>
                                     <div class="count-bar"><div class="count"></div></div>
                                 </div>
                             </div>
@@ -253,7 +289,9 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-3">
-                            <h3 class="title-small"><span>Education</span></h3>
+                            <h3 class="title-small">
+                                <span data-en="Education" data-zh="學歷">Education</span>
+                            </h3>
                         </div>
                         <div class="col-md-9 content-right">
                             <div class="row">
@@ -265,17 +303,17 @@
                                                     <h2 class="year">2023 – Present</h2>
                                                     <hr>
                                                     <div class="text-detail">
-                                                        <p>
+                                                        <p data-en="PhD Candidate · Graduate Institute of Life Sciences · National Defense Medical University, Taipei, Taiwan"
+                                                           data-zh="博士候選人 · 生命科學研究所 · 國防醫學大學，台北，台灣">
                                                             PhD Candidate · Graduate Institute of Life Sciences ·
-                                                            National Defense Medical University, Taipei, Taiwan<br>
-                                                            <em>Passed Qualifying Examination</em>
+                                                            National Defense Medical University, Taipei, Taiwan
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </li>
-                                    <!-- 碩士、學士等資料之後補 -->
+                                    <!-- Master's & Bachelor's: to be added -->
                                 </ul>
                             </div>
                         </div>
@@ -283,60 +321,38 @@
                 </div>
             </section>
 
-            <!-- QUOTE -->
-            <section id="testimonial">
-                <div class="container">
-                    <div class="row wrap-testimonial">
-                        <div class="col-md-10 col-md-offset-1">
-                            <div class="owl-carousel">
-                                <div class="list-testimonial">
-                                    <div class="content-testimonial">
-                                        <h3 class="testi">
-                                            "The most exciting phrase to hear in science, the one that heralds new discoveries, is not 'Eureka!' but 'That's funny…'"
-                                        </h3>
-                                        <p class="people">Isaac Asimov</p>
-                                    </div>
-                                </div>
-                                <div class="list-testimonial">
-                                    <div class="content-testimonial">
-                                        <h3 class="testi">
-                                            "Science is not only a disciple of reason but, also, one of romance and passion."
-                                        </h3>
-                                        <p class="people">Stephen Hawking</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mask-testimonial"></div>
-            </section>
-
             <!-- CONTACT -->
             <section id="contact" class="white-bg">
                 <div class="container">
                     <div class="row">
                         <div class="col-md-3">
-                            <h3 class="title-small"><span>Contact</span></h3>
+                            <h3 class="title-small">
+                                <span data-en="Contact" data-zh="聯絡">Contact</span>
+                            </h3>
                             <p class="content-detail">
-                                Graduate Institute of Life Sciences<br>
-                                National Defense Medical University<br>
-                                Taipei, Taiwan<br>
-                                Email: stu9500149@gmail.com
+                                <!-- Contact info: to be added -->
                             </p>
                         </div>
                         <div class="col-md-9 content-right">
                             <form method="post" action="MAILTO:stu9500149@gmail.com?subject=Hello from your website">
                                 <div class="group">
-                                    <input required="" type="text"><span class="highlight"></span><span class="bar"></span><label>Name</label>
+                                    <input required="" type="text">
+                                    <span class="highlight"></span><span class="bar"></span>
+                                    <label data-en="Name" data-zh="姓名">Name</label>
                                 </div>
                                 <div class="group">
-                                    <input required="" type="email"><span class="highlight"></span><span class="bar"></span><label>Email</label>
+                                    <input required="" type="email">
+                                    <span class="highlight"></span><span class="bar"></span>
+                                    <label data-en="Email" data-zh="信箱">Email</label>
                                 </div>
                                 <div class="group">
-                                    <textarea required=""></textarea><span class="highlight"></span><span class="bar"></span><label>Message</label>
+                                    <textarea required=""></textarea>
+                                    <span class="highlight"></span><span class="bar"></span>
+                                    <label data-en="Message" data-zh="訊息">Message</label>
                                 </div>
-                                <input id="sendMessage" name="sendMessage" type="submit" value="Send Message">
+                                <input id="sendMessage" name="sendMessage" type="submit"
+                                    data-en="Send Message" data-zh="送出"
+                                    value="Send Message">
                             </form>
                         </div>
                     </div>
@@ -357,32 +373,80 @@
         </div>
     </div>
 
-    <script src="js_yen/jquery-1.9.1.min.js" type="text/javascript"></script>
-    <script src="js_yen/jquery.appear.js" type="text/javascript"></script>
-    <script src="js_yen/bootstrap.min.js" type="text/javascript"></script>
-    <script src="js_yen/classie.js" type="text/javascript"></script>
-    <script src="js_yen/owl.carousel.min.js" type="text/javascript"></script>
-    <script src="js_yen/jquery.magnific-popup.min.js" type="text/javascript"></script>
-    <script src="js_yen/masonry.pkgd.min.js" type="text/javascript"></script>
-    <script src="js_yen/masonry.js" type="text/javascript"></script>
-    <script src="js_yen/smooth-scroll.min.js" type="text/javascript"></script>
-    <script src="js_yen/typed.js" type="text/javascript"></script>
-    <script src="js_yen/main.js" type="text/javascript"></script>
+    <!-- SCRIPTS -->
+    <script src="js_yen/jquery-1.9.1.min.js"></script>
+    <script src="js_yen/jquery.appear.js"></script>
+    <script src="js_yen/bootstrap.min.js"></script>
+    <script src="js_yen/classie.js"></script>
+    <script src="js_yen/owl.carousel.min.js"></script>
+    <script src="js_yen/jquery.magnific-popup.min.js"></script>
+    <script src="js_yen/masonry.pkgd.min.js"></script>
+    <script src="js_yen/masonry.js"></script>
+    <script src="js_yen/smooth-scroll.min.js"></script>
+    <script src="js_yen/typed.js"></script>
+    <script src="js_yen/main.js"></script>
 
     <script>
-        $(document).ready(function(){
-            $(".typed").typed({
-                strings: [
-                    "PhD Candidate in Life Sciences",
-                    "Platelet Biology Researcher",
-                    "Burn Wound Healing Research",
-                    "National Defense Medical University"
-                ],
-                typeSpeed: 60,
-                backSpeed: 30,
-                loop: true
-            });
+    // ── Typed.js ──────────────────────────────────────────────
+    var typedStrings = {
+        en: [
+            "PhD Candidate in Life Sciences",
+            "Platelet Biology Researcher",
+            "Burn Wound Healing Research",
+            "National Defense Medical University"
+        ],
+        zh: [
+            "生命科學博士候選人",
+            "血小板生物學研究者",
+            "燒燙傷傷口癒合研究"
+        ]
+    };
+    var typedInstance = null;
+
+    function initTyped(lang) {
+        if (typedInstance) {
+            $(".typed").typed('destroy');
+            $(".typed").text('');
+        }
+        $(".typed").typed({
+            strings: typedStrings[lang],
+            typeSpeed: 60,
+            backSpeed: 30,
+            loop: true
         });
+        typedInstance = true;
+    }
+
+    // ── Language switcher ────────────────────────────────────
+    function setLang(lang) {
+        document.documentElement.lang = lang;
+        localStorage.setItem('lang', lang);
+
+        // Update all data-en / data-zh elements
+        document.querySelectorAll('[data-en],[data-zh]').forEach(function(el) {
+            var val = el.getAttribute('data-' + lang);
+            if (val === null) return;
+            // For inputs, update value; for others, textContent
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.value = val;
+            } else {
+                el.textContent = val;
+            }
+        });
+
+        // Toggle active button
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+
+        // Re-init typed
+        initTyped(lang);
+    }
+
+    // ── Init on load ─────────────────────────────────────────
+    $(document).ready(function() {
+        var savedLang = localStorage.getItem('lang') || 'en';
+        setLang(savedLang);
+    });
     </script>
 </body>
 </html>
