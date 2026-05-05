@@ -1,9 +1,10 @@
-const CACHE_NAME = "growth-compass-v3";
+const CACHE_NAME = "growth-compass-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./script.js",
+  "./hero-plants.png",
   "./manifest.webmanifest",
   "./supabase-schema.sql",
   "./icon.svg"

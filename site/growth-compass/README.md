@@ -1,4 +1,4 @@
-# Growth Compass
+# 每日痕跡
 
 一個本機互動式小 app，把 research workflow 和五支柱成長框架融合成每天 3-5 分鐘可執行的節奏。
 

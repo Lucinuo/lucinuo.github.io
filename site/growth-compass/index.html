@@ -3,34 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#18212f">
+  <meta name="theme-color" content="#0b493b">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Growth Compass">
+  <meta name="apple-mobile-web-app-title" content="每日痕跡">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Growth Compass</title>
+  <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+  <header class="top-visual" aria-hidden="true">
+    <img src="hero-plants.png" alt="">
+  </header>
+
   <div class="app-shell">
     <aside class="sidebar" aria-label="主導覽">
-      <div class="brand">
-        <div>
-          <p class="eyebrow">Growth</p>
-          <h1>Compass</h1>
-        </div>
-      </div>
-
-      <div class="language-toggle" aria-label="Language switcher">
+      <div class="control-row">
+        <div class="language-toggle" aria-label="Language switcher">
         <button class="lang-btn active" data-lang="zh" type="button">中</button>
         <button class="lang-btn" data-lang="en" type="button">EN</button>
-      </div>
+        </div>
 
-      <div class="theme-toggle" aria-label="Theme switcher">
-        <button class="theme-btn active" data-theme-choice="light" type="button">Light</button>
-        <button class="theme-btn" data-theme-choice="dark" type="button">Dark</button>
+        <div class="theme-toggle" aria-label="Theme switcher">
+          <button class="theme-btn active" data-theme-choice="light" type="button" aria-label="Light mode" title="Light mode">☀</button>
+          <button class="theme-btn" data-theme-choice="dark" type="button" aria-label="Dark mode" title="Dark mode">☾</button>
+        </div>
       </div>
 
       <nav class="nav-tabs" aria-label="功能分頁">

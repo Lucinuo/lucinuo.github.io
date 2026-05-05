@@ -484,7 +484,7 @@ function exportMarkdown() {
   }
 
   const lines = [
-    `# Growth Compass Export`,
+    `# 每日痕跡 Export`,
     ``,
     `匯出時間：${new Date().toLocaleString("zh-Hant")}`,
     ``
@@ -502,7 +502,7 @@ function exportMarkdown() {
 
 function exportJson() {
   const payload = {
-    app: "Growth Compass",
+    app: "每日痕跡",
     version: 1,
     exportedAt: new Date().toISOString(),
     entries

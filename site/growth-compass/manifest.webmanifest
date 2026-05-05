@@ -1,12 +1,12 @@
 {
-  "name": "Growth Compass",
-  "short_name": "Growth Compass",
+  "name": "每日痕跡",
+  "short_name": "痕跡",
   "description": "Research workflow and five-pillar growth tracker.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f5ef",
-  "theme_color": "#18212f",
+  "background_color": "#f2f1ee",
+  "theme_color": "#0b493b",
   "icons": [
     {
       "src": "icon.svg",

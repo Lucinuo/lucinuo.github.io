@@ -1,33 +1,38 @@
 :root {
-  --ink: #171b22;
-  --muted: #687080;
-  --line: #e2e6ec;
-  --paper: #f5f6f8;
+  --ink: #252525;
+  --muted: #6f6b64;
+  --line: #e1ddd4;
+  --paper: #f3f2ef;
   --white: #ffffff;
   --panel: rgba(255, 255, 255, 0.92);
   --panel-solid: #ffffff;
-  --blue: #5577b9;
-  --green: #21c78a;
-  --coral: #ff5a3d;
-  --gold: #f3b344;
-  --plum: #8b5cf6;
-  --cyan: #24b9e8;
-  --surface-1: #f7f8fa;
-  --surface-2: #eef1f5;
-  --shadow: 0 18px 48px rgba(23, 27, 34, 0.10);
+  --forest: #0b493b;
+  --moss: #5f9f45;
+  --leaf: #98c955;
+  --terracotta: #cc6b25;
+  --marigold: #f5bb35;
+  --blue: #4d7c59;
+  --green: #5f9f45;
+  --coral: #cc6b25;
+  --gold: #d99a2a;
+  --plum: #4d7c59;
+  --cyan: #98c955;
+  --surface-1: #f2f1ee;
+  --surface-2: #ebe8df;
+  --shadow: 0 18px 44px rgba(35, 35, 31, 0.09);
 }
 
 [data-theme="dark"] {
-  --ink: #f6f7fb;
-  --muted: #a8b0bf;
-  --line: #2a303a;
-  --paper: #12161d;
-  --white: #171c24;
-  --panel: rgba(28, 33, 42, 0.92);
-  --panel-solid: #1c212a;
-  --surface-1: #141922;
-  --surface-2: #0d1016;
-  --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+  --ink: #f6f1e5;
+  --muted: #c2bba9;
+  --line: #285144;
+  --paper: #092f28;
+  --white: #103d33;
+  --panel: rgba(16, 61, 51, 0.92);
+  --panel-solid: #123f35;
+  --surface-1: #072720;
+  --surface-2: #0b493b;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
 }
 
 * {
@@ -56,43 +61,64 @@ button {
   min-height: 100vh;
 }
 
+.top-visual {
+  height: clamp(118px, 18vw, 190px);
+  overflow: hidden;
+  background: var(--forest);
+  border-bottom: 4px solid color-mix(in srgb, var(--leaf) 56%, var(--paper));
+}
+
+.top-visual img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
 .sidebar {
-  padding: 28px 20px;
+  padding: 18px 20px 28px;
   background: var(--panel);
   border-right: 1px solid var(--line);
   backdrop-filter: blur(18px);
 }
 
-.brand {
-  margin-bottom: 22px;
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .language-toggle,
 .theme-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.theme-toggle {
-  margin-bottom: 22px;
+  gap: 6px;
 }
 
 .lang-btn,
 .theme-btn {
-  min-height: 36px;
+  width: 34px;
+  min-height: 30px;
+  padding: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--panel-solid);
   color: var(--muted);
+  font-size: 12px;
   font-weight: 850;
+}
+
+.theme-btn {
+  font-size: 15px;
 }
 
 .lang-btn.active,
 .theme-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--plum), var(--cyan));
+  background: var(--forest);
   border-color: transparent;
 }
 
@@ -151,7 +177,7 @@ h3 {
 .nav-tab:hover {
   background: var(--panel-solid);
   border-color: var(--line);
-  box-shadow: 0 8px 24px rgba(27, 37, 52, 0.08);
+  box-shadow: 0 8px 24px rgba(35, 35, 31, 0.07);
 }
 
 .nav-icon {
@@ -161,7 +187,7 @@ h3 {
   height: 34px;
   border-radius: 7px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--plum), var(--cyan));
+  background: var(--forest);
   font-weight: 800;
 }
 
@@ -257,16 +283,16 @@ h3 {
 
 .pillar-card.active,
 .router-card.active {
-  border-color: var(--ink);
+  border-color: var(--forest);
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(27, 37, 52, 0.10);
+  box-shadow: 0 10px 28px rgba(35, 35, 31, 0.10);
 }
 
 .today-focus {
   margin-top: 16px;
   padding: 16px;
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(36, 185, 232, 0.14));
+  background: color-mix(in srgb, var(--leaf) 18%, var(--panel-solid));
   border: 1px solid var(--line);
 }
 
@@ -327,8 +353,8 @@ textarea {
 
 textarea:focus,
 .text-input:focus {
-  outline: 3px solid rgba(85, 119, 185, 0.18);
-  border-color: var(--blue);
+  outline: 3px solid color-mix(in srgb, var(--leaf) 32%, transparent);
+  border-color: var(--forest);
 }
 
 .form-row {
@@ -354,8 +380,8 @@ textarea:focus,
 
 .primary {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--plum), var(--cyan));
-  border-color: var(--ink);
+  background: var(--forest);
+  border-color: var(--forest);
 }
 
 .secondary {
@@ -505,6 +531,10 @@ input[type="file"] {
     border-bottom: 1px solid var(--line);
   }
 
+  .control-row {
+    justify-content: flex-start;
+  }
+
   .nav-tabs {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -520,6 +550,10 @@ input[type="file"] {
 }
 
 @media (max-width: 640px) {
+  .top-visual {
+    height: 118px;
+  }
+
   .main {
     padding: 22px 16px;
   }
