@@ -194,31 +194,124 @@ const routes = [
   }
 ];
 
-const storageKey = "growth-compass-v1";
+const legacyStorageKey = "growth-compass-v1";
+const storageKey = "growth-compass-v2";
 const supabaseConfigKey = "growth-compass-supabase-v1";
 const languageKey = "growth-compass-language";
 const themeKey = "growth-compass-theme";
+const appDataVersion = 2;
 const defaultSupabaseConfig = {
   url: "https://rmkqvximjjawadvkwviv.supabase.co",
   anonKey: "sb_publishable_7mTarvg832jBS6CeEBaXBA_b_O8smld"
 };
 let selectedPillar = pillars[0].id;
-let entries = loadEntries();
+let appData = loadAppData();
+let entries = appData.dailyEntries;
 let supabaseClient = null;
 let currentUser = null;
 let currentLang = localStorage.getItem(languageKey) || "zh";
 let currentTheme = localStorage.getItem(themeKey) || "light";
 
-function loadEntries() {
+function createId(prefix) {
+  if (crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function createEmptyAppData() {
+  return {
+    version: appDataVersion,
+    dailyEntries: [],
+    flowItems: [],
+    weeklyReviews: []
+  };
+}
+
+function loadAppData() {
   try {
-    return JSON.parse(localStorage.getItem(storageKey)) || [];
+    const stored = localStorage.getItem(storageKey);
+    if (stored) return normalizeAppData(JSON.parse(stored));
+    const legacy = localStorage.getItem(legacyStorageKey);
+    if (legacy) {
+      const migrated = normalizeAppData({ dailyEntries: JSON.parse(legacy) });
+      saveAppData(migrated);
+      return migrated;
+    }
   } catch {
-    return [];
+    return createEmptyAppData();
   }
+  return createEmptyAppData();
+}
+
+function normalizeAppData(raw) {
+  const data = createEmptyAppData();
+  const dailyEntries = Array.isArray(raw) ? raw : raw?.dailyEntries;
+  data.dailyEntries = (dailyEntries || [])
+    .map(normalizeDailyEntry)
+    .filter(Boolean)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  data.flowItems = (raw?.flowItems || []).map(normalizeFlowItem).filter(Boolean);
+  data.weeklyReviews = (raw?.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean);
+  return data;
+}
+
+function normalizeDailyEntry(entry) {
+  if (!entry?.date) return null;
+  const timestamp = entry.updatedAt || entry.createdAt || new Date().toISOString();
+  const reusableTrace = entry.reusableTrace || entry.note || "";
+  if (!reusableTrace.trim()) return null;
+  return {
+    id: entry.id || `daily-${entry.date}`,
+    type: "DailyEntry",
+    date: entry.date,
+    pillar: entry.pillar || entry.state || "knowledge",
+    state: entry.state || entry.pillar || "knowledge",
+    mood: entry.mood || "",
+    keyEvent: entry.keyEvent || "",
+    reusableTrace,
+    nextSmallStep: entry.nextSmallStep || "",
+    note: reusableTrace,
+    createdAt: entry.createdAt || timestamp,
+    updatedAt: timestamp
+  };
+}
+
+function normalizeFlowItem(item) {
+  if (!item?.content) return null;
+  const timestamp = item.updatedAt || item.createdAt || new Date().toISOString();
+  return {
+    id: item.id || createId("flow"),
+    type: "FlowItem",
+    createdAt: item.createdAt || timestamp,
+    updatedAt: timestamp,
+    content: item.content,
+    category: item.category || "",
+    status: item.status || "open",
+    linkedDate: item.linkedDate || ""
+  };
+}
+
+function normalizeWeeklyReview(review) {
+  if (!review?.weekStartDate || !review?.pillar) return null;
+  const timestamp = review.updatedAt || review.createdAt || new Date().toISOString();
+  return {
+    id: review.id || `weekly-${review.weekStartDate}-${review.pillar}`,
+    type: "WeeklyReview",
+    weekStartDate: review.weekStartDate,
+    pillar: review.pillar,
+    content: review.content || "",
+    createdAt: review.createdAt || timestamp,
+    updatedAt: timestamp
+  };
+}
+
+function saveAppData(nextData = appData) {
+  nextData.version = appDataVersion;
+  localStorage.setItem(storageKey, JSON.stringify(nextData));
 }
 
 function saveEntries() {
-  localStorage.setItem(storageKey, JSON.stringify(entries));
+  appData.dailyEntries = entries;
+  saveAppData();
 }
 
 function todayKey() {
@@ -384,7 +477,7 @@ function restoreToday() {
   const existing = entries.find((entry) => entry.date === todayKey());
   if (!existing) return;
   selectedPillar = existing.pillar;
-  document.getElementById("dailyNote").value = existing.note;
+  document.getElementById("dailyNote").value = existing.reusableTrace || existing.note || "";
   document.getElementById("dailyStatus").textContent = t("existingToday");
   renderPillars();
 }
@@ -397,9 +490,17 @@ function saveDaily() {
   }
 
   const entry = {
+    id: existingDailyId(todayKey()),
+    type: "DailyEntry",
     date: todayKey(),
     pillar: selectedPillar,
+    state: selectedPillar,
+    mood: "",
+    keyEvent: "",
+    reusableTrace: note,
+    nextSmallStep: "",
     note,
+    createdAt: existingDailyCreatedAt(todayKey()),
     updatedAt: new Date().toISOString()
   };
 
@@ -412,6 +513,16 @@ function saveDaily() {
   syncEntry(entry);
 }
 
+function existingDailyId(date) {
+  const existing = entries.find((entry) => entry.date === date);
+  return existing?.id || `daily-${date}`;
+}
+
+function existingDailyCreatedAt(date) {
+  const existing = entries.find((entry) => entry.date === date);
+  return existing?.createdAt || new Date().toISOString();
+}
+
 function clearDaily() {
   document.getElementById("dailyNote").value = "";
   document.getElementById("dailyStatus").textContent = t("cleared");
@@ -422,20 +533,39 @@ function renderBars() {
   const bars = document.getElementById("pillarBars");
   bars.innerHTML = "";
   const max = Math.max(1, ...pillars.map((pillar) => recent.filter((entry) => entry.pillar === pillar.id).length));
+  renderWeekSummary(recent);
 
   pillars.forEach((pillar) => {
     const count = recent.filter((entry) => entry.pillar === pillar.id).length;
+    const percent = Math.round((count / max) * 100);
     const row = document.createElement("div");
-    row.className = "bar-row";
+    row.className = `bar-row ${count > 0 ? "has-count" : ""}`;
     row.innerHTML = `
       <strong>${localize(pillar.name)}</strong>
       <span class="bar-track">
-        <span class="bar-fill" style="width:${(count / max) * 100}%; background:${pillar.color}"></span>
+        <span class="bar-fill" style="width:${percent}%; background:${pillar.color}"></span>
       </span>
-      <span>${count}</span>
+      <span class="pillar-count">${count}</span>
     `;
     bars.appendChild(row);
   });
+}
+
+function renderWeekSummary(recent) {
+  const completed = pillars.filter((pillar) => recent.some((entry) => entry.pillar === pillar.id)).length;
+  const total = pillars.length;
+  const message = completed === total
+    ? (currentLang === "zh" ? "本週五個面向都被看見了。" : "All five dimensions have a trace this week.")
+    : (currentLang === "zh" ? "本週已留下可回收的成長痕跡。" : "Reusable traces saved this week.");
+  document.getElementById("weekSummary").innerHTML = `
+    <div>
+      <strong>${completed}/${total}</strong>
+      <span>${message}</span>
+    </div>
+    <div class="summary-dots" aria-label="weekly pillar completion">
+      ${pillars.map((pillar) => `<span class="${recent.some((entry) => entry.pillar === pillar.id) ? "filled" : ""}" style="--dot:${pillar.color}"></span>`).join("")}
+    </div>
+  `;
 }
 
 function getRecentEntries(days) {
@@ -470,7 +600,7 @@ function renderReview() {
     const card = document.createElement("div");
     card.className = "entry-card";
     card.innerHTML = `
-      <p>${entry.note}</p>
+      <p>${entry.reusableTrace || entry.note}</p>
       <span class="entry-meta">${entry.date} · ${localize(pillar.name)}</span>
     `;
     entriesNode.appendChild(card);
@@ -492,7 +622,7 @@ function exportMarkdown() {
 
   entries.forEach((entry) => {
     const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
-    lines.push(`## ${entry.date} · ${localize(pillar.name)}`, "", entry.note, "");
+    lines.push(`## ${entry.date} · ${localize(pillar.name)}`, "", entry.reusableTrace || entry.note, "");
   });
 
   navigator.clipboard.writeText(lines.join("\n")).then(() => {
@@ -503,9 +633,12 @@ function exportMarkdown() {
 function exportJson() {
   const payload = {
     app: "每日痕跡",
-    version: 1,
+    version: appDataVersion,
     exportedAt: new Date().toISOString(),
-    entries
+    entries,
+    dailyEntries: entries,
+    flowItems: appData.flowItems,
+    weeklyReviews: appData.weeklyReviews
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -526,18 +659,21 @@ function importJson(event) {
   reader.onload = () => {
     try {
       const payload = JSON.parse(reader.result);
-      const incoming = Array.isArray(payload.entries) ? payload.entries : [];
+      const incoming = Array.isArray(payload.dailyEntries) ? payload.dailyEntries : (payload.entries || []);
       const merged = new Map();
 
       [...entries, ...incoming].forEach((entry) => {
-        if (!entry.date || !entry.pillar || !entry.note) return;
-        const current = merged.get(entry.date);
-        if (!current || (entry.updatedAt || "") > (current.updatedAt || "")) {
-          merged.set(entry.date, entry);
+        const normalized = normalizeDailyEntry(entry);
+        if (!normalized) return;
+        const current = merged.get(normalized.date);
+        if (!current || (normalized.updatedAt || "") > (current.updatedAt || "")) {
+          merged.set(normalized.date, normalized);
         }
       });
 
       entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
+      appData.flowItems = mergeById(appData.flowItems, (payload.flowItems || []).map(normalizeFlowItem).filter(Boolean));
+      appData.weeklyReviews = mergeById(appData.weeklyReviews, (payload.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean));
       saveEntries();
       renderBars();
       renderReview();
@@ -551,6 +687,16 @@ function importJson(event) {
     }
   };
   reader.readAsText(file);
+}
+
+function mergeById(currentItems, incomingItems) {
+  const merged = new Map();
+  [...currentItems, ...incomingItems].forEach((item) => {
+    if (!item?.id) return;
+    const current = merged.get(item.id);
+    if (!current || (item.updatedAt || "") > (current.updatedAt || "")) merged.set(item.id, item);
+  });
+  return Array.from(merged.values());
 }
 
 function loadSupabaseConfig() {
@@ -693,9 +839,14 @@ async function fetchRemoteEntries() {
   }
 
   return (data || []).map((row) => ({
+    id: `daily-${row.entry_date}`,
+    type: "DailyEntry",
     date: row.entry_date,
     pillar: row.pillar,
+    state: row.pillar,
+    reusableTrace: row.note,
     note: row.note,
+    createdAt: row.updated_at,
     updatedAt: row.updated_at
   }));
 }
@@ -719,7 +870,7 @@ async function pushLocalEntries() {
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
-    note: entry.note,
+    note: entry.reusableTrace || entry.note,
     updated_at: entry.updatedAt || new Date().toISOString()
   }));
 
@@ -739,7 +890,7 @@ async function syncEntry(entry) {
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
-    note: entry.note,
+    note: entry.reusableTrace || entry.note,
     updated_at: entry.updatedAt || new Date().toISOString()
   };
   const { error } = await supabaseClient
