@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#18212f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Growth Compass">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Lucille Growth Compass</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主導覽">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <p class="eyebrow">Lucille</p>
+          <h1>Growth Compass</h1>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" aria-label="功能分頁">
+        <button class="nav-tab active" data-view="today" type="button">
+          <span class="nav-icon">今</span>
+          <span>今日 5 分鐘</span>
+        </button>
+        <button class="nav-tab" data-view="route" type="button">
+          <span class="nav-icon">流</span>
+          <span>研究分流</span>
+        </button>
+        <button class="nav-tab" data-view="review" type="button">
+          <span class="nav-icon">週</span>
+          <span>每週回顧</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-panel">
+        <p class="panel-title">今日原則</p>
+        <p>研究時不混亂，生活中留痕跡，每週再看自己長成什麼樣。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">每天只要留下一點可回收的東西</p>
+          <h2>把研究 workflow 變成長期成長的節奏</h2>
+        </div>
+        <div class="date-chip" id="todayLabel"></div>
+      </section>
+
+      <section class="view active" id="today">
+        <div class="grid two-col">
+          <section class="panel action-panel">
+            <div class="section-heading">
+              <p class="eyebrow">Step 1</p>
+              <h3>今天只選一個成長痕跡</h3>
+            </div>
+            <div class="pillar-grid" id="pillarGrid" aria-label="五支柱選擇"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Step 2</p>
+              <h3>寫 100 字以內就好</h3>
+            </div>
+            <label class="field-label" for="dailyNote">今天最值得留下來的是什麼？</label>
+            <textarea id="dailyNote" rows="8" placeholder="例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。"></textarea>
+            <div class="form-row">
+              <button class="primary" id="saveDaily" type="button">儲存今日痕跡</button>
+              <button class="secondary" id="clearDaily" type="button">清空</button>
+            </div>
+            <p class="helper" id="dailyStatus">還沒儲存今天的痕跡。</p>
+          </section>
+        </div>
+
+        <section class="panel progress-panel">
+          <div class="section-heading">
+            <p class="eyebrow">This week</p>
+            <h3>這週的五支柱溫度</h3>
+          </div>
+          <div class="pillar-bars" id="pillarBars"></div>
+        </section>
+      </section>
+
+      <section class="view" id="route">
+        <div class="grid two-col">
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Research Router</p>
+              <h3>這則資訊現在是什麼狀態？</h3>
+            </div>
+            <div class="router-options" id="routerOptions"></div>
+          </section>
+
+          <section class="panel result-panel">
+            <div class="section-heading">
+              <p class="eyebrow">Destination</p>
+              <h3 id="routeTitle">先選一種資訊狀態</h3>
+            </div>
+            <p class="route-line" id="routeSummary">我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。</p>
+            <div class="route-box">
+              <p class="box-label">放這裡</p>
+              <p id="routePlace">尚未選擇</p>
+            </div>
+            <div class="route-box">
+              <p class="box-label">不要放</p>
+              <p id="routeAvoid">尚未選擇</p>
+            </div>
+            <div class="route-box">
+              <p class="box-label">下一步</p>
+              <p id="routeNext">尚未選擇</p>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel flow-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Flow map</p>
+            <h3>三條主要資料流</h3>
+          </div>
+          <div class="flow-map">
+            <div class="flow-lane">
+              <span>Paper</span>
+              <strong>Zotero → Red → A5 左右翻 → Blue / Green</strong>
+            </div>
+            <div class="flow-lane">
+              <span>Experiment</span>
+              <strong>A5 上翻 → A5 左右翻 → Green → Notion → Finder</strong>
+            </div>
+            <div class="flow-lane">
+              <span>Meeting</span>
+              <strong>A6 → A5 左右翻 / Green / Notion</strong>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="review">
+        <div class="grid two-col">
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Weekly Review</p>
+              <h3>用五支柱看這週的你</h3>
+            </div>
+            <div class="review-prompts" id="reviewPrompts"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Recent traces</p>
+              <h3>最近留下的痕跡</h3>
+            </div>
+            <div class="entries" id="entries"></div>
+            <div class="form-row">
+              <button class="secondary" id="exportMarkdown" type="button">匯出 Markdown</button>
+              <button class="secondary" id="exportJson" type="button">備份 JSON</button>
+              <label class="import-button" for="importJson">匯入 JSON</label>
+              <input id="importJson" type="file" accept="application/json,.json">
+              <button class="danger" id="resetData" type="button">清除本機紀錄</button>
+            </div>
+            <p class="helper">iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。</p>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</body>
+</html>

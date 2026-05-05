@@ -25,6 +25,7 @@ Personal academic website presenting a concise professional introduction for a P
 | **Skills** | Experimental design · Molecular biology · Cell-based assays · Scientific writing · Literature review |
 | **CV** | Available upon request |
 | **Contact** | Email form |
+| **Growth Compass** | Private daily growth and research workflow app at `/growth-compass/` |
 
 Bilingual EN / 中文 switcher — language preference persisted via `localStorage`.
 
@@ -43,6 +44,7 @@ Bilingual EN / 中文 switcher — language preference persisted via `localStora
 ```
 site/           ← deployed files (GitHub Pages serves this)
   index.html
+  growth-compass/
   css_yen/
   js_yen/
   images_yen/
@@ -57,6 +59,12 @@ content/        ← Hugo-compatible markdown scaffold (not deployed)
 ## Deployment
 
 Push to `main` → GitHub Actions runs `deploy.yml` → uploads `./site` → GitHub Pages serves it.
+
+After deployment, Growth Compass is available at:
+
+https://lucinuo.github.io/growth-compass/
+
+On iPhone / iPad, open the URL in Safari → Share → Add to Home Screen.
 
 ---
 
