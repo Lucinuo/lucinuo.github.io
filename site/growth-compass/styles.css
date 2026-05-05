@@ -54,6 +54,28 @@ button {
   margin-bottom: 32px;
 }
 
+.language-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.lang-btn {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.lang-btn.active {
+  color: #ffffff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
 .brand-mark {
   width: 48px;
   height: 48px;

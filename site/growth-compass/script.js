@@ -1,38 +1,121 @@
+const translations = {
+  zh: {
+    navToday: "5 分鐘紀錄",
+    navRoute: "日常分流",
+    navReview: "每週回顧",
+    navSync: "雲端同步",
+    dailyPrincipleTitle: "今日原則",
+    dailyPrincipleText: "讓思緒不混亂，讓生活可被看見。<br>每天留下一點可回收的痕跡，<br>讓日常累積成長的軌跡。",
+    heroEyebrow: "每天只要留下一點可回收的東西",
+    heroTitle: "讓日常成為可以回看的成長軌跡",
+    todayStep1: "Step 1",
+    todayChooseTitle: "今天只選一個成長痕跡",
+    todayStep2: "Step 2",
+    todayWriteTitle: "寫 100 字以內就好",
+    dailyNoteLabel: "今天最值得留下來的是什麼？",
+    dailyPlaceholder: "例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。",
+    saveDaily: "儲存今日痕跡",
+    clear: "清空",
+    weekTemp: "這週的五個面向",
+    routerTitle: "這則資訊現在是什麼狀態？",
+    routePlaceLabel: "放這裡",
+    routeAvoidLabel: "不要放",
+    routeNextLabel: "下一步",
+    flowTitle: "三條主要資料流",
+    weeklyReviewTitle: "用五個面向，回看這一週的自己。",
+    recentTraces: "最近留下的痕跡",
+    exportMarkdown: "匯出 Markdown",
+    exportJson: "備份 JSON",
+    importJson: "匯入 JSON",
+    resetData: "清除本機紀錄",
+    localSyncHint: "iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。",
+    unsaved: "還沒儲存今天的痕跡。",
+    saved: "已儲存。今天有留下可回收的東西。",
+    emptyNote: "先寫一句也可以，空白不會儲存。",
+    cleared: "已清空輸入框，尚未改動已儲存紀錄。",
+    existingToday: "今天已經有一筆痕跡，可以修改後重新儲存。",
+    noEntries: "還沒有紀錄。先從「5 分鐘紀錄」留下一句開始。",
+    routeTitleDefault: "先選一種資訊狀態",
+    routeSummaryDefault: "我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。",
+    notSelected: "尚未選擇"
+  },
+  en: {
+    navToday: "5-min log",
+    navRoute: "Daily routing",
+    navReview: "Weekly review",
+    navSync: "Cloud sync",
+    dailyPrincipleTitle: "Daily Principle",
+    dailyPrincipleText: "Keep thoughts untangled, and let life be seen.<br>Leave one reusable trace each day,<br>so daily life becomes a visible growth path.",
+    heroEyebrow: "One reusable trace a day",
+    heroTitle: "Turn daily life into a visible path of growth",
+    todayStep1: "Step 1",
+    todayChooseTitle: "Choose one trace for today",
+    todayStep2: "Step 2",
+    todayWriteTitle: "Keep it under 100 words",
+    dailyNoteLabel: "What is worth keeping from today?",
+    dailyPlaceholder: "Example: While reading an NRP-1 paper today, I separated the authors' findings from my own SJF hypothesis for the first time.",
+    saveDaily: "Save today's trace",
+    clear: "Clear",
+    weekTemp: "This week's five dimensions",
+    routerTitle: "What state is this information in right now?",
+    routePlaceLabel: "Put it here",
+    routeAvoidLabel: "Do not put",
+    routeNextLabel: "Next step",
+    flowTitle: "Three main flows",
+    weeklyReviewTitle: "Weekly Review: look back at yourself through five dimensions.",
+    recentTraces: "Recent traces",
+    exportMarkdown: "Export Markdown",
+    exportJson: "Backup JSON",
+    importJson: "Import JSON",
+    resetData: "Clear local records",
+    localSyncHint: "iPhone and iPad store records separately. Use Backup JSON / Import JSON for manual sync.",
+    unsaved: "Today's trace has not been saved yet.",
+    saved: "Saved. You left something reusable today.",
+    emptyNote: "One sentence is enough. Blank notes will not be saved.",
+    cleared: "Input cleared. Saved records were not changed.",
+    existingToday: "You already have a trace today. Edit and save again if needed.",
+    noEntries: "No records yet. Start with one sentence in 5-min log.",
+    routeTitleDefault: "Choose an information state",
+    routeSummaryDefault: "I will show where it belongs, what not to mix in, and the next step.",
+    notSelected: "Not selected"
+  }
+};
+
 const pillars = [
   {
     id: "knowledge",
-    name: "知識體系",
     color: "#5577b9",
-    copy: "今天有沒有一個概念、paper 或觀點變清楚？",
-    prompt: "這週我新增了哪 3 張知識卡？"
+    name: { zh: "知識體系", en: "Knowledge system" },
+    copy: { zh: "今天有沒有一個概念、paper 或觀點變清楚？", en: "Did one concept, paper, or viewpoint become clearer today?" },
+    prompt: { zh: "這週我新增了哪 3 張知識卡？", en: "Which three knowledge cards did I add this week?" }
   },
   {
     id: "expression",
-    name: "有力量的表達",
     color: "#c96f5b",
-    copy: "今天有沒有一次把想法說得更清楚？",
-    prompt: "這週哪一次表達比以前更清楚？"
+    name: { zh: "有力量的表達", en: "Powerful expression" },
+    copy: { zh: "今天有沒有一次把想法說得更清楚？", en: "Did I express one thought more clearly today?" },
+    prompt: { zh: "這週哪一次表達比以前更清楚？", en: "When did I express myself more clearly this week?" }
   },
   {
     id: "aesthetic",
-    name: "審美辨識",
     color: "#c49a45",
-    copy: "今天看見了什麼好的圖、簡報、排版或畫面？",
-    prompt: "這週看見了什麼美的東西？"
+    name: { zh: "審美辨識", en: "Aesthetic awareness" },
+    copy: { zh: "今天看見了什麼好的圖、簡報、排版或畫面？", en: "What image, slide, layout, or scene looked good today?" },
+    prompt: { zh: "這週看見了什麼美的東西？", en: "What beauty did I notice this week?" }
   },
   {
     id: "solitude",
-    name: "深度愛好",
     color: "#4f8a73",
-    copy: "今天有沒有一段不被外界推著走的安靜時間？",
-    prompt: "這週有沒有一段真正安靜、專注、只屬於自己的時間？"
+    name: { zh: "深度愛好", en: "Deep solitude" },
+    copy: { zh: "今天有沒有一段不被外界推著走的安靜時間？", en: "Did I have a quiet moment not pushed by the outside world?" },
+    prompt: { zh: "這週有沒有一段真正安靜、專注、只屬於自己的時間？", en: "Did I have a truly quiet, focused time for myself this week?" }
   },
   {
     id: "emotion",
-    name: "情緒覺察",
     color: "#7b6598",
-    copy: "今天哪個情緒最強烈？它想提醒你什麼？",
-    prompt: "這週最常出現的情緒是什麼？它想提醒我什麼？"
+    name: { zh: "情緒覺察", en: "Emotional awareness" },
+    copy: { zh: "今天哪個情緒最強烈？它想提醒你什麼？", en: "Which emotion was strongest today, and what did it remind me of?" },
+    prompt: { zh: "這週最常出現的情緒是什麼？它想提醒我什麼？", en: "Which emotion appeared most often this week, and what was it telling me?" }
   }
 ];
 
@@ -113,10 +196,12 @@ const routes = [
 
 const storageKey = "lucille-growth-compass-v1";
 const supabaseConfigKey = "lucille-growth-compass-supabase-v1";
+const languageKey = "lucille-growth-compass-language";
 let selectedPillar = pillars[0].id;
 let entries = loadEntries();
 let supabaseClient = null;
 let currentUser = null;
+let currentLang = localStorage.getItem(languageKey) || "zh";
 
 function loadEntries() {
   try {
@@ -145,6 +230,7 @@ function formatDate() {
 
 function init() {
   document.getElementById("todayLabel").textContent = formatDate();
+  renderLanguage();
   renderTabs();
   renderPillars();
   renderRouter();
@@ -164,6 +250,36 @@ function init() {
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
   initSupabaseFromStorage();
+}
+
+function t(key) {
+  return translations[currentLang][key] || translations.zh[key] || key;
+}
+
+function localize(value) {
+  if (typeof value === "string") return value;
+  return value[currentLang] || value.zh || "";
+}
+
+function renderLanguage() {
+  document.documentElement.lang = currentLang === "zh" ? "zh-Hant" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.innerHTML = t(node.dataset.i18n);
+  });
+  document.querySelectorAll(".lang-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.lang === currentLang);
+    button.addEventListener("click", () => {
+      currentLang = button.dataset.lang;
+      localStorage.setItem(languageKey, currentLang);
+      renderLanguage();
+      renderPillars();
+      renderRouter();
+      renderBars();
+      renderReview();
+      restoreToday();
+    }, { once: true });
+  });
+  document.getElementById("dailyNote").placeholder = t("dailyPlaceholder");
 }
 
 function renderTabs() {
@@ -187,8 +303,8 @@ function renderPillars() {
     button.innerHTML = `
       <span class="color-dot" style="background:${pillar.color}"></span>
       <span>
-        <span class="card-title">${pillar.name}</span>
-        <span class="card-copy">${pillar.copy}</span>
+        <span class="card-title">${localize(pillar.name)}</span>
+        <span class="card-copy">${localize(pillar.copy)}</span>
       </span>
     `;
     button.addEventListener("click", () => {
@@ -236,14 +352,14 @@ function restoreToday() {
   if (!existing) return;
   selectedPillar = existing.pillar;
   document.getElementById("dailyNote").value = existing.note;
-  document.getElementById("dailyStatus").textContent = "今天已經有一筆痕跡，可以修改後重新儲存。";
+  document.getElementById("dailyStatus").textContent = t("existingToday");
   renderPillars();
 }
 
 function saveDaily() {
   const note = document.getElementById("dailyNote").value.trim();
   if (!note) {
-    document.getElementById("dailyStatus").textContent = "先寫一句也可以，空白不會儲存。";
+    document.getElementById("dailyStatus").textContent = t("emptyNote");
     return;
   }
 
@@ -257,7 +373,7 @@ function saveDaily() {
   entries = entries.filter((item) => item.date !== entry.date);
   entries.unshift(entry);
   saveEntries();
-  document.getElementById("dailyStatus").textContent = "已儲存。今天有留下可回收的東西。";
+  document.getElementById("dailyStatus").textContent = t("saved");
   renderBars();
   renderReview();
   syncEntry(entry);
@@ -265,7 +381,7 @@ function saveDaily() {
 
 function clearDaily() {
   document.getElementById("dailyNote").value = "";
-  document.getElementById("dailyStatus").textContent = "已清空輸入框，尚未改動已儲存紀錄。";
+  document.getElementById("dailyStatus").textContent = t("cleared");
 }
 
 function renderBars() {
@@ -279,7 +395,7 @@ function renderBars() {
     const row = document.createElement("div");
     row.className = "bar-row";
     row.innerHTML = `
-      <strong>${pillar.name}</strong>
+      <strong>${localize(pillar.name)}</strong>
       <span class="bar-track">
         <span class="bar-fill" style="width:${(count / max) * 100}%; background:${pillar.color}"></span>
       </span>
@@ -303,8 +419,8 @@ function renderReview() {
     const card = document.createElement("div");
     card.className = "prompt-card";
     card.innerHTML = `
-      <p class="entry-meta" style="color:${pillar.color}">${pillar.name}</p>
-      <p>${pillar.prompt}</p>
+      <p class="entry-meta" style="color:${pillar.color}">${localize(pillar.name)}</p>
+      <p>${localize(pillar.prompt)}</p>
     `;
     prompts.appendChild(card);
   });
@@ -312,7 +428,7 @@ function renderReview() {
   const entriesNode = document.getElementById("entries");
   entriesNode.innerHTML = "";
   if (entries.length === 0) {
-    entriesNode.innerHTML = `<p class="helper">還沒有紀錄。先從「今日 5 分鐘」留下一句開始。</p>`;
+    entriesNode.innerHTML = `<p class="helper">${t("noEntries")}</p>`;
     return;
   }
 
@@ -322,7 +438,7 @@ function renderReview() {
     card.className = "entry-card";
     card.innerHTML = `
       <p>${entry.note}</p>
-      <span class="entry-meta">${entry.date} · ${pillar.name}</span>
+      <span class="entry-meta">${entry.date} · ${localize(pillar.name)}</span>
     `;
     entriesNode.appendChild(card);
   });
@@ -343,7 +459,7 @@ function exportMarkdown() {
 
   entries.forEach((entry) => {
     const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
-    lines.push(`## ${entry.date} · ${pillar.name}`, "", entry.note, "");
+    lines.push(`## ${entry.date} · ${localize(pillar.name)}`, "", entry.note, "");
   });
 
   navigator.clipboard.writeText(lines.join("\n")).then(() => {

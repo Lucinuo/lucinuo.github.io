@@ -22,40 +22,45 @@
         </div>
         <div>
           <p class="eyebrow">Lucille</p>
-          <h1>Growth Compass</h1>
+          <h1>Lucille</h1>
         </div>
+      </div>
+
+      <div class="language-toggle" aria-label="Language switcher">
+        <button class="lang-btn active" data-lang="zh" type="button">中</button>
+        <button class="lang-btn" data-lang="en" type="button">EN</button>
       </div>
 
       <nav class="nav-tabs" aria-label="功能分頁">
         <button class="nav-tab active" data-view="today" type="button">
           <span class="nav-icon">今</span>
-          <span>今日 5 分鐘</span>
+          <span data-i18n="navToday">5 分鐘紀錄</span>
         </button>
         <button class="nav-tab" data-view="route" type="button">
           <span class="nav-icon">流</span>
-          <span>研究分流</span>
+          <span data-i18n="navRoute">日常分流</span>
         </button>
         <button class="nav-tab" data-view="review" type="button">
           <span class="nav-icon">週</span>
-          <span>每週回顧</span>
+          <span data-i18n="navReview">每週回顧</span>
         </button>
         <button class="nav-tab" data-view="sync" type="button">
           <span class="nav-icon">雲</span>
-          <span>雲端同步</span>
+          <span data-i18n="navSync">雲端同步</span>
         </button>
       </nav>
 
       <div class="sidebar-panel">
-        <p class="panel-title">今日原則</p>
-        <p>研究時不混亂，生活中留痕跡，每週再看自己長成什麼樣。</p>
+        <p class="panel-title" data-i18n="dailyPrincipleTitle">今日原則</p>
+        <p data-i18n="dailyPrincipleText">讓思緒不混亂，讓生活可被看見。<br>每天留下一點可回收的痕跡，<br>讓日常累積成長的軌跡。</p>
       </div>
     </aside>
 
     <main class="main">
       <section class="hero">
         <div>
-          <p class="eyebrow">每天只要留下一點可回收的東西</p>
-          <h2>把研究 workflow 變成長期成長的節奏</h2>
+          <p class="eyebrow" data-i18n="heroEyebrow">每天只要留下一點可回收的東西</p>
+          <h2 data-i18n="heroTitle">讓日常成為可以回看的成長軌跡</h2>
         </div>
         <div class="date-chip" id="todayLabel"></div>
       </section>
@@ -64,22 +69,22 @@
         <div class="grid two-col">
           <section class="panel action-panel">
             <div class="section-heading">
-              <p class="eyebrow">Step 1</p>
-              <h3>今天只選一個成長痕跡</h3>
+              <p class="eyebrow" data-i18n="todayStep1">Step 1</p>
+              <h3 data-i18n="todayChooseTitle">今天只選一個成長痕跡</h3>
             </div>
             <div class="pillar-grid" id="pillarGrid" aria-label="五支柱選擇"></div>
           </section>
 
           <section class="panel">
             <div class="section-heading">
-              <p class="eyebrow">Step 2</p>
-              <h3>寫 100 字以內就好</h3>
+              <p class="eyebrow" data-i18n="todayStep2">Step 2</p>
+              <h3 data-i18n="todayWriteTitle">寫 100 字以內就好</h3>
             </div>
-            <label class="field-label" for="dailyNote">今天最值得留下來的是什麼？</label>
+            <label class="field-label" for="dailyNote" data-i18n="dailyNoteLabel">今天最值得留下來的是什麼？</label>
             <textarea id="dailyNote" rows="8" placeholder="例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。"></textarea>
             <div class="form-row">
-              <button class="primary" id="saveDaily" type="button">儲存今日痕跡</button>
-              <button class="secondary" id="clearDaily" type="button">清空</button>
+              <button class="primary" id="saveDaily" type="button" data-i18n="saveDaily">儲存今日痕跡</button>
+              <button class="secondary" id="clearDaily" type="button" data-i18n="clear">清空</button>
             </div>
             <p class="helper" id="dailyStatus">還沒儲存今天的痕跡。</p>
           </section>
@@ -88,7 +93,7 @@
         <section class="panel progress-panel">
           <div class="section-heading">
             <p class="eyebrow">This week</p>
-            <h3>這週的五支柱溫度</h3>
+            <h3 data-i18n="weekTemp">這週的五個面向</h3>
           </div>
           <div class="pillar-bars" id="pillarBars"></div>
         </section>
@@ -98,8 +103,8 @@
         <div class="grid two-col">
           <section class="panel">
             <div class="section-heading">
-              <p class="eyebrow">Research Router</p>
-              <h3>這則資訊現在是什麼狀態？</h3>
+              <p class="eyebrow">Daily Router</p>
+              <h3 data-i18n="routerTitle">這則資訊現在是什麼狀態？</h3>
             </div>
             <div class="router-options" id="routerOptions"></div>
           </section>
@@ -111,15 +116,15 @@
             </div>
             <p class="route-line" id="routeSummary">我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。</p>
             <div class="route-box">
-              <p class="box-label">放這裡</p>
+              <p class="box-label" data-i18n="routePlaceLabel">放這裡</p>
               <p id="routePlace">尚未選擇</p>
             </div>
             <div class="route-box">
-              <p class="box-label">不要放</p>
+              <p class="box-label" data-i18n="routeAvoidLabel">不要放</p>
               <p id="routeAvoid">尚未選擇</p>
             </div>
             <div class="route-box">
-              <p class="box-label">下一步</p>
+              <p class="box-label" data-i18n="routeNextLabel">下一步</p>
               <p id="routeNext">尚未選擇</p>
             </div>
           </section>
@@ -128,7 +133,7 @@
         <section class="panel flow-panel">
           <div class="section-heading">
             <p class="eyebrow">Flow map</p>
-            <h3>三條主要資料流</h3>
+            <h3 data-i18n="flowTitle">三條主要資料流</h3>
           </div>
           <div class="flow-map">
             <div class="flow-lane">
@@ -152,7 +157,7 @@
           <section class="panel">
             <div class="section-heading">
               <p class="eyebrow">Weekly Review</p>
-              <h3>用五支柱看這週的你</h3>
+              <h3 data-i18n="weeklyReviewTitle">用五個面向，回看這一週的自己。</h3>
             </div>
             <div class="review-prompts" id="reviewPrompts"></div>
           </section>
@@ -160,17 +165,17 @@
           <section class="panel">
             <div class="section-heading">
               <p class="eyebrow">Recent traces</p>
-              <h3>最近留下的痕跡</h3>
+              <h3 data-i18n="recentTraces">最近留下的痕跡</h3>
             </div>
             <div class="entries" id="entries"></div>
             <div class="form-row">
-              <button class="secondary" id="exportMarkdown" type="button">匯出 Markdown</button>
-              <button class="secondary" id="exportJson" type="button">備份 JSON</button>
-              <label class="import-button" for="importJson">匯入 JSON</label>
+              <button class="secondary" id="exportMarkdown" type="button" data-i18n="exportMarkdown">匯出 Markdown</button>
+              <button class="secondary" id="exportJson" type="button" data-i18n="exportJson">備份 JSON</button>
+              <label class="import-button" for="importJson" data-i18n="importJson">匯入 JSON</label>
               <input id="importJson" type="file" accept="application/json,.json">
-              <button class="danger" id="resetData" type="button">清除本機紀錄</button>
+              <button class="danger" id="resetData" type="button" data-i18n="resetData">清除本機紀錄</button>
             </div>
-            <p class="helper">iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。</p>
+            <p class="helper" data-i18n="localSyncHint">iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。</p>
           </section>
         </div>
       </section>
