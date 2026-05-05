@@ -36,16 +36,11 @@ https://lucinuo.github.io/growth-compass/
 
 ## Supabase 自動同步
 
-已加入 Supabase 同步 UI。設定步驟：
+已設定 Supabase 自動同步：
 
-1. 到 Supabase 建立 project。
-2. 在 SQL Editor 執行 `supabase-schema.sql`。
-3. 到 Authentication → URL Configuration：
-   - Site URL 設為 `https://lucinuo.github.io/growth-compass/`
-   - Redirect URLs 加入 `https://lucinuo.github.io/growth-compass/`
-4. 到 Project Settings → API，複製 Project URL 和 anon public key。
-5. 回到 app 的「雲端同步」頁貼上設定。
-6. 輸入 Email，按「寄登入連結」。
-7. 在 iPhone / iPad / Mac 各自登入同一個 Email。
+1. 打開 app 的「雲端同步」頁。
+2. 輸入 Email，按「寄登入連結」。
+3. 在 iPhone / iPad / Mac 各自登入同一個 Email。
+4. 登入後紀錄會同步到 Supabase 的 `growth_entries` table。
 
-安全注意：只能把 anon public key 放進前端，不能放 service role key。
+安全注意：前端只使用 Supabase publishable key，不使用 secret key 或 service role key。

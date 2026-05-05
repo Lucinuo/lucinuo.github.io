@@ -19,6 +19,6 @@ iPhone / iPad 使用方式見 `DEPLOY.md`。部署到 HTTPS 網址後，可以�
 
 ## 資料儲存
 
-未設定 Supabase 時使用瀏覽器 `localStorage`。設定 Supabase 後，使用 Email magic link 登入，資料會同步到 `growth_entries` table。
+已預設連到 Supabase。使用 Email magic link 登入後，資料會同步到 `growth_entries` table；未登入時仍會先存在瀏覽器 `localStorage`。
 
 Supabase SQL 見 `supabase-schema.sql`。

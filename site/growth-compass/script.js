@@ -198,6 +198,10 @@ const storageKey = "growth-compass-v1";
 const supabaseConfigKey = "growth-compass-supabase-v1";
 const languageKey = "growth-compass-language";
 const themeKey = "growth-compass-theme";
+const defaultSupabaseConfig = {
+  url: "https://rmkqvximjjawadvkwviv.supabase.co",
+  anonKey: "sb_publishable_7mTarvg832jBS6CeEBaXBA_b_O8smld"
+};
 let selectedPillar = pillars[0].id;
 let entries = loadEntries();
 let supabaseClient = null;
@@ -551,9 +555,9 @@ function importJson(event) {
 
 function loadSupabaseConfig() {
   try {
-    return JSON.parse(localStorage.getItem(supabaseConfigKey)) || {};
+    return JSON.parse(localStorage.getItem(supabaseConfigKey)) || defaultSupabaseConfig;
   } catch {
-    return {};
+    return defaultSupabaseConfig;
   }
 }
 
@@ -573,11 +577,12 @@ function clearSupabaseConfig() {
   localStorage.removeItem(supabaseConfigKey);
   supabaseClient = null;
   currentUser = null;
-  document.getElementById("supabaseUrl").value = "";
-  document.getElementById("supabaseAnon").value = "";
-  setSyncConfigStatus("Supabase 設定已清除。");
+  document.getElementById("supabaseUrl").value = defaultSupabaseConfig.url;
+  document.getElementById("supabaseAnon").value = defaultSupabaseConfig.anonKey;
+  setSyncConfigStatus("已回復預設 Supabase 設定。");
   setAuthStatus("尚未登入。");
   setCloudStatus("設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。");
+  initSupabase(defaultSupabaseConfig.url, defaultSupabaseConfig.anonKey);
 }
 
 function initSupabaseFromStorage() {
