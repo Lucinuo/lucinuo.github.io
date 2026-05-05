@@ -194,14 +194,16 @@ const routes = [
   }
 ];
 
-const storageKey = "lucille-growth-compass-v1";
-const supabaseConfigKey = "lucille-growth-compass-supabase-v1";
-const languageKey = "lucille-growth-compass-language";
+const storageKey = "growth-compass-v1";
+const supabaseConfigKey = "growth-compass-supabase-v1";
+const languageKey = "growth-compass-language";
+const themeKey = "growth-compass-theme";
 let selectedPillar = pillars[0].id;
 let entries = loadEntries();
 let supabaseClient = null;
 let currentUser = null;
 let currentLang = localStorage.getItem(languageKey) || "zh";
+let currentTheme = localStorage.getItem(themeKey) || "light";
 
 function loadEntries() {
   try {
@@ -230,6 +232,7 @@ function formatDate() {
 
 function init() {
   document.getElementById("todayLabel").textContent = formatDate();
+  renderTheme();
   renderLanguage();
   renderTabs();
   renderPillars();
@@ -249,7 +252,23 @@ function init() {
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
+  document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   initSupabaseFromStorage();
+}
+
+function renderTheme() {
+  document.documentElement.dataset.theme = currentTheme;
+  document.querySelectorAll(".theme-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.themeChoice === currentTheme);
+  });
+}
+
+function changeTheme(event) {
+  const button = event.target.closest(".theme-btn");
+  if (!button) return;
+  currentTheme = button.dataset.themeChoice;
+  localStorage.setItem(themeKey, currentTheme);
+  renderTheme();
 }
 
 function t(key) {
@@ -313,6 +332,16 @@ function renderPillars() {
     });
     grid.appendChild(button);
   });
+  renderTodayFocus();
+}
+
+function renderTodayFocus() {
+  const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
+  const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
+  document.getElementById("todayFocus").innerHTML = `
+    <p>${label}</p>
+    <strong>${localize(pillar.copy)}</strong>
+  `;
 }
 
 function renderRouter() {
@@ -451,7 +480,7 @@ function exportMarkdown() {
   }
 
   const lines = [
-    `# Lucille Growth Compass Export`,
+    `# Growth Compass Export`,
     ``,
     `匯出時間：${new Date().toLocaleString("zh-Hant")}`,
     ``
@@ -469,7 +498,7 @@ function exportMarkdown() {
 
 function exportJson() {
   const payload = {
-    app: "Lucille Growth Compass",
+    app: "Growth Compass",
     version: 1,
     exportedAt: new Date().toISOString(),
     entries

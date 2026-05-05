@@ -1,4 +1,4 @@
--- Lucille Growth Compass Supabase schema
+-- Growth Compass Supabase schema
 -- Run this in Supabase SQL Editor.
 
 create table if not exists public.growth_entries (

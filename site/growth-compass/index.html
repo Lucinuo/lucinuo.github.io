@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Growth Compass">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Lucille Growth Compass</title>
+  <title>Growth Compass</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
@@ -17,18 +17,20 @@
   <div class="app-shell">
     <aside class="sidebar" aria-label="主導覽">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </div>
         <div>
-          <p class="eyebrow">Lucille</p>
-          <h1>Lucille</h1>
+          <p class="eyebrow">Growth</p>
+          <h1>Compass</h1>
         </div>
       </div>
 
       <div class="language-toggle" aria-label="Language switcher">
         <button class="lang-btn active" data-lang="zh" type="button">中</button>
         <button class="lang-btn" data-lang="en" type="button">EN</button>
+      </div>
+
+      <div class="theme-toggle" aria-label="Theme switcher">
+        <button class="theme-btn active" data-theme-choice="light" type="button">Light</button>
+        <button class="theme-btn" data-theme-choice="dark" type="button">Dark</button>
       </div>
 
       <nav class="nav-tabs" aria-label="功能分頁">
@@ -73,6 +75,7 @@
               <h3 data-i18n="todayChooseTitle">今天只選一個成長痕跡</h3>
             </div>
             <div class="pillar-grid" id="pillarGrid" aria-label="五支柱選擇"></div>
+            <div class="today-focus" id="todayFocus"></div>
           </section>
 
           <section class="panel">

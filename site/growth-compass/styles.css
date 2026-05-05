@@ -1,15 +1,33 @@
 :root {
-  --ink: #18212f;
-  --muted: #647084;
-  --line: #dce3ea;
-  --paper: #f7f5ef;
-  --white: #fffdf8;
+  --ink: #171b22;
+  --muted: #687080;
+  --line: #e2e6ec;
+  --paper: #f5f6f8;
+  --white: #ffffff;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-solid: #ffffff;
   --blue: #5577b9;
-  --green: #4f8a73;
-  --coral: #c96f5b;
-  --gold: #c49a45;
-  --plum: #7b6598;
-  --shadow: 0 18px 44px rgba(27, 37, 52, 0.12);
+  --green: #21c78a;
+  --coral: #ff5a3d;
+  --gold: #f3b344;
+  --plum: #8b5cf6;
+  --cyan: #24b9e8;
+  --surface-1: #f7f8fa;
+  --surface-2: #eef1f5;
+  --shadow: 0 18px 48px rgba(23, 27, 34, 0.10);
+}
+
+[data-theme="dark"] {
+  --ink: #f6f7fb;
+  --muted: #a8b0bf;
+  --line: #2a303a;
+  --paper: #12161d;
+  --white: #171c24;
+  --panel: rgba(28, 33, 42, 0.92);
+  --panel-solid: #1c212a;
+  --surface-1: #141922;
+  --surface-2: #0d1016;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
 }
 
 * {
@@ -20,9 +38,7 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  background:
-    radial-gradient(circle at top left, rgba(85, 119, 185, 0.16), transparent 34rem),
-    linear-gradient(135deg, #f8f3e7 0%, #eef4f1 46%, #f7eef1 100%);
+  background: linear-gradient(135deg, var(--surface-1) 0%, var(--surface-2) 100%);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
 }
 
@@ -42,57 +58,43 @@ button {
 
 .sidebar {
   padding: 28px 20px;
-  background: rgba(255, 253, 248, 0.82);
-  border-right: 1px solid rgba(220, 227, 234, 0.9);
+  background: var(--panel);
+  border-right: 1px solid var(--line);
   backdrop-filter: blur(18px);
 }
 
 .brand {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 22px;
 }
 
-.language-toggle {
+.language-toggle,
+.theme-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
-.lang-btn {
+.theme-toggle {
+  margin-bottom: 22px;
+}
+
+.lang-btn,
+.theme-btn {
   min-height: 36px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--panel-solid);
   color: var(--muted);
   font-weight: 850;
 }
 
-.lang-btn.active {
+.lang-btn.active,
+.theme-btn.active {
   color: #ffffff;
-  background: var(--ink);
-  border-color: var(--ink);
+  background: linear-gradient(135deg, var(--plum), var(--cyan));
+  border-color: transparent;
 }
-
-.brand-mark {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 5px;
-}
-
-.brand-mark span {
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 1px rgba(24, 33, 47, 0.12);
-}
-
-.brand-mark span:nth-child(1) { background: var(--blue); }
-.brand-mark span:nth-child(2) { background: var(--green); }
-.brand-mark span:nth-child(3) { background: var(--coral); grid-column: span 2; }
 
 .eyebrow {
   margin: 0 0 5px;
@@ -147,7 +149,7 @@ h3 {
 
 .nav-tab.active,
 .nav-tab:hover {
-  background: #ffffff;
+  background: var(--panel-solid);
   border-color: var(--line);
   box-shadow: 0 8px 24px rgba(27, 37, 52, 0.08);
 }
@@ -159,7 +161,7 @@ h3 {
   height: 34px;
   border-radius: 7px;
   color: #ffffff;
-  background: var(--ink);
+  background: linear-gradient(135deg, var(--plum), var(--cyan));
   font-weight: 800;
 }
 
@@ -168,7 +170,7 @@ h3 {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--panel-solid);
 }
 
 .panel-title {
@@ -199,7 +201,7 @@ h3 {
   padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 253, 248, 0.78);
+  background: var(--panel);
   text-align: center;
   font-weight: 800;
 }
@@ -223,9 +225,9 @@ h3 {
 
 .panel {
   padding: 22px;
-  border: 1px solid rgba(220, 227, 234, 0.95);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 253, 248, 0.9);
+  background: var(--panel);
   box-shadow: var(--shadow);
 }
 
@@ -249,14 +251,33 @@ h3 {
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--panel-solid);
   text-align: left;
 }
 
 .pillar-card.active,
 .router-card.active {
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(24, 33, 47, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(27, 37, 52, 0.10);
+}
+
+.today-focus {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(36, 185, 232, 0.14));
+  border: 1px solid var(--line);
+}
+
+.today-focus p {
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.today-focus strong {
+  display: block;
+  line-height: 1.5;
 }
 
 .color-dot {
@@ -288,7 +309,7 @@ textarea,
   width: 100%;
   padding: 14px;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--panel-solid);
   border: 1px solid var(--line);
   border-radius: 8px;
   line-height: 1.65;
@@ -333,13 +354,13 @@ textarea:focus,
 
 .primary {
   color: #ffffff;
-  background: var(--ink);
+  background: linear-gradient(135deg, var(--plum), var(--cyan));
   border-color: var(--ink);
 }
 
 .secondary {
   color: var(--ink);
-  background: #ffffff;
+  background: var(--panel-solid);
 }
 
 .danger {
@@ -350,7 +371,7 @@ textarea:focus,
 
 .import-button {
   color: var(--ink);
-  background: #ffffff;
+  background: var(--panel-solid);
   cursor: pointer;
 }
 
@@ -388,7 +409,7 @@ input[type="file"] {
 .bar-track {
   height: 12px;
   overflow: hidden;
-  background: #e9edf1;
+  background: var(--line);
   border-radius: 999px;
 }
 
@@ -407,7 +428,7 @@ input[type="file"] {
   padding: 14px;
   margin-top: 12px;
   border-left: 4px solid var(--blue);
-  background: #f4f7fb;
+  background: color-mix(in srgb, var(--blue) 10%, var(--panel-solid));
   border-radius: 0 8px 8px 0;
 }
 
@@ -435,7 +456,7 @@ input[type="file"] {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--panel-solid);
 }
 
 .flow-lane span {
@@ -460,7 +481,7 @@ input[type="file"] {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--panel-solid);
 }
 
 .entry-card p {

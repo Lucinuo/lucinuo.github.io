@@ -1,4 +1,4 @@
-const CACHE_NAME = "growth-compass-v1";
+const CACHE_NAME = "growth-compass-v2";
 const ASSETS = [
   "./",
   "./index.html",

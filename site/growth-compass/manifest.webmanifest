@@ -1,7 +1,7 @@
 {
-  "name": "Lucille Growth Compass",
+  "name": "Growth Compass",
   "short_name": "Growth Compass",
-  "description": "Research workflow and five-pillar growth tracker for Lucille.",
+  "description": "Research workflow and five-pillar growth tracker.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
