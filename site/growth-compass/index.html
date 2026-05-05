@@ -11,6 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -37,6 +38,10 @@
         <button class="nav-tab" data-view="review" type="button">
           <span class="nav-icon">週</span>
           <span>每週回顧</span>
+        </button>
+        <button class="nav-tab" data-view="sync" type="button">
+          <span class="nav-icon">雲</span>
+          <span>雲端同步</span>
         </button>
       </nav>
 
@@ -168,6 +173,51 @@
             <p class="helper">iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。</p>
           </section>
         </div>
+      </section>
+
+      <section class="view" id="sync">
+        <div class="grid two-col">
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Supabase</p>
+              <h3>讓 iPhone / iPad / Mac 同步</h3>
+            </div>
+            <label class="field-label" for="supabaseUrl">Project URL</label>
+            <input class="text-input" id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
+            <label class="field-label" for="supabaseAnon">Anon public key</label>
+            <input class="text-input" id="supabaseAnon" type="password" placeholder="sb_publishable_... 或 eyJ...">
+            <div class="form-row">
+              <button class="primary" id="saveSupabaseConfig" type="button">儲存設定</button>
+              <button class="secondary" id="clearSupabaseConfig" type="button">清除設定</button>
+            </div>
+            <p class="helper" id="syncConfigStatus">尚未設定 Supabase。</p>
+          </section>
+
+          <section class="panel">
+            <div class="section-heading">
+              <p class="eyebrow">Sign in</p>
+              <h3>用 Email magic link 登入</h3>
+            </div>
+            <label class="field-label" for="authEmail">Email</label>
+            <input class="text-input" id="authEmail" type="email" placeholder="you@example.com">
+            <div class="form-row">
+              <button class="primary" id="sendMagicLink" type="button">寄登入連結</button>
+              <button class="secondary" id="signOut" type="button">登出</button>
+            </div>
+            <p class="helper" id="authStatus">尚未登入。</p>
+          </section>
+        </div>
+
+        <section class="panel progress-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Cloud sync</p>
+            <h3>同步狀態</h3>
+          </div>
+          <div class="form-row">
+            <button class="primary" id="syncNow" type="button">立即同步</button>
+          </div>
+          <p class="helper" id="cloudStatus">設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。</p>
+        </section>
       </section>
     </main>
   </div>

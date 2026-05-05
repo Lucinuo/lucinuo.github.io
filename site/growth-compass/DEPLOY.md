@@ -4,13 +4,17 @@
 
 這個 app 是純靜態網站，可以直接部署到任何 HTTPS 靜態網站服務。
 
+目前已部署到：
+
+https://lucinuo.github.io/growth-compass/
+
 推薦路線：
 
 1. GitHub Pages
 2. Netlify
 3. Cloudflare Pages
 
-部署後，用 iPhone / iPad 開 Safari：
+用 iPhone / iPad 開 Safari：
 
 1. 打開網址
 2. 按分享
@@ -30,13 +34,18 @@
 2. 用 AirDrop / iCloud Drive 傳到另一台裝置
 3. 在另一台裝置按「匯入 JSON」
 
-## 真正自動同步的下一版
+## Supabase 自動同步
 
-若要 iPhone、iPad、Mac 自動同步，需要接一個資料層，例如：
+已加入 Supabase 同步 UI。設定步驟：
 
-- Supabase
-- Firebase
-- iCloud Shortcuts + JSON 檔
-- GitHub Gist / private repo
+1. 到 Supabase 建立 project。
+2. 在 SQL Editor 執行 `supabase-schema.sql`。
+3. 到 Authentication → URL Configuration：
+   - Site URL 設為 `https://lucinuo.github.io/growth-compass/`
+   - Redirect URLs 加入 `https://lucinuo.github.io/growth-compass/`
+4. 到 Project Settings → API，複製 Project URL 和 anon public key。
+5. 回到 app 的「雲端同步」頁貼上設定。
+6. 輸入 Email，按「寄登入連結」。
+7. 在 iPhone / iPad / Mac 各自登入同一個 Email。
 
-建議下一版先做 Supabase，因為跨裝置最穩、之後也能做登入與備份。
+安全注意：只能把 anon public key 放進前端，不能放 service role key。

@@ -5,6 +5,7 @@ const ASSETS = [
   "./styles.css",
   "./script.js",
   "./manifest.webmanifest",
+  "./supabase-schema.sql",
   "./icon.svg"
 ];
 

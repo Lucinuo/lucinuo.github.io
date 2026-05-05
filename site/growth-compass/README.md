@@ -15,7 +15,10 @@ iPhone / iPad 使用方式見 `DEPLOY.md`。部署到 HTTPS 網址後，可以�
 - 今日 5 分鐘：只選一個成長支柱，寫 100 字內痕跡。
 - 研究分流：判斷資訊現在的狀態，決定去 Zotero / Red / A6 / A5 / Blue / Green / Notion / Finder。
 - 每週回顧：用五支柱看最近紀錄，匯出 Markdown。
+- 雲端同步：接 Supabase Auth + RLS，讓 iPhone / iPad / Mac 同步。
 
 ## 資料儲存
 
-目前使用瀏覽器 `localStorage`，不需要登入。跨裝置先用「備份 JSON / 匯入 JSON」手動同步；真正自動同步需要下一版接雲端資料層。
+未設定 Supabase 時使用瀏覽器 `localStorage`。設定 Supabase 後，使用 Email magic link 登入，資料會同步到 `growth_entries` table。
+
+Supabase SQL 見 `supabase-schema.sql`。

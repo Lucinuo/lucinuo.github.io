@@ -112,8 +112,11 @@ const routes = [
 ];
 
 const storageKey = "lucille-growth-compass-v1";
+const supabaseConfigKey = "lucille-growth-compass-supabase-v1";
 let selectedPillar = pillars[0].id;
 let entries = loadEntries();
+let supabaseClient = null;
+let currentUser = null;
 
 function loadEntries() {
   try {
@@ -155,6 +158,12 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
+  document.getElementById("saveSupabaseConfig").addEventListener("click", saveSupabaseConfig);
+  document.getElementById("clearSupabaseConfig").addEventListener("click", clearSupabaseConfig);
+  document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
+  document.getElementById("signOut").addEventListener("click", signOut);
+  document.getElementById("syncNow").addEventListener("click", syncNow);
+  initSupabaseFromStorage();
 }
 
 function renderTabs() {
@@ -251,6 +260,7 @@ function saveDaily() {
   document.getElementById("dailyStatus").textContent = "已儲存。今天有留下可回收的東西。";
   renderBars();
   renderReview();
+  syncEntry(entry);
 }
 
 function clearDaily() {
@@ -383,6 +393,7 @@ function importJson(event) {
       renderBars();
       renderReview();
       restoreToday();
+      syncNow();
       alert(`已匯入 ${incoming.length} 筆紀錄。`);
     } catch {
       alert("這個 JSON 檔案格式不對，沒有匯入。");
@@ -391,6 +402,216 @@ function importJson(event) {
     }
   };
   reader.readAsText(file);
+}
+
+function loadSupabaseConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(supabaseConfigKey)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSupabaseConfig() {
+  const url = document.getElementById("supabaseUrl").value.trim();
+  const anonKey = document.getElementById("supabaseAnon").value.trim();
+  if (!url || !anonKey) {
+    setSyncConfigStatus("請填入 Project URL 和 anon public key。");
+    return;
+  }
+  localStorage.setItem(supabaseConfigKey, JSON.stringify({ url, anonKey }));
+  setSyncConfigStatus("Supabase 設定已儲存。");
+  initSupabase(url, anonKey);
+}
+
+function clearSupabaseConfig() {
+  localStorage.removeItem(supabaseConfigKey);
+  supabaseClient = null;
+  currentUser = null;
+  document.getElementById("supabaseUrl").value = "";
+  document.getElementById("supabaseAnon").value = "";
+  setSyncConfigStatus("Supabase 設定已清除。");
+  setAuthStatus("尚未登入。");
+  setCloudStatus("設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。");
+}
+
+function initSupabaseFromStorage() {
+  const config = loadSupabaseConfig();
+  if (!config.url || !config.anonKey) {
+    setSyncConfigStatus("尚未設定 Supabase。");
+    return;
+  }
+  document.getElementById("supabaseUrl").value = config.url;
+  document.getElementById("supabaseAnon").value = config.anonKey;
+  initSupabase(config.url, config.anonKey);
+}
+
+function initSupabase(url, anonKey) {
+  if (!window.supabase || !window.supabase.createClient) {
+    setSyncConfigStatus("Supabase library 尚未載入，請確認網路連線後重新整理。");
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(url, anonKey);
+  setSyncConfigStatus("Supabase client 已就緒。");
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user || null;
+    updateAuthUi();
+    if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+      setTimeout(() => syncNow(), 0);
+    }
+  });
+
+  supabaseClient.auth.getSession().then(({ data }) => {
+    currentUser = data.session?.user || null;
+    updateAuthUi();
+    if (currentUser) syncNow();
+  });
+}
+
+async function sendMagicLink() {
+  if (!supabaseClient) {
+    setAuthStatus("請先儲存 Supabase 設定。");
+    return;
+  }
+  const email = document.getElementById("authEmail").value.trim();
+  if (!email) {
+    setAuthStatus("請先輸入 Email。");
+    return;
+  }
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: location.href.split("#")[0]
+    }
+  });
+  if (error) {
+    setAuthStatus(`寄送失敗：${error.message}`);
+    return;
+  }
+  setAuthStatus("登入連結已寄出。請到信箱點連結，再回到這個 app。");
+}
+
+async function signOut() {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  updateAuthUi();
+  setCloudStatus("已登出。");
+}
+
+function updateAuthUi() {
+  if (currentUser) {
+    document.getElementById("authEmail").value = currentUser.email || "";
+    setAuthStatus(`已登入：${currentUser.email || currentUser.id}`);
+  } else {
+    setAuthStatus("尚未登入。");
+  }
+}
+
+async function syncNow() {
+  if (!supabaseClient || !currentUser) {
+    setCloudStatus("尚未連上 Supabase 或尚未登入；目前只使用本機紀錄。");
+    return;
+  }
+
+  setCloudStatus("同步中...");
+  const remoteEntries = await fetchRemoteEntries();
+  if (remoteEntries === null) return;
+
+  mergeEntries(remoteEntries);
+  await pushLocalEntries();
+  const refreshedEntries = await fetchRemoteEntries();
+  if (refreshedEntries !== null) mergeEntries(refreshedEntries);
+
+  renderBars();
+  renderReview();
+  restoreToday();
+  setCloudStatus(`同步完成。現在共有 ${entries.length} 筆紀錄。`);
+}
+
+async function fetchRemoteEntries() {
+  const { data, error } = await supabaseClient
+    .from("growth_entries")
+    .select("entry_date,pillar,note,updated_at")
+    .order("entry_date", { ascending: false });
+
+  if (error) {
+    setCloudStatus(`讀取雲端失敗：${error.message}`);
+    return null;
+  }
+
+  return (data || []).map((row) => ({
+    date: row.entry_date,
+    pillar: row.pillar,
+    note: row.note,
+    updatedAt: row.updated_at
+  }));
+}
+
+function mergeEntries(incoming) {
+  const merged = new Map();
+  [...entries, ...incoming].forEach((entry) => {
+    if (!entry.date || !entry.pillar || !entry.note) return;
+    const current = merged.get(entry.date);
+    if (!current || (entry.updatedAt || "") > (current.updatedAt || "")) {
+      merged.set(entry.date, entry);
+    }
+  });
+  entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
+  saveEntries();
+}
+
+async function pushLocalEntries() {
+  const rows = entries.map((entry) => ({
+    id: `${currentUser.id}:${entry.date}`,
+    user_id: currentUser.id,
+    entry_date: entry.date,
+    pillar: entry.pillar,
+    note: entry.note,
+    updated_at: entry.updatedAt || new Date().toISOString()
+  }));
+
+  if (rows.length === 0) return;
+
+  const { error } = await supabaseClient
+    .from("growth_entries")
+    .upsert(rows, { onConflict: "id" });
+
+  if (error) setCloudStatus(`寫入雲端失敗：${error.message}`);
+}
+
+async function syncEntry(entry) {
+  if (!supabaseClient || !currentUser) return;
+  const row = {
+    id: `${currentUser.id}:${entry.date}`,
+    user_id: currentUser.id,
+    entry_date: entry.date,
+    pillar: entry.pillar,
+    note: entry.note,
+    updated_at: entry.updatedAt || new Date().toISOString()
+  };
+  const { error } = await supabaseClient
+    .from("growth_entries")
+    .upsert(row, { onConflict: "id" });
+  if (error) {
+    setCloudStatus(`今日痕跡已存在本機，但雲端同步失敗：${error.message}`);
+  } else {
+    setCloudStatus("今日痕跡已同步到雲端。");
+  }
+}
+
+function setSyncConfigStatus(message) {
+  document.getElementById("syncConfigStatus").textContent = message;
+}
+
+function setAuthStatus(message) {
+  document.getElementById("authStatus").textContent = message;
+}
+
+function setCloudStatus(message) {
+  document.getElementById("cloudStatus").textContent = message;
 }
 
 function resetData() {
