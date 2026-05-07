@@ -468,6 +468,7 @@ function renderPillars() {
     button.addEventListener("click", () => {
       selectedPillar = pillar.id;
       renderPillars();
+      restoreForPillar(pillar.id);
     });
     grid.appendChild(button);
   });
@@ -515,13 +516,17 @@ function setRoute(route) {
   document.getElementById("routeNext").textContent = route.next;
 }
 
+function restoreForPillar(pillarId) {
+  const existing = entries.find((e) => e.date === todayKey() && e.pillar === pillarId);
+  const note = document.getElementById("dailyNote");
+  const status = document.getElementById("dailyStatus");
+  if (!existing) { note.value = ""; status.textContent = t("unsaved"); return; }
+  note.value = existing.reusableTrace || existing.note || "";
+  status.textContent = t("existingToday");
+}
+
 function restoreToday() {
-  const existing = entries.find((entry) => entry.date === todayKey());
-  if (!existing) return;
-  selectedPillar = existing.pillar;
-  document.getElementById("dailyNote").value = existing.reusableTrace || existing.note || "";
-  document.getElementById("dailyStatus").textContent = t("existingToday");
-  renderPillars();
+  restoreForPillar(selectedPillar);
 }
 
 function saveDaily() {
@@ -532,7 +537,7 @@ function saveDaily() {
   }
 
   const entry = {
-    id: existingDailyId(todayKey()),
+    id: existingDailyId(todayKey(), selectedPillar),
     type: "DailyEntry",
     date: todayKey(),
     pillar: selectedPillar,
@@ -542,11 +547,11 @@ function saveDaily() {
     reusableTrace: note,
     nextSmallStep: "",
     note,
-    createdAt: existingDailyCreatedAt(todayKey()),
+    createdAt: existingDailyCreatedAt(todayKey(), selectedPillar),
     updatedAt: new Date().toISOString()
   };
 
-  entries = entries.filter((item) => item.date !== entry.date);
+  entries = entries.filter((item) => !(item.date === entry.date && item.pillar === entry.pillar));
   entries.unshift(entry);
   saveEntries();
   document.getElementById("dailyStatus").textContent = t("saved");
@@ -557,13 +562,13 @@ function saveDaily() {
   syncEntry(entry);
 }
 
-function existingDailyId(date) {
-  const existing = entries.find((entry) => entry.date === date);
-  return existing?.id || `daily-${date}`;
+function existingDailyId(date, pillar) {
+  const existing = entries.find((e) => e.date === date && e.pillar === pillar);
+  return existing?.id || `daily-${date}-${pillar}`;
 }
 
-function existingDailyCreatedAt(date) {
-  const existing = entries.find((entry) => entry.date === date);
+function existingDailyCreatedAt(date, pillar) {
+  const existing = entries.find((e) => e.date === date && e.pillar === pillar);
   return existing?.createdAt || new Date().toISOString();
 }
 
@@ -889,9 +894,10 @@ function importJson(event) {
       [...entries, ...incoming].forEach((entry) => {
         const normalized = normalizeDailyEntry(entry);
         if (!normalized) return;
-        const current = merged.get(normalized.date);
+        const key = `${normalized.date}-${normalized.pillar}`;
+        const current = merged.get(key);
         if (!current || (normalized.updatedAt || "") > (current.updatedAt || "")) {
-          merged.set(normalized.date, normalized);
+          merged.set(key, normalized);
         }
       });
 
@@ -1063,7 +1069,7 @@ async function fetchRemoteEntries() {
   }
 
   return (data || []).map((row) => ({
-    id: `daily-${row.entry_date}`,
+    id: `daily-${row.entry_date}-${row.pillar}`,
     type: "DailyEntry",
     date: row.entry_date,
     pillar: row.pillar,
@@ -1079,9 +1085,10 @@ function mergeEntries(incoming) {
   const merged = new Map();
   [...entries, ...incoming].forEach((entry) => {
     if (!entry.date || !entry.pillar || !entry.note) return;
-    const current = merged.get(entry.date);
+    const key = `${entry.date}-${entry.pillar}`;
+    const current = merged.get(key);
     if (!current || (entry.updatedAt || "") > (current.updatedAt || "")) {
-      merged.set(entry.date, entry);
+      merged.set(key, entry);
     }
   });
   entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
@@ -1098,7 +1105,7 @@ function showSavedPulse() {
 
 async function pushLocalEntries() {
   const rows = entries.map((entry) => ({
-    id: `${currentUser.id}:${entry.date}`,
+    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
@@ -1118,7 +1125,7 @@ async function pushLocalEntries() {
 async function syncEntry(entry) {
   if (!supabaseClient || !currentUser) return;
   const row = {
-    id: `${currentUser.id}:${entry.date}`,
+    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
