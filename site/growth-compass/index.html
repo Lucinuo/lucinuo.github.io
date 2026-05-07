@@ -21,11 +21,6 @@
   <div class="app-shell">
     <aside class="sidebar" aria-label="主導覽">
       <div class="control-row">
-        <div class="language-toggle" aria-label="Language switcher">
-        <button class="lang-btn active" data-lang="zh" type="button">中</button>
-        <button class="lang-btn" data-lang="en" type="button">EN</button>
-        </div>
-
         <div class="theme-toggle" aria-label="Theme switcher">
           <button class="theme-btn active" data-theme-choice="light" type="button" aria-label="Light mode" title="Light mode">☀</button>
           <button class="theme-btn" data-theme-choice="dark" type="button" aria-label="Dark mode" title="Dark mode">☾</button>
@@ -35,81 +30,41 @@
       <nav class="nav-tabs" aria-label="功能分頁">
         <button class="nav-tab active" data-view="today" type="button">
           <span class="nav-icon">今</span>
-          <span data-i18n="navToday">5 分鐘紀錄</span>
         </button>
         <button class="nav-tab" data-view="route" type="button">
           <span class="nav-icon">流</span>
-          <span data-i18n="navRoute">日常分流</span>
         </button>
         <button class="nav-tab" data-view="review" type="button">
           <span class="nav-icon">週</span>
-          <span data-i18n="navReview">每週回顧</span>
         </button>
         <button class="nav-tab" data-view="sync" type="button">
           <span class="nav-icon">雲</span>
-          <span data-i18n="navSync">雲端同步</span>
         </button>
       </nav>
 
       <div class="sidebar-status" id="sidebarStatus"></div>
-
-      <div class="sidebar-panel">
-        <p class="panel-title" data-i18n="dailyPrincipleTitle">今日原則</p>
-        <p data-i18n="dailyPrincipleText">讓思緒不混亂，讓生活可被看見。<br>每天留下一點可回收的痕跡，<br>讓日常累積成長的軌跡。</p>
-      </div>
     </aside>
 
     <main class="main">
       <section class="hero">
-        <div>
-          <p class="eyebrow" data-i18n="heroEyebrow">每天只要留下一點可回收的東西</p>
-          <h2 data-i18n="heroTitle">讓日常成為可以回看的成長軌跡</h2>
-        </div>
         <div class="date-chip" id="todayLabel"></div>
       </section>
 
       <section class="view active" id="today">
-        <section class="panel progress-panel">
-          <div class="section-heading">
-            <p class="eyebrow">This week</p>
-            <h3 data-i18n="weekTemp">這週的五個面向</h3>
-          </div>
-          <div class="week-summary" id="weekSummary"></div>
-          <div class="garden" id="garden"></div>
-        </section>
+        <div class="pillar-bar" id="pillarBar" aria-label="選擇成長面向"></div>
 
-        <div class="grid two-col">
-          <section class="panel action-panel">
-            <div class="section-heading">
-              <p class="eyebrow" data-i18n="todayStep1">Step 1</p>
-              <h3 data-i18n="todayChooseTitle">今天只選一個成長痕跡</h3>
-            </div>
-            <div class="pillar-grid" id="pillarGrid" aria-label="五支柱選擇"></div>
-            <div class="today-focus" id="todayFocus"></div>
-          </section>
-
-          <section class="panel">
-            <div class="section-heading">
-              <p class="eyebrow" data-i18n="todayStep2">Step 2</p>
-              <h3 data-i18n="todayWriteTitle">寫 100 字以內就好</h3>
-            </div>
-            <label class="field-label" for="dailyNote" data-i18n="dailyNoteLabel">今天最值得留下來的是什麼？</label>
-            <textarea id="dailyNote" rows="8" placeholder="例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。"></textarea>
-            <div class="form-row">
-              <button class="primary" id="saveDaily" type="button" data-i18n="saveDaily">儲存今日痕跡</button>
-              <button class="secondary" id="clearDaily" type="button" data-i18n="clear">清空</button>
-            </div>
+        <div class="main-input-area">
+          <textarea id="dailyNote" rows="6" placeholder="今天最值得留下來的是什麼？"></textarea>
+          <div class="input-actions">
+            <kbd class="key-hint">⌘↵</kbd>
             <p class="helper" id="dailyStatus">還沒儲存今天的痕跡。</p>
-          </section>
+            <button class="save-btn" id="saveDaily" type="button">儲存</button>
+          </div>
         </div>
 
-
-        <section class="panel trace-cards-section" id="traceCardsSection" style="display:none">
-          <div class="section-heading">
-            <p class="eyebrow">Collection</p>
-            <h3>痕跡收藏</h3>
-          </div>
-          <div class="trace-cards-scroll" id="traceCardsScroll"></div>
+        <section class="panel progress-panel">
+          <div class="week-summary" id="weekSummary"></div>
+          <div class="garden" id="garden"></div>
         </section>
       </section>
 
@@ -147,27 +102,6 @@
             </div>
           </section>
         </div>
-
-        <section class="panel flow-panel">
-          <div class="section-heading">
-            <p class="eyebrow">Flow map</p>
-            <h3 data-i18n="flowTitle">三條主要資料流</h3>
-          </div>
-          <div class="flow-map">
-            <div class="flow-lane">
-              <span>Paper</span>
-              <strong>Zotero → Red → A5 左右翻 → Blue / Green</strong>
-            </div>
-            <div class="flow-lane">
-              <span>Experiment</span>
-              <strong>A5 上翻 → A5 左右翻 → Green → Notion → Finder</strong>
-            </div>
-            <div class="flow-lane">
-              <span>Meeting</span>
-              <strong>A6 → A5 左右翻 / Green / Notion</strong>
-            </div>
-          </div>
-        </section>
       </section>
 
       <section class="view" id="review">
@@ -183,17 +117,9 @@
           <section class="panel">
             <div class="section-heading">
               <p class="eyebrow">Recent traces</p>
-              <h3 data-i18n="recentTraces">最近留下的痕跡</h3>
+              <h3>最近留下的痕跡</h3>
             </div>
             <div class="entries" id="entries"></div>
-            <div class="form-row">
-              <button class="secondary" id="exportMarkdown" type="button" data-i18n="exportMarkdown">匯出 Markdown</button>
-              <button class="secondary" id="exportJson" type="button" data-i18n="exportJson">備份 JSON</button>
-              <label class="import-button" for="importJson" data-i18n="importJson">匯入 JSON</label>
-              <input id="importJson" type="file" accept="application/json,.json">
-              <button class="danger" id="resetData" type="button" data-i18n="resetData">清除本機紀錄</button>
-            </div>
-            <p class="helper" data-i18n="localSyncHint">登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。</p>
           </section>
         </div>
       </section>
@@ -243,6 +169,21 @@
             <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
           </div>
           <p class="helper" id="cloudStatus">設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。</p>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <p class="eyebrow">Data</p>
+            <h3>資料管理</h3>
+          </div>
+          <div class="form-row">
+            <button class="secondary" id="exportMarkdown" type="button">匯出 Markdown</button>
+            <button class="secondary" id="exportJson" type="button">備份 JSON</button>
+            <label class="import-button" for="importJson">匯入 JSON</label>
+            <input id="importJson" type="file" accept="application/json,.json">
+            <button class="danger" id="resetData" type="button">清除本機紀錄</button>
+          </div>
+          <p class="helper">登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。</p>
         </section>
       </section>
     </main>
