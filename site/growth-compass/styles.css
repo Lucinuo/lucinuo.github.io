@@ -940,3 +940,47 @@ input[type="file"] {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+
+/* ── Sync state badge ────────────────────────────────────────── */
+.ss-cloud {
+  font-size: 0.85rem;
+  margin-left: auto;
+  opacity: 0.7;
+  transition: color 300ms, opacity 300ms;
+}
+.sync-badge-offline  { color: var(--muted); opacity: 0.45; }
+.sync-badge-connecting { color: var(--muted); }
+.sync-badge-syncing  { color: #c49a45; animation: spin 1s linear infinite; display: inline-block; }
+.sync-badge-ok       { color: #4f8a73; opacity: 1; }
+.sync-badge-error    { color: #c96f5b; opacity: 1; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* nav icon gets same color treatment */
+.nav-icon.sync-badge-ok       { color: #4f8a73; }
+.nav-icon.sync-badge-syncing  { color: #c49a45; }
+.nav-icon.sync-badge-error    { color: #c96f5b; }
+.nav-icon.sync-badge-offline  { opacity: 0.5; }
+
+/* ── Advanced toggle button ──────────────────────────────────── */
+.toggle-advanced-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 4px 0 10px;
+  text-align: left;
+  transition: color 200ms;
+}
+.toggle-advanced-btn:hover { color: var(--text); }
+
+#advancedSyncBox {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
