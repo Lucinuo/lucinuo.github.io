@@ -240,6 +240,30 @@ let selectedPillar = pillars[0].id;
 let appData = loadAppData();
 let entries = appData.dailyEntries;
 let supabaseClient = null;
+let syncState = "offline";   // offline | connecting | syncing | ok | error
+let lastSyncAt = localStorage.getItem("growth-compass-last-sync") || null;
+
+function setSyncState(state) {
+  syncState = state;
+  renderSyncBadge();
+}
+
+function renderSyncBadge() {
+  // Update nav tab cloud icon
+  const navTab = document.querySelector('.nav-tab[data-view="sync"]');
+  if (navTab) {
+    const icon = navTab.querySelector(".nav-icon");
+    if (icon) {
+      const map = { offline: "雲", connecting: "雲", syncing: "↻", ok: "雲", error: "雲" };
+      icon.textContent = map[syncState] || "雲";
+      icon.className = `nav-icon sync-badge-${syncState}`;
+    }
+  }
+  // Update sidebar status cloud dot
+  const el = document.getElementById("sidebarStatus");
+  if (!el) return;
+  renderSidebarStatus();
+}
 let currentUser = null;
 let currentLang = localStorage.getItem(languageKey) || "zh";
 let currentTheme = localStorage.getItem(themeKey) || "light";
@@ -394,6 +418,7 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
+  document.getElementById("toggleAdvanced").addEventListener("click", toggleAdvancedSync);
   document.getElementById("saveSupabaseConfig").addEventListener("click", saveSupabaseConfig);
   document.getElementById("clearSupabaseConfig").addEventListener("click", clearSupabaseConfig);
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
@@ -499,10 +524,23 @@ function renderSidebarStatus() {
     const logged = entries.some((e) => e.pillar === p.id && e.date === today);
     return `<span class="ss-dot ${logged ? "filled" : ""}" style="${logged ? "--dot:" + p.color : ""}" title="${localize(p.name)}"></span>`;
   }).join("");
-  const streakHtml = streak > 0
-    ? `<span class="ss-streak">🔥 ${streak}</span>`
-    : "";
-  el.innerHTML = `<div class="ss-row">${dots}${streakHtml}</div>`;
+  const streakHtml = streak > 0 ? `<span class="ss-streak">🔥 ${streak}</span>` : "";
+  const cloudTitle = {
+    offline: currentLang === "zh" ? "未連線" : "Offline",
+    connecting: currentLang === "zh" ? "連線中…" : "Connecting…",
+    syncing: currentLang === "zh" ? "同步中…" : "Syncing…",
+    ok: lastSyncAt
+      ? (currentLang === "zh" ? `上次同步 ${lastSyncAt}` : `Last sync ${lastSyncAt}`)
+      : (currentLang === "zh" ? "已同步" : "Synced"),
+    error: currentLang === "zh" ? "同步失敗" : "Sync error"
+  }[syncState] || "";
+  el.innerHTML = `
+    <div class="ss-row">
+      ${dots}${streakHtml}
+      <span class="ss-cloud sync-badge-${syncState}" title="${cloudTitle}">
+        ${syncState === "syncing" ? "↻" : "☁"}
+      </span>
+    </div>`;
 }
 
 function renderTodayFocus() {
@@ -1106,6 +1144,7 @@ function initSupabase(url, anonKey) {
 
   supabaseClient = window.supabase.createClient(url, anonKey);
   setSyncConfigStatus("Supabase client 已就緒。");
+  setSyncState("connecting");
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
@@ -1156,9 +1195,12 @@ async function signOut() {
 function updateAuthUi() {
   if (currentUser) {
     document.getElementById("authEmail").value = currentUser.email || "";
-    setAuthStatus(`已登入：${currentUser.email || currentUser.id}`);
+    const email = currentUser.email || currentUser.id;
+    setAuthStatus(`✓ ${email}`);
+    setSyncState("connecting");
   } else {
-    setAuthStatus("尚未登入。");
+    setAuthStatus(currentLang === "zh" ? "尚未登入。" : "Not signed in.");
+    setSyncState("offline");
   }
 }
 
@@ -1168,7 +1210,8 @@ async function syncNow() {
     return;
   }
 
-  setCloudStatus("同步中...");
+  setSyncState("syncing");
+  setCloudStatus("同步中…");
   const remoteEntries = await fetchRemoteEntries();
   if (remoteEntries === null) return;
 
@@ -1181,7 +1224,12 @@ async function syncNow() {
   renderSidebarStatus();
   renderReview();
   restoreToday();
-  setCloudStatus(`同步完成。現在共有 ${entries.length} 筆紀錄。`);
+  const now = new Date();
+  lastSyncAt = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  localStorage.setItem("growth-compass-last-sync", lastSyncAt);
+  setSyncState("ok");
+  const entryWord = currentLang === "zh" ? "筆紀錄" : "entries";
+  setCloudStatus(`${currentLang === "zh" ? "同步完成" : "Sync complete"} · ${entries.length} ${entryWord} · ${lastSyncAt}`);
 }
 
 async function fetchRemoteEntries() {
@@ -1191,6 +1239,7 @@ async function fetchRemoteEntries() {
     .order("entry_date", { ascending: false });
 
   if (error) {
+    setSyncState("error");
     setCloudStatus(`讀取雲端失敗：${error.message}`);
     return null;
   }
@@ -1246,7 +1295,7 @@ async function pushLocalEntries() {
     .from("growth_entries")
     .upsert(rows, { onConflict: "id" });
 
-  if (error) setCloudStatus(`寫入雲端失敗：${error.message}`);
+  if (error) { setSyncState("error"); setCloudStatus(`寫入雲端失敗：${error.message}`); }
 }
 
 async function syncEntry(entry) {
@@ -1267,6 +1316,17 @@ async function syncEntry(entry) {
   } else {
     setCloudStatus("今日痕跡已同步到雲端。");
   }
+}
+
+function toggleAdvancedSync() {
+  const box = document.getElementById("advancedSyncBox");
+  const btn = document.getElementById("toggleAdvanced");
+  if (!box) return;
+  const open = box.style.display === "none" || box.style.display === "";
+  box.style.display = open ? "block" : "none";
+  if (btn) btn.textContent = open
+    ? (currentLang === "zh" ? "▴ 收起進階設定" : "▴ Hide advanced")
+    : (currentLang === "zh" ? "▾ 進階設定" : "▾ Advanced settings");
 }
 
 function setSyncConfigStatus(message) {
