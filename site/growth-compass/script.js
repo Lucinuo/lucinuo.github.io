@@ -355,7 +355,8 @@ function todayKey() {
 
 function formatDate() {
   const date = new Date();
-  return new Intl.DateTimeFormat("zh-Hant", {
+  const locale = currentLang === "zh" ? "zh-Hant" : "en-US";
+  return new Intl.DateTimeFormat(locale, {
     month: "long",
     day: "numeric",
     weekday: "short"
@@ -430,6 +431,7 @@ function renderLanguage() {
       currentLang = button.dataset.lang;
       localStorage.setItem(languageKey, currentLang);
       renderLanguage();
+      document.getElementById("todayLabel").textContent = formatDate();
       renderPillars();
       renderRouter();
       renderGarden();
