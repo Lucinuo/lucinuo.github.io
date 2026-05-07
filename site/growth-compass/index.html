@@ -51,6 +51,8 @@
         </button>
       </nav>
 
+      <div class="sidebar-status" id="sidebarStatus"></div>
+
       <div class="sidebar-panel">
         <p class="panel-title" data-i18n="dailyPrincipleTitle">今日原則</p>
         <p data-i18n="dailyPrincipleText">讓思緒不混亂，讓生活可被看見。<br>每天留下一點可回收的痕跡，<br>讓日常累積成長的軌跡。</p>
@@ -67,6 +69,15 @@
       </section>
 
       <section class="view active" id="today">
+        <section class="panel progress-panel">
+          <div class="section-heading">
+            <p class="eyebrow">This week</p>
+            <h3 data-i18n="weekTemp">這週的五個面向</h3>
+          </div>
+          <div class="week-summary" id="weekSummary"></div>
+          <div class="garden" id="garden"></div>
+        </section>
+
         <div class="grid two-col">
           <section class="panel action-panel">
             <div class="section-heading">
@@ -92,14 +103,6 @@
           </section>
         </div>
 
-        <section class="panel progress-panel">
-          <div class="section-heading">
-            <p class="eyebrow">This week</p>
-            <h3 data-i18n="weekTemp">這週的五個面向</h3>
-          </div>
-          <div class="week-summary" id="weekSummary"></div>
-          <div class="garden" id="garden"></div>
-        </section>
 
         <section class="panel trace-cards-section" id="traceCardsSection" style="display:none">
           <div class="section-heading">
@@ -137,6 +140,10 @@
             <div class="route-box">
               <p class="box-label" data-i18n="routeNextLabel">下一步</p>
               <p id="routeNext">尚未選擇</p>
+            </div>
+            <div class="route-to-today" id="routeToToday" style="display:none">
+              <p class="box-label">記到哪個成長面向？</p>
+              <div class="route-pillars" id="routePillars"></div>
             </div>
           </section>
         </div>
