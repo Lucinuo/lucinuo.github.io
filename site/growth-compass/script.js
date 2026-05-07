@@ -28,7 +28,17 @@ const translations = {
     exportJson: "備份 JSON",
     importJson: "匯入 JSON",
     resetData: "清除本機紀錄",
-    localSyncHint: "iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。",
+    localSyncHint: "登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。",
+    syncSetupTitle: "讓 iPhone / iPad / Mac 同步",
+    projectUrl: "Project URL",
+    anonKey: "Anon public key",
+    saveConfig: "儲存設定",
+    resetConfig: "回復預設",
+    magicLinkTitle: "用 Email magic link 登入",
+    sendMagicLink: "寄登入連結",
+    signOut: "登出",
+    syncStatusTitle: "同步狀態",
+    syncNow: "立即同步",
     unsaved: "還沒儲存今天的痕跡。",
     saved: "已儲存。今天有留下可回收的東西。",
     emptyNote: "先寫一句也可以，空白不會儲存。",
@@ -68,7 +78,17 @@ const translations = {
     exportJson: "Backup JSON",
     importJson: "Import JSON",
     resetData: "Clear local records",
-    localSyncHint: "iPhone and iPad store records separately. Use Backup JSON / Import JSON for manual sync.",
+    localSyncHint: "After Supabase sign-in, Mac / iPhone / iPad merge automatically. JSON backup stays as a manual safety net.",
+    syncSetupTitle: "Sync iPhone / iPad / Mac",
+    projectUrl: "Project URL",
+    anonKey: "Anon public key",
+    saveConfig: "Save settings",
+    resetConfig: "Restore default",
+    magicLinkTitle: "Sign in with Email magic link",
+    sendMagicLink: "Send sign-in link",
+    signOut: "Sign out",
+    syncStatusTitle: "Sync status",
+    syncNow: "Sync now",
     unsaved: "Today's trace has not been saved yet.",
     saved: "Saved. You left something reusable today.",
     emptyNote: "One sentence is enough. Blank notes will not be saved.",
@@ -222,7 +242,8 @@ function createEmptyAppData() {
     version: appDataVersion,
     dailyEntries: [],
     flowItems: [],
-    weeklyReviews: []
+    weeklyReviews: [],
+    traceCards: []
   };
 }
 
@@ -251,7 +272,21 @@ function normalizeAppData(raw) {
     .sort((a, b) => b.date.localeCompare(a.date));
   data.flowItems = (raw?.flowItems || []).map(normalizeFlowItem).filter(Boolean);
   data.weeklyReviews = (raw?.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean);
+  data.traceCards = (raw?.traceCards || []).map(normalizeTraceCard).filter(Boolean);
   return data;
+}
+
+function normalizeTraceCard(card) {
+  if (!card?.date || !card?.pillar) return null;
+  return {
+    id: card.id || `card-${card.date}-${card.pillar}`,
+    date: card.date,
+    pillar: card.pillar,
+    color: card.color || "#5577b9",
+    text: card.text || "",
+    special: card.special || false,
+    createdAt: card.createdAt || new Date().toISOString()
+  };
 }
 
 function normalizeDailyEntry(entry) {
@@ -334,7 +369,8 @@ function init() {
   renderTabs();
   renderPillars();
   renderRouter();
-  renderBars();
+  backfillCards();
+  renderGarden();
   renderReview();
   restoreToday();
 
@@ -350,6 +386,12 @@ function init() {
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
+  window.addEventListener("online", () => {
+    if (currentUser) syncNow();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && currentUser) syncNow();
+  });
   initSupabaseFromStorage();
 }
 
@@ -390,7 +432,7 @@ function renderLanguage() {
       renderLanguage();
       renderPillars();
       renderRouter();
-      renderBars();
+      renderGarden();
       renderReview();
       restoreToday();
     }, { once: true });
@@ -508,8 +550,10 @@ function saveDaily() {
   entries.unshift(entry);
   saveEntries();
   document.getElementById("dailyStatus").textContent = t("saved");
-  renderBars();
+  generateCard(entry);
+  renderGarden(entry.pillar);
   renderReview();
+  showSavedPulse();
   syncEntry(entry);
 }
 
@@ -528,45 +572,225 @@ function clearDaily() {
   document.getElementById("dailyStatus").textContent = t("cleared");
 }
 
-function renderBars() {
+function getPillarStage(pillarId) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 6);
+  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const count = entries.filter((e) => e.pillar === pillarId && e.date >= cutoffKey).length;
+  return Math.min(count, 4);
+}
+
+function plantSVG(stage, color) {
+  const c = color;
+  const s = [
+    // 0: seed
+    `<ellipse cx="40" cy="87" rx="24" ry="7" fill="${c}" opacity="0.14"/>
+     <ellipse cx="40" cy="82" rx="6" ry="4.5" fill="${c}" opacity="0.42"/>
+     <ellipse cx="40" cy="79" rx="3" ry="2" fill="${c}" opacity="0.6"/>`,
+    // 1: sprout
+    `<ellipse cx="40" cy="90" rx="24" ry="6" fill="${c}" opacity="0.12"/>
+     <path d="M40 90 C40 80 40 72 40 66" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     <path d="M40 77 C36 73 30 73 27 71" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="24" cy="70" rx="7" ry="4" fill="${c}" opacity="0.6" transform="rotate(-20 24 70)"/>
+     <path d="M40 75 C44 71 50 71 53 69" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="56" cy="68" rx="7" ry="4" fill="${c}" opacity="0.6" transform="rotate(20 56 68)"/>`,
+    // 2: small plant
+    `<ellipse cx="40" cy="91" rx="24" ry="6" fill="${c}" opacity="0.12"/>
+     <path d="M40 91 C39 78 40 65 40 52" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     <path d="M40 84 C35 79 26 79 23 77" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="20" cy="76" rx="9" ry="5" fill="${c}" opacity="0.52" transform="rotate(-25 20 76)"/>
+     <path d="M40 82 C45 77 54 77 57 75" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="60" cy="74" rx="9" ry="5" fill="${c}" opacity="0.52" transform="rotate(25 60 74)"/>
+     <path d="M40 69 C35 64 27 64 24 62" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="21" cy="61" rx="9" ry="4.5" fill="${c}" opacity="0.64" transform="rotate(-20 21 61)"/>
+     <path d="M40 67 C45 62 53 62 56 60" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="59" cy="59" rx="9" ry="4.5" fill="${c}" opacity="0.64" transform="rotate(20 59 59)"/>`,
+    // 3: growing
+    `<ellipse cx="40" cy="92" rx="24" ry="5.5" fill="${c}" opacity="0.11"/>
+     <path d="M40 92 C38 74 40 54 40 36" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     <path d="M40 86 C33 80 23 80 19 78" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="16" cy="77" rx="11" ry="5.5" fill="${c}" opacity="0.46" transform="rotate(-30 16 77)"/>
+     <path d="M40 84 C47 78 57 78 61 76" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="64" cy="75" rx="11" ry="5.5" fill="${c}" opacity="0.46" transform="rotate(30 64 75)"/>
+     <path d="M40 73 C33 67 23 67 19 65" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="16" cy="64" rx="10" ry="5" fill="${c}" opacity="0.57" transform="rotate(-25 16 64)"/>
+     <path d="M40 71 C47 65 57 65 61 63" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="64" cy="62" rx="10" ry="5" fill="${c}" opacity="0.57" transform="rotate(25 64 62)"/>
+     <path d="M40 58 C34 52 26 52 22 50" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="19" cy="49" rx="9" ry="4.5" fill="${c}" opacity="0.68" transform="rotate(-20 19 49)"/>
+     <path d="M40 56 C46 50 54 50 58 48" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="61" cy="47" rx="9" ry="4.5" fill="${c}" opacity="0.68" transform="rotate(20 61 47)"/>`,
+    // 4: full bloom
+    `<ellipse cx="40" cy="93" rx="24" ry="5" fill="${c}" opacity="0.11"/>
+     <path d="M40 93 C38 72 40 50 40 28" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     <path d="M40 86 C32 79 21 79 17 77" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="13" cy="76" rx="12" ry="5.5" fill="${c}" opacity="0.42" transform="rotate(-32 13 76)"/>
+     <path d="M40 84 C48 77 59 77 63 75" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="67" cy="74" rx="12" ry="5.5" fill="${c}" opacity="0.42" transform="rotate(32 67 74)"/>
+     <path d="M40 73 C32 66 21 66 17 64" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="13" cy="63" rx="11" ry="5" fill="${c}" opacity="0.53" transform="rotate(-27 13 63)"/>
+     <path d="M40 71 C48 64 59 64 63 62" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="67" cy="61" rx="11" ry="5" fill="${c}" opacity="0.53" transform="rotate(27 67 61)"/>
+     <path d="M40 60 C33 53 23 53 19 51" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="16" cy="50" rx="10" ry="4.5" fill="${c}" opacity="0.63" transform="rotate(-22 16 50)"/>
+     <path d="M40 58 C47 51 57 51 61 49" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+     <ellipse cx="64" cy="48" rx="10" ry="4.5" fill="${c}" opacity="0.63" transform="rotate(22 64 48)"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(60 40 27)"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(120 40 27)"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(180 40 27)"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(240 40 27)"/>
+     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(300 40 27)"/>
+     <circle cx="40" cy="27" r="8" fill="${c}"/>
+     <circle cx="40" cy="27" r="4.5" fill="white" opacity="0.52"/>`
+  ];
+  return `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${s[Math.min(stage, 4)]}</svg>`;
+}
+
+function getStreakDays() {
+  if (entries.length === 0) return 0;
+  const dates = new Set(entries.map((e) => e.date));
+  const today = todayKey();
+  const cursor = new Date();
+  if (!dates.has(today)) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!dates.has(cursor.toISOString().slice(0, 10))) return 0;
+  }
+  let streak = 0;
+  const check = new Date();
+  if (!dates.has(today)) check.setDate(check.getDate() - 1);
+  while (true) {
+    const key = check.toISOString().slice(0, 10);
+    if (dates.has(key)) { streak++; check.setDate(check.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderGarden(justGrownPillar = null) {
+  const garden = document.getElementById("garden");
+  if (!garden) return;
+  garden.innerHTML = "";
+  const today = todayKey();
   const recent = getRecentEntries(7);
-  const bars = document.getElementById("pillarBars");
-  bars.innerHTML = "";
-  const max = Math.max(1, ...pillars.map((pillar) => recent.filter((entry) => entry.pillar === pillar.id).length));
+  const stageLabels = { zh: ["種子", "嫩芽", "成長", "茂盛", "盛開"], en: ["Seed", "Sprout", "Growing", "Thriving", "Blooming"] };
+
   renderWeekSummary(recent);
 
   pillars.forEach((pillar) => {
-    const count = recent.filter((entry) => entry.pillar === pillar.id).length;
-    const percent = Math.round((count / max) * 100);
-    const row = document.createElement("div");
-    row.className = `bar-row ${count > 0 ? "has-count" : ""}`;
-    row.innerHTML = `
-      <strong>${localize(pillar.name)}</strong>
-      <span class="bar-track">
-        <span class="bar-fill" style="width:${percent}%; background:${pillar.color}"></span>
-      </span>
-      <span class="pillar-count">${count}</span>
+    const stage = getPillarStage(pillar.id);
+    const hasToday = entries.some((e) => e.pillar === pillar.id && e.date === today);
+    const isJustGrew = pillar.id === justGrownPillar;
+
+    const item = document.createElement("div");
+    item.className = `garden-plant${hasToday ? " today" : ""}${isJustGrew ? " just-grew" : ""}`;
+    if (hasToday) item.style.setProperty("--plant-color", pillar.color);
+    item.innerHTML = `
+      <div class="plant-svg-wrap">${plantSVG(stage, pillar.color)}</div>
+      <div class="plant-info">
+        <span class="plant-name">${localize(pillar.name)}</span>
+        <span class="plant-stage" style="color:${pillar.color}">${(stageLabels[currentLang] || stageLabels.zh)[stage]}</span>
+      </div>
     `;
-    bars.appendChild(row);
+    garden.appendChild(item);
   });
+
+  renderCards();
 }
 
 function renderWeekSummary(recent) {
-  const completed = pillars.filter((pillar) => recent.some((entry) => entry.pillar === pillar.id)).length;
+  const completed = pillars.filter((p) => recent.some((e) => e.pillar === p.id)).length;
   const total = pillars.length;
+  const streak = getStreakDays();
   const message = completed === total
-    ? (currentLang === "zh" ? "本週五個面向都被看見了。" : "All five dimensions have a trace this week.")
+    ? (currentLang === "zh" ? "本週五個面向都被看見了。" : "All five dimensions traced this week.")
     : (currentLang === "zh" ? "本週已留下可回收的成長痕跡。" : "Reusable traces saved this week.");
+  const streakHtml = streak > 0
+    ? `<div class="streak-badge"><span class="streak-fire">🔥</span><strong>${streak}</strong><small>${currentLang === "zh" ? "天連勝" : "day streak"}</small></div>`
+    : "";
   document.getElementById("weekSummary").innerHTML = `
-    <div>
+    <div class="ws-left">
       <strong>${completed}/${total}</strong>
       <span>${message}</span>
     </div>
-    <div class="summary-dots" aria-label="weekly pillar completion">
-      ${pillars.map((pillar) => `<span class="${recent.some((entry) => entry.pillar === pillar.id) ? "filled" : ""}" style="--dot:${pillar.color}"></span>`).join("")}
+    <div class="ws-right">
+      ${streakHtml}
+      <div class="summary-dots" aria-label="weekly pillar completion">
+        ${pillars.map((p) => `<span class="${recent.some((e) => e.pillar === p.id) ? "filled" : ""}" style="--dot:${p.color}"></span>`).join("")}
+      </div>
     </div>
   `;
 }
+
+function generateCard(entry) {
+  const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
+  const recent = getRecentEntries(7);
+  const uniquePillars = new Set(recent.map((e) => e.pillar));
+  const isSpecial = pillars.every((p) => uniquePillars.has(p.id));
+  const cardId = `card-${entry.date}-${entry.pillar}`;
+  const card = {
+    id: cardId,
+    date: entry.date,
+    pillar: entry.pillar,
+    color: pillar.color,
+    text: (entry.reusableTrace || entry.note || "").slice(0, 80),
+    special: isSpecial,
+    createdAt: new Date().toISOString()
+  };
+  if (!appData.traceCards) appData.traceCards = [];
+  appData.traceCards = appData.traceCards.filter((c) => c.id !== cardId);
+  appData.traceCards.unshift(card);
+  saveAppData();
+}
+
+function renderCards() {
+  const scroll = document.getElementById("traceCardsScroll");
+  const section = document.getElementById("traceCardsSection");
+  if (!scroll || !section) return;
+  const cards = appData.traceCards || [];
+  if (cards.length === 0) { section.style.display = "none"; return; }
+  section.style.display = "";
+  scroll.innerHTML = "";
+  cards.slice(0, 30).forEach((card, index) => {
+    const pillar = pillars.find((p) => p.id === card.pillar) || pillars[0];
+    const el = document.createElement("div");
+    el.className = `trace-card${index === 0 ? " new" : ""}${card.special ? " special" : ""}`;
+    el.innerHTML = `
+      <div class="tc-bar" style="background:${card.color}"></div>
+      <div class="tc-body">
+        <span class="tc-pillar" style="color:${card.color}">${localize(pillar.name)}</span>
+        <p class="tc-text">${card.text}</p>
+        <span class="tc-date">${card.date}</span>
+      </div>
+      ${card.special ? '<div class="tc-special">✦ All five bloomed</div>' : ""}
+    `;
+    scroll.appendChild(el);
+  });
+}
+
+function backfillCards() {
+  if (!appData.traceCards) appData.traceCards = [];
+  if (appData.traceCards.length > 0 || entries.length === 0) return;
+  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  sorted.forEach((entry) => {
+    const cardId = `card-${entry.date}-${entry.pillar}`;
+    if (appData.traceCards.some((c) => c.id === cardId)) return;
+    const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
+    appData.traceCards.push({
+      id: cardId,
+      date: entry.date,
+      pillar: entry.pillar,
+      color: pillar.color,
+      text: (entry.reusableTrace || entry.note || "").slice(0, 80),
+      special: false,
+      createdAt: entry.updatedAt || new Date().toISOString()
+    });
+  });
+  appData.traceCards.sort((a, b) => b.date.localeCompare(a.date));
+  saveAppData();
+}
+
+function renderBars() { renderGarden(); }
 
 function getRecentEntries(days) {
   const cutoff = new Date();
@@ -675,7 +899,7 @@ function importJson(event) {
       appData.flowItems = mergeById(appData.flowItems, (payload.flowItems || []).map(normalizeFlowItem).filter(Boolean));
       appData.weeklyReviews = mergeById(appData.weeklyReviews, (payload.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean));
       saveEntries();
-      renderBars();
+      renderGarden();
       renderReview();
       restoreToday();
       syncNow();
@@ -821,7 +1045,7 @@ async function syncNow() {
   const refreshedEntries = await fetchRemoteEntries();
   if (refreshedEntries !== null) mergeEntries(refreshedEntries);
 
-  renderBars();
+  renderGarden();
   renderReview();
   restoreToday();
   setCloudStatus(`同步完成。現在共有 ${entries.length} 筆紀錄。`);
@@ -862,6 +1086,14 @@ function mergeEntries(incoming) {
   });
   entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
   saveEntries();
+}
+
+function showSavedPulse() {
+  const panel = document.querySelector(".progress-panel");
+  if (!panel) return;
+  panel.classList.remove("pulse");
+  void panel.offsetWidth;
+  panel.classList.add("pulse");
 }
 
 async function pushLocalEntries() {
@@ -920,9 +1152,11 @@ function resetData() {
   if (!ok) return;
   entries = [];
   saveEntries();
+  appData.traceCards = [];
+  saveAppData();
   document.getElementById("dailyNote").value = "";
   document.getElementById("dailyStatus").textContent = "本機紀錄已清除。";
-  renderBars();
+  renderGarden();
   renderReview();
 }
 

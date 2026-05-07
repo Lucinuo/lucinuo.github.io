@@ -98,7 +98,15 @@
             <h3 data-i18n="weekTemp">這週的五個面向</h3>
           </div>
           <div class="week-summary" id="weekSummary"></div>
-          <div class="pillar-bars" id="pillarBars"></div>
+          <div class="garden" id="garden"></div>
+        </section>
+
+        <section class="panel trace-cards-section" id="traceCardsSection" style="display:none">
+          <div class="section-heading">
+            <p class="eyebrow">Collection</p>
+            <h3>痕跡收藏</h3>
+          </div>
+          <div class="trace-cards-scroll" id="traceCardsScroll"></div>
         </section>
       </section>
 
@@ -178,7 +186,7 @@
               <input id="importJson" type="file" accept="application/json,.json">
               <button class="danger" id="resetData" type="button" data-i18n="resetData">清除本機紀錄</button>
             </div>
-            <p class="helper" data-i18n="localSyncHint">iPhone / iPad 會各自儲存紀錄。要手動同步時，用「備份 JSON」和「匯入 JSON」。</p>
+            <p class="helper" data-i18n="localSyncHint">登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。</p>
           </section>
         </div>
       </section>
@@ -187,16 +195,16 @@
         <div class="grid two-col">
           <section class="panel">
             <div class="section-heading">
-              <p class="eyebrow">Supabase</p>
-              <h3>讓 iPhone / iPad / Mac 同步</h3>
+              <p class="eyebrow">Supabase free</p>
+              <h3 data-i18n="syncSetupTitle">讓 iPhone / iPad / Mac 同步</h3>
             </div>
-            <label class="field-label" for="supabaseUrl">Project URL</label>
+            <label class="field-label" for="supabaseUrl" data-i18n="projectUrl">Project URL</label>
             <input class="text-input" id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
-            <label class="field-label" for="supabaseAnon">Anon public key</label>
+            <label class="field-label" for="supabaseAnon" data-i18n="anonKey">Anon public key</label>
             <input class="text-input" id="supabaseAnon" type="password" placeholder="sb_publishable_... 或 eyJ...">
             <div class="form-row">
-              <button class="primary" id="saveSupabaseConfig" type="button">儲存設定</button>
-              <button class="secondary" id="clearSupabaseConfig" type="button">清除設定</button>
+              <button class="primary" id="saveSupabaseConfig" type="button" data-i18n="saveConfig">儲存設定</button>
+              <button class="secondary" id="clearSupabaseConfig" type="button" data-i18n="resetConfig">回復預設</button>
             </div>
             <p class="helper" id="syncConfigStatus">尚未設定 Supabase。</p>
           </section>
@@ -204,13 +212,13 @@
           <section class="panel">
             <div class="section-heading">
               <p class="eyebrow">Sign in</p>
-              <h3>用 Email magic link 登入</h3>
+              <h3 data-i18n="magicLinkTitle">用 Email magic link 登入</h3>
             </div>
             <label class="field-label" for="authEmail">Email</label>
             <input class="text-input" id="authEmail" type="email" placeholder="you@example.com">
             <div class="form-row">
-              <button class="primary" id="sendMagicLink" type="button">寄登入連結</button>
-              <button class="secondary" id="signOut" type="button">登出</button>
+              <button class="primary" id="sendMagicLink" type="button" data-i18n="sendMagicLink">寄登入連結</button>
+              <button class="secondary" id="signOut" type="button" data-i18n="signOut">登出</button>
             </div>
             <p class="helper" id="authStatus">尚未登入。</p>
           </section>
@@ -219,10 +227,10 @@
         <section class="panel progress-panel">
           <div class="section-heading">
             <p class="eyebrow">Cloud sync</p>
-            <h3>同步狀態</h3>
+            <h3 data-i18n="syncStatusTitle">同步狀態</h3>
           </div>
           <div class="form-row">
-            <button class="primary" id="syncNow" type="button">立即同步</button>
+            <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
           </div>
           <p class="helper" id="cloudStatus">設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。</p>
         </section>
