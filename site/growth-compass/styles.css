@@ -867,3 +867,76 @@ input[type="file"] {
     flex-direction: column;
   }
 }
+
+
+/* ── Sidebar status dots ─────────────────────────────────────── */
+.sidebar-status {
+  padding: 10px 14px 4px;
+}
+.ss-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.ss-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--line);
+  border: 1.5px solid var(--line);
+  transition: background 300ms, transform 200ms;
+  display: inline-block;
+}
+.ss-dot.filled {
+  background: var(--dot);
+  border-color: var(--dot);
+  transform: scale(1.15);
+}
+.ss-streak {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+/* ── Route → Today pillar bridge ────────────────────────────── */
+.route-to-today {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.route-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.route-pillar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms;
+}
+.route-pillar-btn:hover {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 10%, var(--surface));
+}
+.route-pillar-btn.suggested {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 12%, var(--surface));
+  font-weight: 600;
+}
+.rp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
