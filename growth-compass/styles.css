@@ -479,48 +479,191 @@ input[type="file"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--dot) 16%, transparent);
 }
 
-.pillar-bars {
+/* ── Garden ── */
+.garden {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 8px 0 4px;
 }
 
-.bar-row {
-  display: grid;
-  grid-template-columns: 124px minmax(0, 1fr) 36px;
-  gap: 12px;
+.garden-plant {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
+  position: relative;
 }
 
-.bar-row.has-count .pillar-count {
-  color: #ffffff;
-  background: var(--forest);
-  border-color: var(--forest);
+.plant-svg-wrap {
+  position: relative;
+  width: 80px;
+  height: 100px;
+  transition: transform 280ms ease;
 }
 
-.bar-track {
-  height: 12px;
-  overflow: hidden;
-  background: var(--line);
-  border-radius: 999px;
-}
-
-.bar-fill {
+.plant-svg-wrap svg {
+  width: 100%;
   height: 100%;
-  min-width: 4px;
-  border-radius: 999px;
-  transition: width 240ms ease;
+  overflow: visible;
 }
 
-.pillar-count {
-  display: grid;
-  place-items: center;
-  min-width: 30px;
-  min-height: 30px;
-  border: 1px solid var(--line);
+.garden-plant.today .plant-svg-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--plant-color);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.plant-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.plant-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.plant-stage {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+  letter-spacing: 0.2px;
+}
+
+@keyframes plantGrow {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.14) translateY(-5px); }
+  65%  { transform: scale(0.97) translateY(0); }
+  100% { transform: scale(1); }
+}
+
+.garden-plant.just-grew .plant-svg-wrap {
+  animation: plantGrow 650ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Week summary adjustments ── */
+.ws-left { flex: 1; }
+
+.ws-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.streak-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 6px 11px;
   border-radius: 999px;
+  background: color-mix(in srgb, #f59e0b 10%, var(--panel-solid));
+  border: 1px solid color-mix(in srgb, #f59e0b 28%, var(--line));
+}
+
+.streak-fire { font-size: 16px; line-height: 1; }
+
+.streak-badge strong {
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+  color: #d97706;
+}
+
+.streak-badge small {
+  font-size: 11px;
   color: var(--muted);
+  font-weight: 600;
+}
+
+/* ── Trace cards ── */
+.trace-cards-section { margin-top: 18px; }
+
+.trace-cards-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.trace-card {
+  flex: 0 0 172px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
   background: var(--panel-solid);
-  font-weight: 850;
+  overflow: hidden;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  scroll-snap-align: start;
+  cursor: default;
+}
+
+.trace-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(35,35,31,0.13);
+}
+
+.trace-card.new {
+  animation: cardDrop 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.trace-card.special {
+  border-color: #d99a2a;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #d99a2a 18%, transparent);
+}
+
+@keyframes cardDrop {
+  from { opacity: 0; transform: translateY(-18px) scale(0.88); }
+  to   { opacity: 1; transform: none; }
+}
+
+.tc-bar { height: 6px; }
+
+.tc-body { padding: 12px 12px 10px; }
+
+.tc-pillar {
+  display: block;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 7px;
+}
+
+.tc-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0 0 9px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tc-date {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tc-special {
+  margin: 0 12px 10px;
+  font-size: 11px;
+  color: #d99a2a;
+  font-weight: 800;
 }
 
 .route-line {
@@ -644,10 +787,17 @@ input[type="file"] {
     grid-template-columns: 1fr;
   }
 
-  .bar-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
+  .garden {
+    gap: 3px;
   }
+
+  .plant-svg-wrap {
+    width: 50px;
+    height: 62px;
+  }
+
+  .plant-name { font-size: 10px; }
+  .plant-stage { font-size: 10px; }
 
   .week-summary {
     align-items: flex-start;
