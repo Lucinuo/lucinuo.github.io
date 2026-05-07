@@ -13,7 +13,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "寫 100 字以內就好",
     dailyNoteLabel: "今天最值得留下來的是什麼？",
-    dailyPlaceholder: "例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。",
+    dailyPlaceholder: "今天最值得留下來的是什麼？",
     saveDaily: "儲存今日痕跡",
     clear: "清空",
     weekTemp: "這週的五個面向",
@@ -63,7 +63,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "Keep it under 100 words",
     dailyNoteLabel: "What is worth keeping from today?",
-    dailyPlaceholder: "Example: While reading an NRP-1 paper today, I separated the authors' findings from my own SJF hypothesis for the first time.",
+    dailyPlaceholder: "What is worth keeping from today?",
     saveDaily: "Save today's trace",
     clear: "Clear",
     weekTemp: "This week's five dimensions",
@@ -404,16 +404,14 @@ function init() {
   renderTheme();
   renderLanguage();
   renderTabs();
-  renderPillars();
+  renderPillarBar();
   renderRouter();
-  backfillCards();
   renderGarden();
   renderSidebarStatus();
   renderReview();
   restoreToday();
 
   document.getElementById("saveDaily").addEventListener("click", saveDaily);
-  document.getElementById("clearDaily").addEventListener("click", clearDaily);
   document.getElementById("exportMarkdown").addEventListener("click", exportMarkdown);
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
@@ -432,6 +430,8 @@ function init() {
     if (document.visibilityState === "visible" && currentUser) syncNow();
   });
   initSupabaseFromStorage();
+  initKeyboardShortcuts();
+  document.getElementById("dailyNote").focus();
 }
 
 function renderTheme() {
@@ -463,21 +463,8 @@ function renderLanguage() {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     node.innerHTML = t(node.dataset.i18n);
   });
-  document.querySelectorAll(".lang-btn").forEach((button) => {
-    button.classList.toggle("active", button.dataset.lang === currentLang);
-    button.addEventListener("click", () => {
-      currentLang = button.dataset.lang;
-      localStorage.setItem(languageKey, currentLang);
-      renderLanguage();
-      document.getElementById("todayLabel").textContent = formatDate();
-      renderPillars();
-      renderRouter();
-      renderGarden();
-      renderReview();
-      restoreToday();
-    }, { once: true });
-  });
-  document.getElementById("dailyNote").placeholder = t("dailyPlaceholder");
+  const dailyNote = document.getElementById("dailyNote");
+  if (dailyNote) dailyNote.placeholder = t("dailyPlaceholder");
 }
 
 function renderTabs() {
@@ -491,28 +478,51 @@ function renderTabs() {
   });
 }
 
-function renderPillars() {
-  const grid = document.getElementById("pillarGrid");
-  grid.innerHTML = "";
-  pillars.forEach((pillar) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `pillar-card ${pillar.id === selectedPillar ? "active" : ""}`;
-    button.innerHTML = `
-      <span class="color-dot" style="background:${pillar.color}"></span>
-      <span>
-        <span class="card-title">${localize(pillar.name)}</span>
-        <span class="card-copy">${localize(pillar.copy)}</span>
-      </span>
+function renderPillarBar() {
+  const bar = document.getElementById("pillarBar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  const today = todayKey();
+  pillars.forEach((pillar, i) => {
+    const logged = entries.some((e) => e.pillar === pillar.id && e.date === today);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `pillar-chip${pillar.id === selectedPillar ? " active" : ""}`;
+    btn.style.setProperty("--pcolor", pillar.color);
+    btn.setAttribute("title", localize(pillar.copy));
+    btn.innerHTML = `
+      <span class="pc-dot${logged ? " logged" : ""}"></span>
+      <span class="pc-name">${localize(pillar.name)}</span>
+      <span class="pc-num">${i + 1}</span>
     `;
-    button.addEventListener("click", () => {
+    btn.addEventListener("click", () => {
       selectedPillar = pillar.id;
-      renderPillars();
+      renderPillarBar();
       restoreForPillar(pillar.id);
+      document.getElementById("dailyNote").focus();
     });
-    grid.appendChild(button);
+    bar.appendChild(btn);
   });
-  renderTodayFocus();
+}
+
+function initKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    // Cmd+Enter or Ctrl+Enter to save
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      saveDaily();
+      return;
+    }
+    // 1-5 to select pillar (only when textarea is NOT focused)
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && e.target !== document.getElementById("dailyNote")) {
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= 5 && pillars[num - 1]) {
+        selectedPillar = pillars[num - 1].id;
+        renderPillarBar();
+        restoreForPillar(pillars[num - 1].id);
+      }
+    }
+  });
 }
 
 function renderSidebarStatus() {
@@ -544,6 +554,8 @@ function renderSidebarStatus() {
 }
 
 function renderTodayFocus() {
+  const el = document.getElementById("todayFocus");
+  if (!el) return;
   const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
   const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
   const past = entries
@@ -558,7 +570,7 @@ function renderTodayFocus() {
         return `<p class="focus-last">${ago} · ${lastEntry.date}<br><em>${preview}${ellipsis}</em></p>`;
       })()
     : "";
-  document.getElementById("todayFocus").innerHTML = `
+  el.innerHTML = `
     <p>${label}</p>
     <strong>${localize(pillar.copy)}</strong>
     ${lastHtml}
@@ -583,7 +595,7 @@ function renderRoutePillars(routeId) {
       document.querySelector('.nav-tab[data-view="today"]').classList.add("active");
       document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
       document.getElementById("today").classList.add("active");
-      renderPillars();
+      renderPillarBar();
       document.getElementById("dailyNote").focus();
     });
     grid.appendChild(btn);
@@ -665,7 +677,7 @@ function saveDaily() {
   statusEl.textContent = t("saved");
   statusEl.classList.add("status-saved");
   setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
-  generateCard(entry);
+  renderPillarBar();
   renderGarden(entry.pillar);
   renderSidebarStatus();
   renderReview();
@@ -681,11 +693,6 @@ function existingDailyId(date, pillar) {
 function existingDailyCreatedAt(date, pillar) {
   const existing = entries.find((e) => e.date === date && e.pillar === pillar);
   return existing?.createdAt || new Date().toISOString();
-}
-
-function clearDaily() {
-  document.getElementById("dailyNote").value = "";
-  document.getElementById("dailyStatus").textContent = t("cleared");
 }
 
 function getPillarStage(pillarId) {
@@ -846,8 +853,6 @@ function renderGarden(justGrownPillar = null) {
       if (grewEl) grewEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 80);
   }
-
-  renderCards();
 }
 
 function renderWeekSummary(recent) {
@@ -872,74 +877,6 @@ function renderWeekSummary(recent) {
       </div>
     </div>
   `;
-}
-
-function generateCard(entry) {
-  const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
-  const recent = getRecentEntries(7);
-  const uniquePillars = new Set(recent.map((e) => e.pillar));
-  const isSpecial = pillars.every((p) => uniquePillars.has(p.id));
-  const cardId = `card-${entry.date}-${entry.pillar}`;
-  const card = {
-    id: cardId,
-    date: entry.date,
-    pillar: entry.pillar,
-    color: pillar.color,
-    text: (entry.reusableTrace || entry.note || "").slice(0, 80),
-    special: isSpecial,
-    createdAt: new Date().toISOString()
-  };
-  if (!appData.traceCards) appData.traceCards = [];
-  appData.traceCards = appData.traceCards.filter((c) => c.id !== cardId);
-  appData.traceCards.unshift(card);
-  saveAppData();
-}
-
-function renderCards() {
-  const scroll = document.getElementById("traceCardsScroll");
-  const section = document.getElementById("traceCardsSection");
-  if (!scroll || !section) return;
-  const cards = appData.traceCards || [];
-  if (cards.length === 0) { section.style.display = "none"; return; }
-  section.style.display = "";
-  scroll.innerHTML = "";
-  cards.slice(0, 30).forEach((card, index) => {
-    const pillar = pillars.find((p) => p.id === card.pillar) || pillars[0];
-    const el = document.createElement("div");
-    el.className = `trace-card${index === 0 ? " new" : ""}${card.special ? " special" : ""}`;
-    el.innerHTML = `
-      <div class="tc-bar" style="background:${card.color}"></div>
-      <div class="tc-body">
-        <span class="tc-pillar" style="color:${card.color}">${localize(pillar.name)}</span>
-        <p class="tc-text">${card.text}</p>
-        <span class="tc-date">${card.date}</span>
-      </div>
-      ${card.special ? '<div class="tc-special">✦ All five bloomed</div>' : ""}
-    `;
-    scroll.appendChild(el);
-  });
-}
-
-function backfillCards() {
-  if (!appData.traceCards) appData.traceCards = [];
-  if (appData.traceCards.length > 0 || entries.length === 0) return;
-  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-  sorted.forEach((entry) => {
-    const cardId = `card-${entry.date}-${entry.pillar}`;
-    if (appData.traceCards.some((c) => c.id === cardId)) return;
-    const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
-    appData.traceCards.push({
-      id: cardId,
-      date: entry.date,
-      pillar: entry.pillar,
-      color: pillar.color,
-      text: (entry.reusableTrace || entry.note || "").slice(0, 80),
-      special: false,
-      createdAt: entry.updatedAt || new Date().toISOString()
-    });
-  });
-  appData.traceCards.sort((a, b) => b.date.localeCompare(a.date));
-  saveAppData();
 }
 
 function renderBars() { renderGarden(); }
@@ -1221,6 +1158,7 @@ async function syncNow() {
   if (refreshedEntries !== null) mergeEntries(refreshedEntries);
 
   renderGarden();
+  renderPillarBar();
   renderSidebarStatus();
   renderReview();
   restoreToday();
@@ -1351,6 +1289,7 @@ function resetData() {
   document.getElementById("dailyNote").value = "";
   document.getElementById("dailyStatus").textContent = "本機紀錄已清除。";
   renderGarden();
+  renderPillarBar();
   renderReview();
 }
 
