@@ -205,15 +205,18 @@
               <p class="eyebrow">Supabase free</p>
               <h3 data-i18n="syncSetupTitle">讓 iPhone / iPad / Mac 同步</h3>
             </div>
-            <label class="field-label" for="supabaseUrl" data-i18n="projectUrl">Project URL</label>
-            <input class="text-input" id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
-            <label class="field-label" for="supabaseAnon" data-i18n="anonKey">Anon public key</label>
-            <input class="text-input" id="supabaseAnon" type="password" placeholder="sb_publishable_... 或 eyJ...">
-            <div class="form-row">
-              <button class="primary" id="saveSupabaseConfig" type="button" data-i18n="saveConfig">儲存設定</button>
-              <button class="secondary" id="clearSupabaseConfig" type="button" data-i18n="resetConfig">回復預設</button>
-            </div>
             <p class="helper" id="syncConfigStatus">尚未設定 Supabase。</p>
+            <button class="toggle-advanced-btn" id="toggleAdvanced" type="button">▾ 進階設定</button>
+            <div id="advancedSyncBox" style="display:none">
+              <label class="field-label" for="supabaseUrl" data-i18n="projectUrl">Project URL</label>
+              <input class="text-input" id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
+              <label class="field-label" for="supabaseAnon" data-i18n="anonKey">Anon public key</label>
+              <input class="text-input" id="supabaseAnon" type="password" placeholder="sb_publishable_... 或 eyJ...">
+              <div class="form-row">
+                <button class="primary" id="saveSupabaseConfig" type="button" data-i18n="saveConfig">儲存設定</button>
+                <button class="secondary" id="clearSupabaseConfig" type="button" data-i18n="resetConfig">回復預設</button>
+              </div>
+            </div>
           </section>
 
           <section class="panel">
