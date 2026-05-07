@@ -480,9 +480,22 @@ function renderPillars() {
 function renderTodayFocus() {
   const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
   const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
+  const past = entries
+    .filter((e) => e.pillar === pillar.id)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const lastEntry = past[0];
+  const lastHtml = lastEntry
+    ? (() => {
+        const preview = (lastEntry.reusableTrace || lastEntry.note || "").slice(0, 72);
+        const ellipsis = (lastEntry.reusableTrace || lastEntry.note || "").length > 72 ? "…" : "";
+        const ago = currentLang === "zh" ? "上次你寫" : "Last trace";
+        return `<p class="focus-last">${ago} · ${lastEntry.date}<br><em>${preview}${ellipsis}</em></p>`;
+      })()
+    : "";
   document.getElementById("todayFocus").innerHTML = `
     <p>${label}</p>
     <strong>${localize(pillar.copy)}</strong>
+    ${lastHtml}
   `;
 }
 
@@ -556,7 +569,10 @@ function saveDaily() {
   entries = entries.filter((item) => !(item.date === entry.date && item.pillar === entry.pillar));
   entries.unshift(entry);
   saveEntries();
-  document.getElementById("dailyStatus").textContent = t("saved");
+  const statusEl = document.getElementById("dailyStatus");
+  statusEl.textContent = t("saved");
+  statusEl.classList.add("status-saved");
+  setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
   generateCard(entry);
   renderGarden(entry.pillar);
   renderReview();
@@ -654,6 +670,31 @@ function plantSVG(stage, color) {
   return `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${s[Math.min(stage, 4)]}</svg>`;
 }
 
+function getWeekStart(date) {
+  const d = date ? new Date(date) : new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function saveWeeklyReview(pillarId, content) {
+  const weekStart = getWeekStart();
+  const id = `weekly-${weekStart}-${pillarId}`;
+  const idx = appData.weeklyReviews.findIndex((r) => r.id === id);
+  const review = {
+    id,
+    weekStartDate: weekStart,
+    pillar: pillarId,
+    content,
+    createdAt: idx >= 0 ? appData.weeklyReviews[idx].createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  if (idx >= 0) appData.weeklyReviews[idx] = review;
+  else appData.weeklyReviews.push(review);
+  saveEntries();
+}
+
 function getStreakDays() {
   if (entries.length === 0) return 0;
   const dates = new Set(entries.map((e) => e.date));
@@ -678,6 +719,10 @@ function renderGarden(justGrownPillar = null) {
   const garden = document.getElementById("garden");
   if (!garden) return;
   garden.innerHTML = "";
+  if (!justGrownPillar) {
+    garden.classList.add("fresh-load");
+    setTimeout(() => garden.classList.remove("fresh-load"), 2400);
+  }
   const today = todayKey();
   const recent = getRecentEntries(7);
   const stageLabels = { zh: ["種子", "嫩芽", "成長", "茂盛", "盛開"], en: ["Seed", "Sprout", "Growing", "Thriving", "Blooming"] };
@@ -701,6 +746,13 @@ function renderGarden(justGrownPillar = null) {
     `;
     garden.appendChild(item);
   });
+
+  if (justGrownPillar) {
+    setTimeout(() => {
+      const grewEl = garden.querySelector(".just-grew");
+      if (grewEl) grewEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 80);
+  }
 
   renderCards();
 }
@@ -809,14 +861,31 @@ function getRecentEntries(days) {
 function renderReview() {
   const prompts = document.getElementById("reviewPrompts");
   prompts.innerHTML = "";
+  const weekStart = getWeekStart();
+  const prevDate = new Date();
+  prevDate.setDate(prevDate.getDate() - 7);
+  const lastWeekStart = getWeekStart(prevDate);
+
   pillars.forEach((pillar) => {
+    const saved = appData.weeklyReviews.find((r) => r.weekStartDate === weekStart && r.pillar === pillar.id);
+    const lastWeek = appData.weeklyReviews.find((r) => r.weekStartDate === lastWeekStart && r.pillar === pillar.id);
+    const lastHint = lastWeek?.content
+      ? `<p class="review-last">${currentLang === "zh" ? "上週" : "Last week"}: <em>${lastWeek.content.slice(0, 80)}${lastWeek.content.length > 80 ? "…" : ""}</em></p>`
+      : "";
+    const placeholder = currentLang === "zh" ? "這週的回顧…" : "This week's reflection…";
     const card = document.createElement("div");
     card.className = "prompt-card";
     card.innerHTML = `
       <p class="entry-meta" style="color:${pillar.color}">${localize(pillar.name)}</p>
-      <p>${localize(pillar.prompt)}</p>
+      <p class="prompt-text">${localize(pillar.prompt)}</p>
+      ${lastHint}
+      <textarea class="review-textarea" data-pillar="${pillar.id}" rows="3" placeholder="${placeholder}">${saved?.content || ""}</textarea>
     `;
     prompts.appendChild(card);
+  });
+
+  prompts.querySelectorAll(".review-textarea").forEach((ta) => {
+    ta.addEventListener("input", () => saveWeeklyReview(ta.dataset.pillar, ta.value));
   });
 
   const entriesNode = document.getElementById("entries");
