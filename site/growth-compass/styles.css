@@ -191,36 +191,31 @@ h3 {
   font-weight: 800;
 }
 
+/* V2: icon-only nav tabs */
+.nav-tab {
+  justify-content: center;
+}
+.nav-tab .nav-text {
+  display: none;
+}
+
 .sidebar-panel {
-  margin-top: 34px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-solid);
-}
-
-.panel-title {
-  margin-bottom: 8px;
-  font-weight: 800;
-}
-
-.sidebar-panel p:last-child {
-  margin-bottom: 0;
-  color: var(--muted);
-  line-height: 1.65;
+  display: none;
 }
 
 .main {
   padding: 38px;
 }
 
+/* V2: minimal hero */
 .hero {
+  padding: 16px 0 20px;
   display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 28px;
+  align-items: center;
+  min-height: unset;
+  margin-bottom: 0;
 }
+.hero > div:not(.date-chip) { display: none; }
 
 .date-chip {
   min-width: 132px;
@@ -983,4 +978,136 @@ input[type="file"] {
   padding-top: 8px;
   border-top: 1px solid var(--line);
   margin-top: 4px;
+}
+
+/* ── Pillar bar (compact chip selector) ─────────────────────── */
+.pillar-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pillar-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px 7px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms, color 200ms;
+}
+
+.pillar-chip:hover {
+  border-color: var(--pcolor);
+}
+
+.pillar-chip.active {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 12%, var(--surface));
+  color: var(--pcolor);
+  font-weight: 600;
+}
+
+.pc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pcolor);
+  opacity: 0.3;
+  flex-shrink: 0;
+  transition: opacity 200ms;
+}
+
+.pc-dot.logged {
+  opacity: 1;
+}
+
+.pc-num {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-left: 1px;
+}
+
+/* ── Main input area ──────────────────────────────────────────── */
+.main-input-area {
+  margin-bottom: 24px;
+}
+
+.main-input-area #dailyNote {
+  width: 100%;
+  min-height: 150px;
+  padding: 18px 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.75;
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 200ms, box-shadow 200ms;
+  display: block;
+}
+
+.main-input-area #dailyNote:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 15%, transparent);
+}
+
+.input-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 2px;
+}
+
+.key-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.input-actions .helper {
+  flex: 1;
+  margin: 0;
+}
+
+.save-btn {
+  padding: 6px 18px;
+  background: var(--leaf);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 200ms;
+}
+
+.save-btn:hover { opacity: 0.85; }
+
+/* V2 sidebar narrower */
+@media (min-width: 640px) {
+  .sidebar {
+    width: 72px;
+    min-width: 72px;
+  }
+
+  .app-shell {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
 }
