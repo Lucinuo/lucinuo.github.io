@@ -139,6 +139,18 @@ const pillars = [
   }
 ];
 
+const routePillarMap = {
+  "paper-source": "knowledge",
+  "author-content": "knowledge",
+  "pre-meeting": null,
+  "experiment-raw": "knowledge",
+  "my-thinking": "knowledge",
+  "stable-knowledge": "knowledge",
+  "research-decision": "knowledge",
+  "task": null,
+  "data-file": "knowledge"
+};
+
 const routes = [
   {
     id: "paper-source",
@@ -372,6 +384,7 @@ function init() {
   renderRouter();
   backfillCards();
   renderGarden();
+  renderSidebarStatus();
   renderReview();
   restoreToday();
 
@@ -477,6 +490,21 @@ function renderPillars() {
   renderTodayFocus();
 }
 
+function renderSidebarStatus() {
+  const el = document.getElementById("sidebarStatus");
+  if (!el) return;
+  const today = todayKey();
+  const streak = getStreakDays();
+  const dots = pillars.map((p) => {
+    const logged = entries.some((e) => e.pillar === p.id && e.date === today);
+    return `<span class="ss-dot ${logged ? "filled" : ""}" style="${logged ? "--dot:" + p.color : ""}" title="${localize(p.name)}"></span>`;
+  }).join("");
+  const streakHtml = streak > 0
+    ? `<span class="ss-streak">🔥 ${streak}</span>`
+    : "";
+  el.innerHTML = `<div class="ss-row">${dots}${streakHtml}</div>`;
+}
+
 function renderTodayFocus() {
   const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
   const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
@@ -497,6 +525,31 @@ function renderTodayFocus() {
     <strong>${localize(pillar.copy)}</strong>
     ${lastHtml}
   `;
+}
+
+function renderRoutePillars(routeId) {
+  const container = document.getElementById("routeToToday");
+  const grid = document.getElementById("routePillars");
+  if (!container || !grid) return;
+  container.style.display = "block";
+  grid.innerHTML = "";
+  pillars.forEach((p) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `route-pillar-btn${routePillarMap[routeId] === p.id ? " suggested" : ""}`;
+    btn.style.setProperty("--pcolor", p.color);
+    btn.innerHTML = `<span class="rp-dot" style="background:${p.color}"></span>${localize(p.name)}`;
+    btn.addEventListener("click", () => {
+      selectedPillar = p.id;
+      document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
+      document.querySelector('.nav-tab[data-view="today"]').classList.add("active");
+      document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+      document.getElementById("today").classList.add("active");
+      renderPillars();
+      document.getElementById("dailyNote").focus();
+    });
+    grid.appendChild(btn);
+  });
 }
 
 function renderRouter() {
@@ -524,6 +577,7 @@ function renderRouter() {
 }
 
 function setRoute(route) {
+  renderRoutePillars(route.id);
   document.getElementById("routeTitle").textContent = route.place;
   document.getElementById("routeSummary").textContent = route.summary;
   document.getElementById("routePlace").textContent = route.place;
@@ -575,6 +629,7 @@ function saveDaily() {
   setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
   generateCard(entry);
   renderGarden(entry.pillar);
+  renderSidebarStatus();
   renderReview();
   showSavedPulse();
   syncEntry(entry);
@@ -1123,6 +1178,7 @@ async function syncNow() {
   if (refreshedEntries !== null) mergeEntries(refreshedEntries);
 
   renderGarden();
+  renderSidebarStatus();
   renderReview();
   restoreToday();
   setCloudStatus(`同步完成。現在共有 ${entries.length} 筆紀錄。`);
