@@ -465,6 +465,19 @@ function renderLanguage() {
   });
   const dailyNote = document.getElementById("dailyNote");
   if (dailyNote) dailyNote.placeholder = t("dailyPlaceholder");
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.lang === currentLang);
+    btn.addEventListener("click", () => {
+      currentLang = btn.dataset.lang;
+      localStorage.setItem(languageKey, currentLang);
+      renderLanguage();
+      renderPillarBar();
+      renderRouter();
+      renderGarden();
+      renderSidebarStatus();
+      renderReview();
+    }, { once: true });
+  });
 }
 
 function renderTabs() {
@@ -530,31 +543,26 @@ function initKeyboardShortcuts() {
 }
 
 function renderSidebarStatus() {
+  // Cloud sync badge in sidebar
   const el = document.getElementById("sidebarStatus");
-  if (!el) return;
-  const today = todayKey();
-  const streak = getStreakDays();
-  const dots = pillars.map((p) => {
-    const logged = entries.some((e) => e.pillar === p.id && e.date === today);
-    return `<span class="ss-dot ${logged ? "filled" : ""}" style="${logged ? "--dot:" + p.color : ""}" title="${localize(p.name)}"></span>`;
-  }).join("");
-  const streakHtml = streak > 0 ? `<span class="ss-streak">🔥 ${streak}</span>` : "";
-  const cloudTitle = {
-    offline: currentLang === "zh" ? "未連線" : "Offline",
-    connecting: currentLang === "zh" ? "連線中…" : "Connecting…",
-    syncing: currentLang === "zh" ? "同步中…" : "Syncing…",
-    ok: lastSyncAt
-      ? (currentLang === "zh" ? `上次同步 ${lastSyncAt}` : `Last sync ${lastSyncAt}`)
-      : (currentLang === "zh" ? "已同步" : "Synced"),
-    error: currentLang === "zh" ? "同步失敗" : "Sync error"
-  }[syncState] || "";
-  el.innerHTML = `
-    <div class="ss-row">
-      ${dots}${streakHtml}
-      <span class="ss-cloud sync-badge-${syncState}" title="${cloudTitle}">
-        ${syncState === "syncing" ? "↻" : "☁"}
-      </span>
-    </div>`;
+  if (el) {
+    const cloudTitle = {
+      offline: currentLang === "zh" ? "未連線" : "Offline",
+      connecting: currentLang === "zh" ? "連線中…" : "Connecting…",
+      syncing: currentLang === "zh" ? "同步中…" : "Syncing…",
+      ok: lastSyncAt ? `${lastSyncAt}` : (currentLang === "zh" ? "已同步" : "Synced"),
+      error: currentLang === "zh" ? "同步失敗" : "Sync error"
+    }[syncState] || "";
+    el.innerHTML = `<span class="ss-cloud sync-badge-${syncState}" title="${cloudTitle}">${syncState === "syncing" ? "↻" : "☁"}</span>`;
+  }
+  // Streak display
+  const streakEl = document.getElementById("sidebarStreak");
+  if (streakEl) {
+    const streak = getStreakDays();
+    streakEl.innerHTML = streak > 0
+      ? `<span class="ss-streak-badge">🔥<strong>${streak}</strong></span>`
+      : "";
+  }
 }
 
 function renderTodayFocus() {
