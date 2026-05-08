@@ -583,7 +583,7 @@ function initCharCounter() {
   });
 }
 
-function initKeyboardShortcuts() {function initKeyboardShortcuts() {
+function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
     // Cmd+Enter or Ctrl+Enter to save
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
