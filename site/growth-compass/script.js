@@ -114,7 +114,7 @@ const pillars = [
     color: "#c96f5b",
     name: { zh: "有力量的表達", en: "Expression" },
     copy: { zh: "今天說出口的話，有哪一句是真的你說的？", en: "Which words today were truly yours?" },
-    prompt: { zh: "這週，你說的哪句話是真的你說的？", en: "Which words this week were truly yours?" }
+    prompt: { zh: "這週，說過的話裡，哪句是真的你？", en: "Which words this week were truly yours?" }
   },
   {
     id: "aesthetic",
@@ -422,8 +422,7 @@ function init() {
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
-  const ambBtn = document.getElementById("ambientBtn");
-  if (ambBtn) ambBtn.addEventListener("click", toggleAmbient);
+
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   window.addEventListener("online", () => {
     if (currentUser) syncNow();
@@ -433,8 +432,6 @@ function init() {
   });
   initSupabaseFromStorage();
   initKeyboardShortcuts();
-  initCharCounter();
-  if (localStorage.getItem("growth-compass-ambient") === "1") toggleAmbient();
   document.getElementById("dailyNote").focus();
 }
 
@@ -527,61 +524,7 @@ function renderPillarBar() {
 }
 
 /* ─── Ambient sound (brown noise via Web Audio API) ─── */
-let ambientCtx = null;
-let ambientGain = null;
-let ambientNode = null;
-let ambientOn = false;
 
-function toggleAmbient() {
-  const btn = document.getElementById("ambientBtn");
-  if (!ambientOn) {
-    if (!ambientCtx) {
-      ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const bufferSize = 4096;
-      ambientNode = ambientCtx.createScriptProcessor(bufferSize, 1, 1);
-      let lastOut = 0;
-      ambientNode.onaudioprocess = (e) => {
-        const out = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          out[i] = (lastOut + 0.02 * white) / 1.02;
-          lastOut = out[i];
-          out[i] *= 3.5;
-        }
-      };
-      ambientGain = ambientCtx.createGain();
-      ambientGain.gain.value = 0;
-      ambientNode.connect(ambientGain);
-      ambientGain.connect(ambientCtx.destination);
-    }
-    if (ambientCtx.state === "suspended") ambientCtx.resume();
-    ambientGain.gain.cancelScheduledValues(ambientCtx.currentTime);
-    ambientGain.gain.setValueAtTime(0, ambientCtx.currentTime);
-    ambientGain.gain.linearRampToValueAtTime(0.045, ambientCtx.currentTime + 2);
-    ambientOn = true;
-    if (btn) { btn.textContent = "◼"; btn.title = currentLang === "zh" ? "關閉環境音" : "Stop ambient"; btn.classList.add("active"); }
-    localStorage.setItem("growth-compass-ambient", "1");
-  } else {
-    ambientGain.gain.cancelScheduledValues(ambientCtx.currentTime);
-    ambientGain.gain.setValueAtTime(ambientGain.gain.value, ambientCtx.currentTime);
-    ambientGain.gain.linearRampToValueAtTime(0, ambientCtx.currentTime + 1.5);
-    setTimeout(() => { if (ambientCtx) ambientCtx.suspend(); }, 1600);
-    ambientOn = false;
-    if (btn) { btn.textContent = "♩"; btn.title = currentLang === "zh" ? "開啟環境音（brown noise）" : "Ambient sound (brown noise)"; btn.classList.remove("active"); }
-    localStorage.setItem("growth-compass-ambient", "0");
-  }
-}
-
-/* ─── Char counter ─── */
-function initCharCounter() {
-  const ta = document.getElementById("dailyNote");
-  const counter = document.getElementById("charCount");
-  if (!ta || !counter) return;
-  ta.addEventListener("input", () => {
-    const len = ta.value.trim().length;
-    counter.textContent = len > 0 ? `${len} 字` : "";
-  });
-}
 
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
