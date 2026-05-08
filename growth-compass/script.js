@@ -416,9 +416,7 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
-  document.getElementById("toggleAdvanced").addEventListener("click", toggleAdvancedSync);
-  document.getElementById("saveSupabaseConfig").addEventListener("click", saveSupabaseConfig);
-  document.getElementById("clearSupabaseConfig").addEventListener("click", clearSupabaseConfig);
+  document.getElementById("signInGoogle").addEventListener("click", signInWithGoogle);
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
@@ -1112,14 +1110,8 @@ function clearSupabaseConfig() {
 }
 
 function initSupabaseFromStorage() {
-  const config = loadSupabaseConfig();
-  if (!config.url || !config.anonKey) {
-    setSyncConfigStatus("尚未設定 Supabase。");
-    return;
-  }
-  document.getElementById("supabaseUrl").value = config.url;
-  document.getElementById("supabaseAnon").value = config.anonKey;
-  initSupabase(config.url, config.anonKey);
+  // Config is hardcoded — no manual entry needed
+  initSupabase(defaultSupabaseConfig.url, defaultSupabaseConfig.anonKey);
 }
 
 function initSupabase(url, anonKey) {
@@ -1147,9 +1139,18 @@ function initSupabase(url, anonKey) {
   });
 }
 
+async function signInWithGoogle() {
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: location.href.split("#")[0] }
+  });
+  if (error) setAuthStatus(`Google 登入失敗：${error.message}`);
+}
+
 async function sendMagicLink() {
   if (!supabaseClient) {
-    setAuthStatus("請先儲存 Supabase 設定。");
+    setAuthStatus("Supabase 尚未就緒，請稍候再試。");
     return;
   }
   const email = document.getElementById("authEmail").value.trim();
