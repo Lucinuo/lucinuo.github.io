@@ -13,7 +13,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "寫 100 字以內就好",
     dailyNoteLabel: "今天最值得留下來的是什麼？",
-    dailyPlaceholder: "例如：今天讀 NRP-1 相關 paper 時，我第一次把作者的結果和自己的 SJF 假說分開看，這讓我比較清楚下一步該問什麼。",
+    dailyPlaceholder: "今天留下一個片刻。",
     saveDaily: "儲存今日痕跡",
     clear: "清空",
     weekTemp: "這週的五個面向",
@@ -39,12 +39,12 @@ const translations = {
     signOut: "登出",
     syncStatusTitle: "同步狀態",
     syncNow: "立即同步",
-    unsaved: "還沒儲存今天的痕跡。",
-    saved: "已儲存。今天有留下可回收的東西。",
-    emptyNote: "先寫一句也可以，空白不會儲存。",
+    unsaved: "今天還沒有痕跡。",
+    saved: "留下了。",
+    emptyNote: "先寫一句也可以。",
     cleared: "已清空輸入框，尚未改動已儲存紀錄。",
     existingToday: "今天已經有一筆痕跡，可以修改後重新儲存。",
-    noEntries: "還沒有紀錄。先從「5 分鐘紀錄」留下一句開始。",
+    noEntries: "還沒有痕跡。今天留下第一句，從這裡開始。",
     routeTitleDefault: "先選一種資訊狀態",
     routeSummaryDefault: "我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。",
     notSelected: "尚未選擇"
@@ -63,7 +63,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "Keep it under 100 words",
     dailyNoteLabel: "What is worth keeping from today?",
-    dailyPlaceholder: "Example: While reading an NRP-1 paper today, I separated the authors' findings from my own SJF hypothesis for the first time.",
+    dailyPlaceholder: "Leave one moment from today.",
     saveDaily: "Save today's trace",
     clear: "Clear",
     weekTemp: "This week's five dimensions",
@@ -90,11 +90,11 @@ const translations = {
     syncStatusTitle: "Sync status",
     syncNow: "Sync now",
     unsaved: "Today's trace has not been saved yet.",
-    saved: "Saved. You left something reusable today.",
-    emptyNote: "One sentence is enough. Blank notes will not be saved.",
+    saved: "Saved.",
+    emptyNote: "One sentence is enough.",
     cleared: "Input cleared. Saved records were not changed.",
     existingToday: "You already have a trace today. Edit and save again if needed.",
-    noEntries: "No records yet. Start with one sentence in 5-min log.",
+    noEntries: "No traces yet. Leave your first sentence today.",
     routeTitleDefault: "Choose an information state",
     routeSummaryDefault: "I will show where it belongs, what not to mix in, and the next step.",
     notSelected: "Not selected"
@@ -105,39 +105,51 @@ const pillars = [
   {
     id: "knowledge",
     color: "#5577b9",
-    name: { zh: "知識體系", en: "Knowledge system" },
-    copy: { zh: "今天有沒有一個概念、paper 或觀點變清楚？", en: "Did one concept, paper, or viewpoint become clearer today?" },
-    prompt: { zh: "這週我新增了哪 3 張知識卡？", en: "Which three knowledge cards did I add this week?" }
+    name: { zh: "知識體系", en: "Knowledge" },
+    copy: { zh: "今天什麼東西想通了一點？", en: "What clicked a little more today?" },
+    prompt: { zh: "這週，有什麼東西突然變清楚了？", en: "What became clearer this week?" }
   },
   {
     id: "expression",
     color: "#c96f5b",
-    name: { zh: "有力量的表達", en: "Powerful expression" },
-    copy: { zh: "今天有沒有一次把想法說得更清楚？", en: "Did I express one thought more clearly today?" },
-    prompt: { zh: "這週哪一次表達比以前更清楚？", en: "When did I express myself more clearly this week?" }
+    name: { zh: "有力量的表達", en: "Expression" },
+    copy: { zh: "今天說出去的話裡，有沒有一句說完你覺得說對了？", en: "Did any words today feel exactly right?" },
+    prompt: { zh: "這週，有沒有說過什麼讓你說完覺得：對，就是這個意思。", en: "Did you say something this week and think: yes, that's exactly it." }
   },
   {
     id: "aesthetic",
     color: "#c49a45",
-    name: { zh: "審美辨識", en: "Aesthetic awareness" },
-    copy: { zh: "今天看見了什麼好的圖、簡報、排版或畫面？", en: "What image, slide, layout, or scene looked good today?" },
-    prompt: { zh: "這週看見了什麼美的東西？", en: "What beauty did I notice this week?" }
+    name: { zh: "審美辨識", en: "Aesthetic" },
+    copy: { zh: "今天有沒有哪個畫面讓你停下來？", en: "Did anything catch your eye and make you pause?" },
+    prompt: { zh: "這週，有沒有哪個畫面讓你多看了一眼？", en: "What made you look twice this week?" }
   },
   {
     id: "solitude",
     color: "#4f8a73",
-    name: { zh: "深度愛好", en: "Deep solitude" },
-    copy: { zh: "今天有沒有一段不被外界推著走的安靜時間？", en: "Did I have a quiet moment not pushed by the outside world?" },
-    prompt: { zh: "這週有沒有一段真正安靜、專注、只屬於自己的時間？", en: "Did I have a truly quiet, focused time for myself this week?" }
+    name: { zh: "深度愛好", en: "Deep interest" },
+    copy: { zh: "今天有沒有一刻，是完全只屬於自己的？", en: "Was there a moment today that was entirely yours?" },
+    prompt: { zh: "這週，有沒有哪件事是純粹因為喜歡而做的？", en: "Did you do anything this week just because you wanted to?" }
   },
   {
     id: "emotion",
     color: "#7b6598",
-    name: { zh: "情緒覺察", en: "Emotional awareness" },
-    copy: { zh: "今天哪個情緒最強烈？它想提醒你什麼？", en: "Which emotion was strongest today, and what did it remind me of?" },
-    prompt: { zh: "這週最常出現的情緒是什麼？它想提醒我什麼？", en: "Which emotion appeared most often this week, and what was it telling me?" }
+    name: { zh: "情緒覺察", en: "Emotion" },
+    copy: { zh: "今天哪個情緒最大聲？", en: "Which emotion was loudest today?" },
+    prompt: { zh: "這週，哪個情緒來了最多次？它在說什麼？", en: "Which emotion kept returning this week? What was it saying?" }
   }
 ];
+
+const routePillarMap = {
+  "paper-source": "knowledge",
+  "author-content": "knowledge",
+  "pre-meeting": null,
+  "experiment-raw": "knowledge",
+  "my-thinking": "knowledge",
+  "stable-knowledge": "knowledge",
+  "research-decision": "knowledge",
+  "task": null,
+  "data-file": "knowledge"
+};
 
 const routes = [
   {
@@ -228,6 +240,30 @@ let selectedPillar = pillars[0].id;
 let appData = loadAppData();
 let entries = appData.dailyEntries;
 let supabaseClient = null;
+let syncState = "offline";   // offline | connecting | syncing | ok | error
+let lastSyncAt = localStorage.getItem("growth-compass-last-sync") || null;
+
+function setSyncState(state) {
+  syncState = state;
+  renderSyncBadge();
+}
+
+function renderSyncBadge() {
+  // Update nav tab cloud icon
+  const navTab = document.querySelector('.nav-tab[data-view="sync"]');
+  if (navTab) {
+    const icon = navTab.querySelector(".nav-icon");
+    if (icon) {
+      const map = { offline: "雲", connecting: "雲", syncing: "↻", ok: "雲", error: "雲" };
+      icon.textContent = map[syncState] || "雲";
+      icon.className = `nav-icon sync-badge-${syncState}`;
+    }
+  }
+  // Update sidebar status cloud dot
+  const el = document.getElementById("sidebarStatus");
+  if (!el) return;
+  renderSidebarStatus();
+}
 let currentUser = null;
 let currentLang = localStorage.getItem(languageKey) || "zh";
 let currentTheme = localStorage.getItem(themeKey) || "light";
@@ -355,7 +391,8 @@ function todayKey() {
 
 function formatDate() {
   const date = new Date();
-  return new Intl.DateTimeFormat("zh-Hant", {
+  const locale = currentLang === "zh" ? "zh-Hant" : "en-US";
+  return new Intl.DateTimeFormat(locale, {
     month: "long",
     day: "numeric",
     weekday: "short"
@@ -367,24 +404,25 @@ function init() {
   renderTheme();
   renderLanguage();
   renderTabs();
-  renderPillars();
+  renderPillarBar();
   renderRouter();
-  backfillCards();
   renderGarden();
+  renderSidebarStatus();
   renderReview();
   restoreToday();
 
   document.getElementById("saveDaily").addEventListener("click", saveDaily);
-  document.getElementById("clearDaily").addEventListener("click", clearDaily);
   document.getElementById("exportMarkdown").addEventListener("click", exportMarkdown);
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
+  document.getElementById("toggleAdvanced").addEventListener("click", toggleAdvancedSync);
   document.getElementById("saveSupabaseConfig").addEventListener("click", saveSupabaseConfig);
   document.getElementById("clearSupabaseConfig").addEventListener("click", clearSupabaseConfig);
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
+
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   window.addEventListener("online", () => {
     if (currentUser) syncNow();
@@ -393,6 +431,8 @@ function init() {
     if (document.visibilityState === "visible" && currentUser) syncNow();
   });
   initSupabaseFromStorage();
+  initKeyboardShortcuts();
+  document.getElementById("dailyNote").focus();
 }
 
 function renderTheme() {
@@ -424,20 +464,21 @@ function renderLanguage() {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     node.innerHTML = t(node.dataset.i18n);
   });
-  document.querySelectorAll(".lang-btn").forEach((button) => {
-    button.classList.toggle("active", button.dataset.lang === currentLang);
-    button.addEventListener("click", () => {
-      currentLang = button.dataset.lang;
+  const dailyNote = document.getElementById("dailyNote");
+  if (dailyNote) dailyNote.placeholder = t("dailyPlaceholder");
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.lang === currentLang);
+    btn.addEventListener("click", () => {
+      currentLang = btn.dataset.lang;
       localStorage.setItem(languageKey, currentLang);
       renderLanguage();
-      renderPillars();
+      renderPillarBar();
       renderRouter();
       renderGarden();
+      renderSidebarStatus();
       renderReview();
-      restoreToday();
     }, { once: true });
   });
-  document.getElementById("dailyNote").placeholder = t("dailyPlaceholder");
 }
 
 function renderTabs() {
@@ -451,36 +492,130 @@ function renderTabs() {
   });
 }
 
-function renderPillars() {
-  const grid = document.getElementById("pillarGrid");
-  grid.innerHTML = "";
-  pillars.forEach((pillar) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `pillar-card ${pillar.id === selectedPillar ? "active" : ""}`;
-    button.innerHTML = `
-      <span class="color-dot" style="background:${pillar.color}"></span>
-      <span>
-        <span class="card-title">${localize(pillar.name)}</span>
-        <span class="card-copy">${localize(pillar.copy)}</span>
-      </span>
+function renderPillarBar() {
+  const bar = document.getElementById("pillarBar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  const today = todayKey();
+  // Set active pillar color on input area for live accent
+  const activePillar = pillars.find((p) => p.id === selectedPillar);
+  const inputArea = document.querySelector(".main-input-area");
+  if (inputArea && activePillar) inputArea.style.setProperty("--active-pillar", activePillar.color);
+  pillars.forEach((pillar, i) => {
+    const logged = entries.some((e) => e.pillar === pillar.id && e.date === today);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `pillar-chip${pillar.id === selectedPillar ? " active" : ""}`;
+    btn.style.setProperty("--pcolor", pillar.color);
+    btn.setAttribute("title", localize(pillar.copy));
+    btn.innerHTML = `
+      <span class="pc-dot${logged ? " logged" : ""}"></span>
+      <span class="pc-name">${localize(pillar.name)}</span>
+      <span class="pc-num">${i + 1}</span>
     `;
-    button.addEventListener("click", () => {
+    btn.addEventListener("click", () => {
       selectedPillar = pillar.id;
-      renderPillars();
+      renderPillarBar();
+      restoreForPillar(pillar.id);
+      document.getElementById("dailyNote").focus();
     });
-    grid.appendChild(button);
+    bar.appendChild(btn);
   });
-  renderTodayFocus();
+}
+
+/* ─── Ambient sound (brown noise via Web Audio API) ─── */
+
+
+function initKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    // Cmd+Enter or Ctrl+Enter to save
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      saveDaily();
+      return;
+    }
+    // 1-5 to select pillar (only when textarea is NOT focused)
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && e.target !== document.getElementById("dailyNote")) {
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= 5 && pillars[num - 1]) {
+        selectedPillar = pillars[num - 1].id;
+        renderPillarBar();
+        restoreForPillar(pillars[num - 1].id);
+      }
+    }
+  });
+}
+
+function renderSidebarStatus() {
+  // Cloud sync badge in sidebar
+  const el = document.getElementById("sidebarStatus");
+  if (el) {
+    const cloudTitle = {
+      offline: currentLang === "zh" ? "未連線" : "Offline",
+      connecting: currentLang === "zh" ? "連線中…" : "Connecting…",
+      syncing: currentLang === "zh" ? "同步中…" : "Syncing…",
+      ok: lastSyncAt ? `${lastSyncAt}` : (currentLang === "zh" ? "已同步" : "Synced"),
+      error: currentLang === "zh" ? "同步失敗" : "Sync error"
+    }[syncState] || "";
+    el.innerHTML = `<span class="ss-cloud sync-badge-${syncState}" title="${cloudTitle}">${syncState === "syncing" ? "↻" : "☁"}</span>`;
+  }
+  // Streak display
+  const streakEl = document.getElementById("sidebarStreak");
+  if (streakEl) {
+    const streak = getStreakDays();
+    streakEl.innerHTML = streak > 0
+      ? `<span class="ss-streak-badge">🔥<strong>${streak}</strong></span>`
+      : "";
+  }
 }
 
 function renderTodayFocus() {
+  const el = document.getElementById("todayFocus");
+  if (!el) return;
   const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
   const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
-  document.getElementById("todayFocus").innerHTML = `
+  const past = entries
+    .filter((e) => e.pillar === pillar.id)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const lastEntry = past[0];
+  const lastHtml = lastEntry
+    ? (() => {
+        const preview = (lastEntry.reusableTrace || lastEntry.note || "").slice(0, 72);
+        const ellipsis = (lastEntry.reusableTrace || lastEntry.note || "").length > 72 ? "…" : "";
+        const ago = currentLang === "zh" ? "上次你寫" : "Last trace";
+        return `<p class="focus-last">${ago} · ${lastEntry.date}<br><em>${preview}${ellipsis}</em></p>`;
+      })()
+    : "";
+  el.innerHTML = `
     <p>${label}</p>
     <strong>${localize(pillar.copy)}</strong>
+    ${lastHtml}
   `;
+}
+
+function renderRoutePillars(routeId) {
+  const container = document.getElementById("routeToToday");
+  const grid = document.getElementById("routePillars");
+  if (!container || !grid) return;
+  container.style.display = "block";
+  grid.innerHTML = "";
+  pillars.forEach((p) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `route-pillar-btn${routePillarMap[routeId] === p.id ? " suggested" : ""}`;
+    btn.style.setProperty("--pcolor", p.color);
+    btn.innerHTML = `<span class="rp-dot" style="background:${p.color}"></span>${localize(p.name)}`;
+    btn.addEventListener("click", () => {
+      selectedPillar = p.id;
+      document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
+      document.querySelector('.nav-tab[data-view="today"]').classList.add("active");
+      document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+      document.getElementById("today").classList.add("active");
+      renderPillarBar();
+      document.getElementById("dailyNote").focus();
+    });
+    grid.appendChild(btn);
+  });
 }
 
 function renderRouter() {
@@ -508,6 +643,7 @@ function renderRouter() {
 }
 
 function setRoute(route) {
+  renderRoutePillars(route.id);
   document.getElementById("routeTitle").textContent = route.place;
   document.getElementById("routeSummary").textContent = route.summary;
   document.getElementById("routePlace").textContent = route.place;
@@ -515,13 +651,17 @@ function setRoute(route) {
   document.getElementById("routeNext").textContent = route.next;
 }
 
+function restoreForPillar(pillarId) {
+  const existing = entries.find((e) => e.date === todayKey() && e.pillar === pillarId);
+  const note = document.getElementById("dailyNote");
+  const status = document.getElementById("dailyStatus");
+  if (!existing) { note.value = ""; status.textContent = t("unsaved"); return; }
+  note.value = existing.reusableTrace || existing.note || "";
+  status.textContent = t("existingToday");
+}
+
 function restoreToday() {
-  const existing = entries.find((entry) => entry.date === todayKey());
-  if (!existing) return;
-  selectedPillar = existing.pillar;
-  document.getElementById("dailyNote").value = existing.reusableTrace || existing.note || "";
-  document.getElementById("dailyStatus").textContent = t("existingToday");
-  renderPillars();
+  restoreForPillar(selectedPillar);
 }
 
 function saveDaily() {
@@ -532,7 +672,7 @@ function saveDaily() {
   }
 
   const entry = {
-    id: existingDailyId(todayKey()),
+    id: existingDailyId(todayKey(), selectedPillar),
     type: "DailyEntry",
     date: todayKey(),
     pillar: selectedPillar,
@@ -542,34 +682,33 @@ function saveDaily() {
     reusableTrace: note,
     nextSmallStep: "",
     note,
-    createdAt: existingDailyCreatedAt(todayKey()),
+    createdAt: existingDailyCreatedAt(todayKey(), selectedPillar),
     updatedAt: new Date().toISOString()
   };
 
-  entries = entries.filter((item) => item.date !== entry.date);
+  entries = entries.filter((item) => !(item.date === entry.date && item.pillar === entry.pillar));
   entries.unshift(entry);
   saveEntries();
-  document.getElementById("dailyStatus").textContent = t("saved");
-  generateCard(entry);
+  const statusEl = document.getElementById("dailyStatus");
+  statusEl.textContent = t("saved");
+  statusEl.classList.add("status-saved");
+  setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
+  renderPillarBar();
   renderGarden(entry.pillar);
+  renderSidebarStatus();
   renderReview();
   showSavedPulse();
   syncEntry(entry);
 }
 
-function existingDailyId(date) {
-  const existing = entries.find((entry) => entry.date === date);
-  return existing?.id || `daily-${date}`;
+function existingDailyId(date, pillar) {
+  const existing = entries.find((e) => e.date === date && e.pillar === pillar);
+  return existing?.id || `daily-${date}-${pillar}`;
 }
 
-function existingDailyCreatedAt(date) {
-  const existing = entries.find((entry) => entry.date === date);
+function existingDailyCreatedAt(date, pillar) {
+  const existing = entries.find((e) => e.date === date && e.pillar === pillar);
   return existing?.createdAt || new Date().toISOString();
-}
-
-function clearDaily() {
-  document.getElementById("dailyNote").value = "";
-  document.getElementById("dailyStatus").textContent = t("cleared");
 }
 
 function getPillarStage(pillarId) {
@@ -647,6 +786,31 @@ function plantSVG(stage, color) {
   return `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${s[Math.min(stage, 4)]}</svg>`;
 }
 
+function getWeekStart(date) {
+  const d = date ? new Date(date) : new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function saveWeeklyReview(pillarId, content) {
+  const weekStart = getWeekStart();
+  const id = `weekly-${weekStart}-${pillarId}`;
+  const idx = appData.weeklyReviews.findIndex((r) => r.id === id);
+  const review = {
+    id,
+    weekStartDate: weekStart,
+    pillar: pillarId,
+    content,
+    createdAt: idx >= 0 ? appData.weeklyReviews[idx].createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  if (idx >= 0) appData.weeklyReviews[idx] = review;
+  else appData.weeklyReviews.push(review);
+  saveEntries();
+}
+
 function getStreakDays() {
   if (entries.length === 0) return 0;
   const dates = new Set(entries.map((e) => e.date));
@@ -671,6 +835,10 @@ function renderGarden(justGrownPillar = null) {
   const garden = document.getElementById("garden");
   if (!garden) return;
   garden.innerHTML = "";
+  if (!justGrownPillar) {
+    garden.classList.add("fresh-load");
+    setTimeout(() => garden.classList.remove("fresh-load"), 2400);
+  }
   const today = todayKey();
   const recent = getRecentEntries(7);
   const stageLabels = { zh: ["種子", "嫩芽", "成長", "茂盛", "盛開"], en: ["Seed", "Sprout", "Growing", "Thriving", "Blooming"] };
@@ -681,30 +849,63 @@ function renderGarden(justGrownPillar = null) {
     const stage = getPillarStage(pillar.id);
     const hasToday = entries.some((e) => e.pillar === pillar.id && e.date === today);
     const isJustGrew = pillar.id === justGrownPillar;
+    const stepsToNext = stage < 4 ? (stage + 1) - (
+      entries.filter((e) => e.pillar === pillar.id && e.date >= (() => {
+        const c = new Date(); c.setDate(c.getDate() - 6); return c.toISOString().slice(0, 10);
+      })()).length
+    ) : 0;
 
     const item = document.createElement("div");
     item.className = `garden-plant${hasToday ? " today" : ""}${isJustGrew ? " just-grew" : ""}`;
     if (hasToday) item.style.setProperty("--plant-color", pillar.color);
+    const progressHint = stage < 4 && stepsToNext > 0
+      ? `<span class="plant-progress">${currentLang === "zh" ? `再記 ${stepsToNext} 次` : `${stepsToNext} more`}</span>`
+      : stage === 4
+      ? `<span class="plant-progress bloom">${currentLang === "zh" ? "盛開中" : "Blooming"}</span>`
+      : "";
+    const lastForPillar = entries.find((e) => e.pillar === pillar.id);
+    const tooltipText = lastForPillar
+      ? (lastForPillar.reusableTrace || lastForPillar.note || "").slice(0, 80)
+      : (currentLang === "zh" ? "還沒有痕跡" : "No trace yet");
+    item.title = tooltipText;
     item.innerHTML = `
       <div class="plant-svg-wrap">${plantSVG(stage, pillar.color)}</div>
       <div class="plant-info">
         <span class="plant-name">${localize(pillar.name)}</span>
         <span class="plant-stage" style="color:${pillar.color}">${(stageLabels[currentLang] || stageLabels.zh)[stage]}</span>
+        ${progressHint}
       </div>
     `;
     garden.appendChild(item);
   });
 
-  renderCards();
+  // Empty state: no entries ever
+  if (entries.length === 0) {
+    const hint = document.createElement("p");
+    hint.className = "garden-empty-hint";
+    hint.textContent = currentLang === "zh"
+      ? "每記一次，它就往前走一步。"
+      : "Every trace moves it forward.";
+    garden.appendChild(hint);
+  }
+
+  if (justGrownPillar) {
+    setTimeout(() => {
+      const grewEl = garden.querySelector(".just-grew");
+      if (grewEl) grewEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 80);
+  }
 }
 
 function renderWeekSummary(recent) {
   const completed = pillars.filter((p) => recent.some((e) => e.pillar === p.id)).length;
   const total = pillars.length;
   const streak = getStreakDays();
-  const message = completed === total
-    ? (currentLang === "zh" ? "本週五個面向都被看見了。" : "All five dimensions traced this week.")
-    : (currentLang === "zh" ? "本週已留下可回收的成長痕跡。" : "Reusable traces saved this week.");
+  const message = entries.length === 0
+    ? (currentLang === "zh" ? "選一個面向，留下今天的第一個痕跡。" : "Choose a dimension and leave your first trace.")
+    : completed === total
+    ? (currentLang === "zh" ? "這週，五個面向都有了痕跡。" : "All five dimensions have a trace this week.")
+    : (currentLang === "zh" ? "這週有些面向被照到了光。" : "Some dimensions were tended to this week.");
   const streakHtml = streak > 0
     ? `<div class="streak-badge"><span class="streak-fire">🔥</span><strong>${streak}</strong><small>${currentLang === "zh" ? "天連勝" : "day streak"}</small></div>`
     : "";
@@ -722,74 +923,6 @@ function renderWeekSummary(recent) {
   `;
 }
 
-function generateCard(entry) {
-  const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
-  const recent = getRecentEntries(7);
-  const uniquePillars = new Set(recent.map((e) => e.pillar));
-  const isSpecial = pillars.every((p) => uniquePillars.has(p.id));
-  const cardId = `card-${entry.date}-${entry.pillar}`;
-  const card = {
-    id: cardId,
-    date: entry.date,
-    pillar: entry.pillar,
-    color: pillar.color,
-    text: (entry.reusableTrace || entry.note || "").slice(0, 80),
-    special: isSpecial,
-    createdAt: new Date().toISOString()
-  };
-  if (!appData.traceCards) appData.traceCards = [];
-  appData.traceCards = appData.traceCards.filter((c) => c.id !== cardId);
-  appData.traceCards.unshift(card);
-  saveAppData();
-}
-
-function renderCards() {
-  const scroll = document.getElementById("traceCardsScroll");
-  const section = document.getElementById("traceCardsSection");
-  if (!scroll || !section) return;
-  const cards = appData.traceCards || [];
-  if (cards.length === 0) { section.style.display = "none"; return; }
-  section.style.display = "";
-  scroll.innerHTML = "";
-  cards.slice(0, 30).forEach((card, index) => {
-    const pillar = pillars.find((p) => p.id === card.pillar) || pillars[0];
-    const el = document.createElement("div");
-    el.className = `trace-card${index === 0 ? " new" : ""}${card.special ? " special" : ""}`;
-    el.innerHTML = `
-      <div class="tc-bar" style="background:${card.color}"></div>
-      <div class="tc-body">
-        <span class="tc-pillar" style="color:${card.color}">${localize(pillar.name)}</span>
-        <p class="tc-text">${card.text}</p>
-        <span class="tc-date">${card.date}</span>
-      </div>
-      ${card.special ? '<div class="tc-special">✦ All five bloomed</div>' : ""}
-    `;
-    scroll.appendChild(el);
-  });
-}
-
-function backfillCards() {
-  if (!appData.traceCards) appData.traceCards = [];
-  if (appData.traceCards.length > 0 || entries.length === 0) return;
-  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-  sorted.forEach((entry) => {
-    const cardId = `card-${entry.date}-${entry.pillar}`;
-    if (appData.traceCards.some((c) => c.id === cardId)) return;
-    const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
-    appData.traceCards.push({
-      id: cardId,
-      date: entry.date,
-      pillar: entry.pillar,
-      color: pillar.color,
-      text: (entry.reusableTrace || entry.note || "").slice(0, 80),
-      special: false,
-      createdAt: entry.updatedAt || new Date().toISOString()
-    });
-  });
-  appData.traceCards.sort((a, b) => b.date.localeCompare(a.date));
-  saveAppData();
-}
-
 function renderBars() { renderGarden(); }
 
 function getRecentEntries(days) {
@@ -802,14 +935,32 @@ function getRecentEntries(days) {
 function renderReview() {
   const prompts = document.getElementById("reviewPrompts");
   prompts.innerHTML = "";
+  const weekStart = getWeekStart();
+  const prevDate = new Date();
+  prevDate.setDate(prevDate.getDate() - 7);
+  const lastWeekStart = getWeekStart(prevDate);
+
   pillars.forEach((pillar) => {
+    const saved = appData.weeklyReviews.find((r) => r.weekStartDate === weekStart && r.pillar === pillar.id);
+    const lastWeek = appData.weeklyReviews.find((r) => r.weekStartDate === lastWeekStart && r.pillar === pillar.id);
+    const lastHint = lastWeek?.content
+      ? `<p class="review-last">${currentLang === "zh" ? "上週" : "Last week"}: <em>${lastWeek.content.slice(0, 80)}${lastWeek.content.length > 80 ? "…" : ""}</em></p>`
+      : "";
+    const placeholder = currentLang === "zh" ? "這週的回顧…" : "This week's reflection…";
     const card = document.createElement("div");
     card.className = "prompt-card";
+    card.style.setProperty("--pcard-color", pillar.color);
     card.innerHTML = `
-      <p class="entry-meta" style="color:${pillar.color}">${localize(pillar.name)}</p>
-      <p>${localize(pillar.prompt)}</p>
+      <p class="entry-meta pc-label" style="color:${pillar.color}">${localize(pillar.name)}</p>
+      <p class="prompt-text">${localize(pillar.prompt)}</p>
+      ${lastHint}
+      <textarea class="review-textarea" data-pillar="${pillar.id}" rows="3" placeholder="${placeholder}">${saved?.content || ""}</textarea>
     `;
     prompts.appendChild(card);
+  });
+
+  prompts.querySelectorAll(".review-textarea").forEach((ta) => {
+    ta.addEventListener("input", () => saveWeeklyReview(ta.dataset.pillar, ta.value));
   });
 
   const entriesNode = document.getElementById("entries");
@@ -823,9 +974,13 @@ function renderReview() {
     const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
     const card = document.createElement("div");
     card.className = "entry-card";
+    card.style.setProperty("--ecolor", pillar.color);
     card.innerHTML = `
       <p>${entry.reusableTrace || entry.note}</p>
-      <span class="entry-meta">${entry.date} · ${localize(pillar.name)}</span>
+      <span class="entry-meta">
+        <span class="em-dot" style="background:${pillar.color}"></span>
+        ${localize(pillar.name)} · ${entry.date}
+      </span>
     `;
     entriesNode.appendChild(card);
   });
@@ -889,9 +1044,10 @@ function importJson(event) {
       [...entries, ...incoming].forEach((entry) => {
         const normalized = normalizeDailyEntry(entry);
         if (!normalized) return;
-        const current = merged.get(normalized.date);
+        const key = `${normalized.date}-${normalized.pillar}`;
+        const current = merged.get(key);
         if (!current || (normalized.updatedAt || "") > (current.updatedAt || "")) {
-          merged.set(normalized.date, normalized);
+          merged.set(key, normalized);
         }
       });
 
@@ -974,6 +1130,7 @@ function initSupabase(url, anonKey) {
 
   supabaseClient = window.supabase.createClient(url, anonKey);
   setSyncConfigStatus("Supabase client 已就緒。");
+  setSyncState("connecting");
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
@@ -1024,9 +1181,12 @@ async function signOut() {
 function updateAuthUi() {
   if (currentUser) {
     document.getElementById("authEmail").value = currentUser.email || "";
-    setAuthStatus(`已登入：${currentUser.email || currentUser.id}`);
+    const email = currentUser.email || currentUser.id;
+    setAuthStatus(`✓ ${email}`);
+    setSyncState("connecting");
   } else {
-    setAuthStatus("尚未登入。");
+    setAuthStatus(currentLang === "zh" ? "尚未登入。" : "Not signed in.");
+    setSyncState("offline");
   }
 }
 
@@ -1036,7 +1196,8 @@ async function syncNow() {
     return;
   }
 
-  setCloudStatus("同步中...");
+  setSyncState("syncing");
+  setCloudStatus("同步中…");
   const remoteEntries = await fetchRemoteEntries();
   if (remoteEntries === null) return;
 
@@ -1046,9 +1207,16 @@ async function syncNow() {
   if (refreshedEntries !== null) mergeEntries(refreshedEntries);
 
   renderGarden();
+  renderPillarBar();
+  renderSidebarStatus();
   renderReview();
   restoreToday();
-  setCloudStatus(`同步完成。現在共有 ${entries.length} 筆紀錄。`);
+  const now = new Date();
+  lastSyncAt = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  localStorage.setItem("growth-compass-last-sync", lastSyncAt);
+  setSyncState("ok");
+  const entryWord = currentLang === "zh" ? "筆紀錄" : "entries";
+  setCloudStatus(`${currentLang === "zh" ? "同步完成" : "Sync complete"} · ${entries.length} ${entryWord} · ${lastSyncAt}`);
 }
 
 async function fetchRemoteEntries() {
@@ -1058,12 +1226,13 @@ async function fetchRemoteEntries() {
     .order("entry_date", { ascending: false });
 
   if (error) {
+    setSyncState("error");
     setCloudStatus(`讀取雲端失敗：${error.message}`);
     return null;
   }
 
   return (data || []).map((row) => ({
-    id: `daily-${row.entry_date}`,
+    id: `daily-${row.entry_date}-${row.pillar}`,
     type: "DailyEntry",
     date: row.entry_date,
     pillar: row.pillar,
@@ -1079,9 +1248,10 @@ function mergeEntries(incoming) {
   const merged = new Map();
   [...entries, ...incoming].forEach((entry) => {
     if (!entry.date || !entry.pillar || !entry.note) return;
-    const current = merged.get(entry.date);
+    const key = `${entry.date}-${entry.pillar}`;
+    const current = merged.get(key);
     if (!current || (entry.updatedAt || "") > (current.updatedAt || "")) {
-      merged.set(entry.date, entry);
+      merged.set(key, entry);
     }
   });
   entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
@@ -1098,7 +1268,7 @@ function showSavedPulse() {
 
 async function pushLocalEntries() {
   const rows = entries.map((entry) => ({
-    id: `${currentUser.id}:${entry.date}`,
+    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
@@ -1112,13 +1282,13 @@ async function pushLocalEntries() {
     .from("growth_entries")
     .upsert(rows, { onConflict: "id" });
 
-  if (error) setCloudStatus(`寫入雲端失敗：${error.message}`);
+  if (error) { setSyncState("error"); setCloudStatus(`寫入雲端失敗：${error.message}`); }
 }
 
 async function syncEntry(entry) {
   if (!supabaseClient || !currentUser) return;
   const row = {
-    id: `${currentUser.id}:${entry.date}`,
+    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
     user_id: currentUser.id,
     entry_date: entry.date,
     pillar: entry.pillar,
@@ -1133,6 +1303,17 @@ async function syncEntry(entry) {
   } else {
     setCloudStatus("今日痕跡已同步到雲端。");
   }
+}
+
+function toggleAdvancedSync() {
+  const box = document.getElementById("advancedSyncBox");
+  const btn = document.getElementById("toggleAdvanced");
+  if (!box) return;
+  const open = box.style.display === "none" || box.style.display === "";
+  box.style.display = open ? "block" : "none";
+  if (btn) btn.textContent = open
+    ? (currentLang === "zh" ? "▴ 收起進階設定" : "▴ Hide advanced")
+    : (currentLang === "zh" ? "▾ 進階設定" : "▾ Advanced settings");
 }
 
 function setSyncConfigStatus(message) {
@@ -1157,6 +1338,7 @@ function resetData() {
   document.getElementById("dailyNote").value = "";
   document.getElementById("dailyStatus").textContent = "本機紀錄已清除。";
   renderGarden();
+  renderPillarBar();
   renderReview();
 }
 
