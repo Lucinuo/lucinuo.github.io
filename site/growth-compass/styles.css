@@ -20,6 +20,8 @@
   --surface-1: #f2f1ee;
   --surface-2: #ebe8df;
   --shadow: 0 18px 44px rgba(35, 35, 31, 0.09);
+  --surface: #ffffff;
+  --text: #252525;
 }
 
 [data-theme="dark"] {
@@ -33,6 +35,8 @@
   --surface-1: #072720;
   --surface-2: #0b493b;
   --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --surface: #123f35;
+  --text: #f6f1e5;
 }
 
 * {
