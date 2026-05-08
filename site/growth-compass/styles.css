@@ -95,6 +95,30 @@ button {
   margin-bottom: 18px;
 }
 
+.lang-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.lang-btn {
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.lang-btn.active {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
+}
+
 .language-toggle,
 .theme-toggle {
   display: grid;
@@ -868,35 +892,26 @@ input[type="file"] {
 }
 
 
-/* ── Sidebar status dots ─────────────────────────────────────── */
+/* ── Sidebar status (cloud + streak) ─────────────────────────── */
 .sidebar-status {
-  padding: 10px 14px 4px;
+  padding: 8px 0 2px;
+  text-align: center;
 }
-.ss-row {
-  display: flex;
+.sidebar-streak {
+  text-align: center;
+  padding: 0 0 6px;
+}
+.ss-streak-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-.ss-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--line);
-  border: 1.5px solid var(--line);
-  transition: background 300ms, transform 200ms;
-  display: inline-block;
-}
-.ss-dot.filled {
-  background: var(--dot);
-  border-color: var(--dot);
-  transform: scale(1.15);
-}
-.ss-streak {
-  font-size: 0.72rem;
+  gap: 3px;
+  font-size: 0.7rem;
   color: var(--muted);
-  margin-left: 4px;
-  font-weight: 600;
+  font-weight: 700;
+}
+.ss-streak-badge strong {
+  color: var(--ink);
+  font-size: 0.75rem;
 }
 
 /* ── Route → Today pillar bridge ────────────────────────────── */
@@ -1107,12 +1122,18 @@ input[type="file"] {
 /* V2 sidebar narrower */
 @media (min-width: 640px) {
   .sidebar {
-    width: 72px;
-    min-width: 72px;
+    width: 88px;
+    min-width: 88px;
   }
 
   .app-shell {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .control-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
   }
 }
 
