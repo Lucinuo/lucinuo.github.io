@@ -1111,3 +1111,152 @@ input[type="file"] {
     grid-template-columns: 72px minmax(0, 1fr);
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   V2 VISUAL POLISH
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Entry cards: pillar color left accent ────────────────── */
+.entry-card {
+  border-left: 3px solid var(--ecolor, var(--leaf));
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  transition: transform 150ms, box-shadow 150ms;
+}
+.entry-card:hover {
+  transform: translateX(2px);
+  box-shadow: -3px 0 0 var(--ecolor, var(--leaf)), var(--shadow);
+}
+.entry-card p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.em-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* ── Prompt cards: pillar color left accent ───────────────── */
+.prompt-card {
+  border-left: 3px solid var(--pcard-color, var(--leaf));
+  border-radius: 0 10px 10px 0;
+  padding: 16px 18px;
+}
+.prompt-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 4px 0 10px;
+  line-height: 1.45;
+}
+.pc-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ── Main textarea: active pillar color accent ────────────── */
+.main-input-area #dailyNote:focus {
+  border-color: var(--active-pillar, var(--leaf));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--active-pillar, var(--leaf)) 15%, transparent);
+}
+.main-input-area {
+  border-top: 2.5px solid var(--active-pillar, var(--leaf));
+  padding-top: 18px;
+  transition: border-color 250ms;
+  border-radius: 0 0 0 0;
+}
+
+/* ── Progress panel ───────────────────────────────────────── */
+.progress-panel {
+  position: relative;
+}
+
+/* ── Date chip: stronger presence ────────────────────────────*/
+.date-chip {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Sidebar: tighter, cleaner ───────────────────────────────*/
+.sidebar {
+  padding: 14px 10px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.control-row {
+  margin-bottom: 14px;
+  justify-content: center;
+}
+
+/* Nav tabs: icon-only, tighter gap */
+.nav-tabs {
+  gap: 4px;
+  flex: 1;
+}
+.nav-tab {
+  padding: 10px 8px;
+  border-radius: 10px;
+}
+.nav-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Sidebar status: push to bottom */
+.sidebar-status {
+  margin-top: auto;
+  padding: 10px 6px 0;
+  border-top: 1px solid var(--line);
+}
+.ss-row {
+  justify-content: center;
+  gap: 6px;
+}
+.ss-cloud {
+  font-size: 0.75rem;
+}
+.ss-streak {
+  font-size: 0.68rem;
+  margin-left: 2px;
+}
+
+/* ── Week summary: stronger numbers ──────────────────────────*/
+.week-summary {
+  margin-bottom: 18px;
+}
+.ws-left strong {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.ws-left span {
+  font-size: 0.78rem;
+}
+
+/* ── Review entries: spaced out ──────────────────────────────*/
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
