@@ -1285,3 +1285,59 @@ input[type="file"] {
   flex-direction: column;
   gap: 10px;
 }
+
+
+/* ── Ambient button ──────────────────────────────────────────── */
+.ambient-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 200ms;
+  line-height: 1;
+}
+.ambient-btn:hover {
+  border-color: var(--leaf);
+  color: var(--ink);
+}
+.ambient-btn.active {
+  background: color-mix(in srgb, var(--leaf) 15%, var(--surface));
+  border-color: var(--leaf);
+  color: var(--leaf);
+}
+
+/* ── Char counter ────────────────────────────────────────────── */
+.char-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+/* ── Save button: renamed "留下" — same style, softer feel ────── */
+.save-btn {
+  letter-spacing: 0.02em;
+}
+
+/* ── System dark mode auto-detect ────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #f6f1e5;
+    --muted: #c2bba9;
+    --line: #285144;
+    --paper: #092f28;
+    --white: #103d33;
+    --panel: rgba(16, 61, 51, 0.92);
+    --panel-solid: #123f35;
+    --surface-1: #072720;
+    --surface-2: #0b493b;
+    --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+    --surface: #123f35;
+    --text: #f6f1e5;
+  }
+}
