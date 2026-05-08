@@ -1006,6 +1006,44 @@ input[type="file"] {
 .nav-icon.sync-badge-offline  { opacity: 0.5; }
 
 /* ── Advanced toggle button ──────────────────────────────────── */
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  min-height: 44px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--panel-solid);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 180ms, box-shadow 180ms;
+  margin-bottom: 4px;
+}
+.google-signin-btn:hover {
+  border-color: #4285F4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
+}
+
+.signin-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.signin-divider::before,
+.signin-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
 .toggle-advanced-btn {
   background: none;
   border: none;
