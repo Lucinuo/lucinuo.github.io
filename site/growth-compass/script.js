@@ -483,6 +483,10 @@ function renderPillarBar() {
   if (!bar) return;
   bar.innerHTML = "";
   const today = todayKey();
+  // Set active pillar color on input area for live accent
+  const activePillar = pillars.find((p) => p.id === selectedPillar);
+  const inputArea = document.querySelector(".main-input-area");
+  if (inputArea && activePillar) inputArea.style.setProperty("--active-pillar", activePillar.color);
   pillars.forEach((pillar, i) => {
     const logged = entries.some((e) => e.pillar === pillar.id && e.date === today);
     const btn = document.createElement("button");
@@ -905,8 +909,9 @@ function renderReview() {
     const placeholder = currentLang === "zh" ? "這週的回顧…" : "This week's reflection…";
     const card = document.createElement("div");
     card.className = "prompt-card";
+    card.style.setProperty("--pcard-color", pillar.color);
     card.innerHTML = `
-      <p class="entry-meta" style="color:${pillar.color}">${localize(pillar.name)}</p>
+      <p class="entry-meta pc-label" style="color:${pillar.color}">${localize(pillar.name)}</p>
       <p class="prompt-text">${localize(pillar.prompt)}</p>
       ${lastHint}
       <textarea class="review-textarea" data-pillar="${pillar.id}" rows="3" placeholder="${placeholder}">${saved?.content || ""}</textarea>
@@ -929,9 +934,13 @@ function renderReview() {
     const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
     const card = document.createElement("div");
     card.className = "entry-card";
+    card.style.setProperty("--ecolor", pillar.color);
     card.innerHTML = `
       <p>${entry.reusableTrace || entry.note}</p>
-      <span class="entry-meta">${entry.date} · ${localize(pillar.name)}</span>
+      <span class="entry-meta">
+        <span class="em-dot" style="background:${pillar.color}"></span>
+        ${localize(pillar.name)} · ${entry.date}
+      </span>
     `;
     entriesNode.appendChild(card);
   });
