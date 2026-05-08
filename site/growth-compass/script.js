@@ -13,7 +13,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "寫 100 字以內就好",
     dailyNoteLabel: "今天最值得留下來的是什麼？",
-    dailyPlaceholder: "今天最值得留下來的是什麼？",
+    dailyPlaceholder: "今天留下一個片刻。",
     saveDaily: "儲存今日痕跡",
     clear: "清空",
     weekTemp: "這週的五個面向",
@@ -39,9 +39,9 @@ const translations = {
     signOut: "登出",
     syncStatusTitle: "同步狀態",
     syncNow: "立即同步",
-    unsaved: "還沒儲存今天的痕跡。",
-    saved: "已儲存。今天有留下可回收的東西。",
-    emptyNote: "先寫一句也可以，空白不會儲存。",
+    unsaved: "今天還沒有痕跡。",
+    saved: "留下了。",
+    emptyNote: "先寫一句也可以。",
     cleared: "已清空輸入框，尚未改動已儲存紀錄。",
     existingToday: "今天已經有一筆痕跡，可以修改後重新儲存。",
     noEntries: "還沒有紀錄。先從「5 分鐘紀錄」留下一句開始。",
@@ -63,7 +63,7 @@ const translations = {
     todayStep2: "Step 2",
     todayWriteTitle: "Keep it under 100 words",
     dailyNoteLabel: "What is worth keeping from today?",
-    dailyPlaceholder: "What is worth keeping from today?",
+    dailyPlaceholder: "Leave one moment from today.",
     saveDaily: "Save today's trace",
     clear: "Clear",
     weekTemp: "This week's five dimensions",
@@ -90,8 +90,8 @@ const translations = {
     syncStatusTitle: "Sync status",
     syncNow: "Sync now",
     unsaved: "Today's trace has not been saved yet.",
-    saved: "Saved. You left something reusable today.",
-    emptyNote: "One sentence is enough. Blank notes will not be saved.",
+    saved: "Saved.",
+    emptyNote: "One sentence is enough.",
     cleared: "Input cleared. Saved records were not changed.",
     existingToday: "You already have a trace today. Edit and save again if needed.",
     noEntries: "No records yet. Start with one sentence in 5-min log.",
@@ -105,37 +105,37 @@ const pillars = [
   {
     id: "knowledge",
     color: "#5577b9",
-    name: { zh: "知識體系", en: "Knowledge system" },
-    copy: { zh: "今天有沒有一個概念、paper 或觀點變清楚？", en: "Did one concept, paper, or viewpoint become clearer today?" },
-    prompt: { zh: "這週我新增了哪 3 張知識卡？", en: "Which three knowledge cards did I add this week?" }
+    name: { zh: "知識體系", en: "Knowledge" },
+    copy: { zh: "今天什麼東西想通了一點？", en: "What clicked a little more today?" },
+    prompt: { zh: "這週，有什麼東西突然變清楚了？", en: "What became clearer this week?" }
   },
   {
     id: "expression",
     color: "#c96f5b",
-    name: { zh: "有力量的表達", en: "Powerful expression" },
-    copy: { zh: "今天有沒有一次把想法說得更清楚？", en: "Did I express one thought more clearly today?" },
-    prompt: { zh: "這週哪一次表達比以前更清楚？", en: "When did I express myself more clearly this week?" }
+    name: { zh: "有力量的表達", en: "Expression" },
+    copy: { zh: "今天說出口的話，有哪一句是真的你說的？", en: "Which words today were truly yours?" },
+    prompt: { zh: "這週，你說的哪句話是真的你說的？", en: "Which words this week were truly yours?" }
   },
   {
     id: "aesthetic",
     color: "#c49a45",
-    name: { zh: "審美辨識", en: "Aesthetic awareness" },
-    copy: { zh: "今天看見了什麼好的圖、簡報、排版或畫面？", en: "What image, slide, layout, or scene looked good today?" },
-    prompt: { zh: "這週看見了什麼美的東西？", en: "What beauty did I notice this week?" }
+    name: { zh: "審美辨識", en: "Aesthetic" },
+    copy: { zh: "今天有沒有哪個畫面讓你停下來？", en: "Did anything catch your eye and make you pause?" },
+    prompt: { zh: "這週，有沒有哪個畫面讓你多看了一眼？", en: "What made you look twice this week?" }
   },
   {
     id: "solitude",
     color: "#4f8a73",
-    name: { zh: "深度愛好", en: "Deep solitude" },
-    copy: { zh: "今天有沒有一段不被外界推著走的安靜時間？", en: "Did I have a quiet moment not pushed by the outside world?" },
-    prompt: { zh: "這週有沒有一段真正安靜、專注、只屬於自己的時間？", en: "Did I have a truly quiet, focused time for myself this week?" }
+    name: { zh: "深度愛好", en: "Deep interest" },
+    copy: { zh: "今天有沒有一刻，是完全只屬於自己的？", en: "Was there a moment today that was entirely yours?" },
+    prompt: { zh: "這週，有沒有哪件事是純粹因為喜歡而做的？", en: "Did you do anything this week just because you wanted to?" }
   },
   {
     id: "emotion",
     color: "#7b6598",
-    name: { zh: "情緒覺察", en: "Emotional awareness" },
-    copy: { zh: "今天哪個情緒最強烈？它想提醒你什麼？", en: "Which emotion was strongest today, and what did it remind me of?" },
-    prompt: { zh: "這週最常出現的情緒是什麼？它想提醒我什麼？", en: "Which emotion appeared most often this week, and what was it telling me?" }
+    name: { zh: "情緒覺察", en: "Emotion" },
+    copy: { zh: "今天哪個情緒最大聲？", en: "Which emotion was loudest today?" },
+    prompt: { zh: "這週，哪個情緒來了最多次？它在說什麼？", en: "Which emotion kept returning this week? What was it saying?" }
   }
 ];
 
@@ -422,6 +422,8 @@ function init() {
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
+  const ambBtn = document.getElementById("ambientBtn");
+  if (ambBtn) ambBtn.addEventListener("click", toggleAmbient);
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   window.addEventListener("online", () => {
     if (currentUser) syncNow();
@@ -431,6 +433,8 @@ function init() {
   });
   initSupabaseFromStorage();
   initKeyboardShortcuts();
+  initCharCounter();
+  if (localStorage.getItem("growth-compass-ambient") === "1") toggleAmbient();
   document.getElementById("dailyNote").focus();
 }
 
@@ -522,7 +526,64 @@ function renderPillarBar() {
   });
 }
 
-function initKeyboardShortcuts() {
+/* ─── Ambient sound (brown noise via Web Audio API) ─── */
+let ambientCtx = null;
+let ambientGain = null;
+let ambientNode = null;
+let ambientOn = false;
+
+function toggleAmbient() {
+  const btn = document.getElementById("ambientBtn");
+  if (!ambientOn) {
+    if (!ambientCtx) {
+      ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const bufferSize = 4096;
+      ambientNode = ambientCtx.createScriptProcessor(bufferSize, 1, 1);
+      let lastOut = 0;
+      ambientNode.onaudioprocess = (e) => {
+        const out = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          out[i] = (lastOut + 0.02 * white) / 1.02;
+          lastOut = out[i];
+          out[i] *= 3.5;
+        }
+      };
+      ambientGain = ambientCtx.createGain();
+      ambientGain.gain.value = 0;
+      ambientNode.connect(ambientGain);
+      ambientGain.connect(ambientCtx.destination);
+    }
+    if (ambientCtx.state === "suspended") ambientCtx.resume();
+    ambientGain.gain.cancelScheduledValues(ambientCtx.currentTime);
+    ambientGain.gain.setValueAtTime(0, ambientCtx.currentTime);
+    ambientGain.gain.linearRampToValueAtTime(0.045, ambientCtx.currentTime + 2);
+    ambientOn = true;
+    if (btn) { btn.textContent = "◼"; btn.title = currentLang === "zh" ? "關閉環境音" : "Stop ambient"; btn.classList.add("active"); }
+    localStorage.setItem("growth-compass-ambient", "1");
+  } else {
+    ambientGain.gain.cancelScheduledValues(ambientCtx.currentTime);
+    ambientGain.gain.setValueAtTime(ambientGain.gain.value, ambientCtx.currentTime);
+    ambientGain.gain.linearRampToValueAtTime(0, ambientCtx.currentTime + 1.5);
+    setTimeout(() => { if (ambientCtx) ambientCtx.suspend(); }, 1600);
+    ambientOn = false;
+    if (btn) { btn.textContent = "♩"; btn.title = currentLang === "zh" ? "開啟環境音（brown noise）" : "Ambient sound (brown noise)"; btn.classList.remove("active"); }
+    localStorage.setItem("growth-compass-ambient", "0");
+  }
+}
+
+/* ─── Char counter ─── */
+function initCharCounter() {
+  const ta = document.getElementById("dailyNote");
+  const counter = document.getElementById("charCount");
+  if (!ta || !counter) return;
+  ta.addEventListener("input", () => {
+    const len = ta.value.trim().length;
+    counter.textContent = len > 0 ? `${len} 字` : "";
+  });
+}
+
+function initKeyboardShortcuts() {function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
     // Cmd+Enter or Ctrl+Enter to save
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -872,8 +933,8 @@ function renderWeekSummary(recent) {
   const total = pillars.length;
   const streak = getStreakDays();
   const message = completed === total
-    ? (currentLang === "zh" ? "本週五個面向都被看見了。" : "All five dimensions traced this week.")
-    : (currentLang === "zh" ? "本週已留下可回收的成長痕跡。" : "Reusable traces saved this week.");
+    ? (currentLang === "zh" ? "這週，五個面向都有了痕跡。" : "All five dimensions have a trace this week.")
+    : (currentLang === "zh" ? "這週有些面向被照到了光。" : "Some dimensions were tended to this week.");
   const streakHtml = streak > 0
     ? `<div class="streak-badge"><span class="streak-fire">🔥</span><strong>${streak}</strong><small>${currentLang === "zh" ? "天連勝" : "day streak"}</small></div>`
     : "";
