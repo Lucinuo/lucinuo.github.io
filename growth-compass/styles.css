@@ -20,6 +20,8 @@
   --surface-1: #f2f1ee;
   --surface-2: #ebe8df;
   --shadow: 0 18px 44px rgba(35, 35, 31, 0.09);
+  --surface: #ffffff;
+  --text: #252525;
 }
 
 [data-theme="dark"] {
@@ -33,6 +35,8 @@
   --surface-1: #072720;
   --surface-2: #0b493b;
   --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --surface: #123f35;
+  --text: #f6f1e5;
 }
 
 * {
@@ -89,6 +93,30 @@ button {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 18px;
+}
+
+.lang-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.lang-btn {
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.lang-btn.active {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
 }
 
 .language-toggle,
@@ -191,36 +219,31 @@ h3 {
   font-weight: 800;
 }
 
+/* V2: icon-only nav tabs */
+.nav-tab {
+  justify-content: center;
+}
+.nav-tab .nav-text {
+  display: none;
+}
+
 .sidebar-panel {
-  margin-top: 34px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-solid);
-}
-
-.panel-title {
-  margin-bottom: 8px;
-  font-weight: 800;
-}
-
-.sidebar-panel p:last-child {
-  margin-bottom: 0;
-  color: var(--muted);
-  line-height: 1.65;
+  display: none;
 }
 
 .main {
   padding: 38px;
 }
 
+/* V2: minimal hero */
 .hero {
+  padding: 16px 0 20px;
   display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 28px;
+  align-items: center;
+  min-height: unset;
+  margin-bottom: 0;
 }
+.hero > div:not(.date-chip) { display: none; }
 
 .date-chip {
   min-width: 132px;
@@ -286,6 +309,21 @@ h3 {
   border-color: var(--forest);
   transform: translateY(-1px);
   box-shadow: 0 10px 28px rgba(35, 35, 31, 0.10);
+}
+
+.focus-last {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--leaf) 8%, var(--surface));
+  border-radius: 6px;
+  border-left: 2px solid color-mix(in srgb, var(--leaf) 40%, transparent);
+}
+.focus-last em {
+  color: var(--text);
+  font-style: italic;
 }
 
 .today-focus {
@@ -424,6 +462,11 @@ input[type="file"] {
   animation: savedPulse 520ms ease;
 }
 
+.helper.status-saved {
+  color: var(--leaf);
+  font-weight: 600;
+}
+
 @keyframes savedPulse {
   0% {
     box-shadow: var(--shadow);
@@ -539,6 +582,44 @@ input[type="file"] {
   opacity: 0.85;
   letter-spacing: 0.2px;
 }
+
+.plant-progress {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.2px;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+.plant-progress.bloom {
+  color: var(--moss);
+  opacity: 1;
+}
+
+.garden-empty-hint {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  opacity: 0.7;
+  padding: 16px 0 8px;
+  letter-spacing: 0.2px;
+}
+
+@keyframes plantEntrance {
+  from { opacity: 0; transform: translateY(14px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.garden.fresh-load .garden-plant {
+  animation: plantEntrance 420ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+.garden.fresh-load .garden-plant:nth-child(1) { animation-delay: 0ms; }
+.garden.fresh-load .garden-plant:nth-child(2) { animation-delay: 80ms; }
+.garden.fresh-load .garden-plant:nth-child(3) { animation-delay: 160ms; }
+.garden.fresh-load .garden-plant:nth-child(4) { animation-delay: 240ms; }
+.garden.fresh-load .garden-plant:nth-child(5) { animation-delay: 320ms; }
 
 @keyframes plantGrow {
   0%   { transform: scale(1); }
@@ -723,6 +804,36 @@ input[type="file"] {
   gap: 12px;
 }
 
+.review-textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 200ms;
+}
+.review-textarea:focus {
+  outline: none;
+  border-color: var(--leaf);
+}
+.review-last {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--muted) 8%, var(--surface));
+  border-radius: 6px;
+  line-height: 1.5;
+}
+.review-last em { color: var(--text); font-style: italic; }
+
 .prompt-card,
 .entry-card {
   padding: 14px;
@@ -802,5 +913,456 @@ input[type="file"] {
   .week-summary {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+
+/* ── Sidebar status (cloud + streak) ─────────────────────────── */
+.sidebar-status {
+  padding: 8px 0 2px;
+  text-align: center;
+}
+.sidebar-streak {
+  text-align: center;
+  padding: 0 0 6px;
+}
+.ss-streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+.ss-streak-badge strong {
+  color: var(--ink);
+  font-size: 0.75rem;
+}
+
+/* ── Route → Today pillar bridge ────────────────────────────── */
+.route-to-today {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.route-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.route-pillar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms;
+}
+.route-pillar-btn:hover {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 10%, var(--surface));
+}
+.route-pillar-btn.suggested {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 12%, var(--surface));
+  font-weight: 600;
+}
+.rp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+
+/* ── Sync state badge ────────────────────────────────────────── */
+.ss-cloud {
+  font-size: 0.85rem;
+  margin-left: auto;
+  opacity: 0.7;
+  transition: color 300ms, opacity 300ms;
+}
+.sync-badge-offline  { color: var(--muted); opacity: 0.45; }
+.sync-badge-connecting { color: var(--muted); }
+.sync-badge-syncing  { color: #c49a45; animation: spin 1s linear infinite; display: inline-block; }
+.sync-badge-ok       { color: #4f8a73; opacity: 1; }
+.sync-badge-error    { color: #c96f5b; opacity: 1; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* nav icon gets same color treatment */
+.nav-icon.sync-badge-ok       { color: #4f8a73; }
+.nav-icon.sync-badge-syncing  { color: #c49a45; }
+.nav-icon.sync-badge-error    { color: #c96f5b; }
+.nav-icon.sync-badge-offline  { opacity: 0.5; }
+
+/* ── Advanced toggle button ──────────────────────────────────── */
+.toggle-advanced-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 4px 0 10px;
+  text-align: left;
+  transition: color 200ms;
+}
+.toggle-advanced-btn:hover { color: var(--text); }
+
+#advancedSyncBox {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
+
+/* ── Pillar bar (compact chip selector) ─────────────────────── */
+.pillar-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pillar-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px 7px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms, color 200ms;
+}
+
+.pillar-chip:hover {
+  border-color: var(--pcolor);
+}
+
+.pillar-chip.active {
+  border-color: var(--pcolor);
+  background: color-mix(in srgb, var(--pcolor) 12%, var(--surface));
+  color: var(--pcolor);
+  font-weight: 600;
+}
+
+.pc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pcolor);
+  opacity: 0.3;
+  flex-shrink: 0;
+  transition: opacity 200ms;
+}
+
+.pc-dot.logged {
+  opacity: 1;
+}
+
+.pc-num {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-left: 1px;
+}
+
+/* ── Main input area ──────────────────────────────────────────── */
+.main-input-area {
+  margin-bottom: 24px;
+}
+
+.main-input-area #dailyNote {
+  width: 100%;
+  min-height: 150px;
+  padding: 18px 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.75;
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 200ms, box-shadow 200ms;
+  display: block;
+}
+
+.main-input-area #dailyNote:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 15%, transparent);
+}
+
+.input-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 2px;
+}
+
+.key-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.input-actions .helper {
+  flex: 1;
+  margin: 0;
+}
+
+.save-btn {
+  padding: 6px 18px;
+  background: var(--leaf);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 200ms;
+}
+
+.save-btn:hover { opacity: 0.85; }
+
+/* V2 sidebar narrower */
+@media (min-width: 640px) {
+  .sidebar {
+    width: 88px;
+    min-width: 88px;
+  }
+
+  .app-shell {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .control-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   V2 VISUAL POLISH
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Entry cards: pillar color left accent ────────────────── */
+.entry-card {
+  border-left: 3px solid var(--ecolor, var(--leaf));
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  transition: transform 150ms, box-shadow 150ms;
+}
+.entry-card:hover {
+  transform: translateX(2px);
+  box-shadow: -3px 0 0 var(--ecolor, var(--leaf)), var(--shadow);
+}
+.entry-card p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.em-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* ── Prompt cards: pillar color left accent ───────────────── */
+.prompt-card {
+  border-left: 3px solid var(--pcard-color, var(--leaf));
+  border-radius: 0 10px 10px 0;
+  padding: 16px 18px;
+}
+.prompt-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 4px 0 10px;
+  line-height: 1.45;
+}
+.pc-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ── Main textarea: active pillar color accent ────────────── */
+.main-input-area #dailyNote:focus {
+  border-color: var(--active-pillar, var(--leaf));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--active-pillar, var(--leaf)) 15%, transparent);
+}
+.main-input-area {
+  border-top: 2.5px solid var(--active-pillar, var(--leaf));
+  padding-top: 18px;
+  transition: border-color 250ms;
+  border-radius: 0 0 0 0;
+}
+
+/* ── Progress panel ───────────────────────────────────────── */
+.progress-panel {
+  position: relative;
+}
+
+/* ── Date chip: stronger presence ────────────────────────────*/
+.date-chip {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Sidebar: tighter, cleaner ───────────────────────────────*/
+.sidebar {
+  padding: 14px 10px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.control-row {
+  margin-bottom: 14px;
+  justify-content: center;
+}
+
+/* Nav tabs: icon-only, tighter gap */
+.nav-tabs {
+  gap: 4px;
+  flex: 1;
+}
+.nav-tab {
+  padding: 10px 8px;
+  border-radius: 10px;
+}
+.nav-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Sidebar status: push to bottom */
+.sidebar-status {
+  margin-top: auto;
+  padding: 10px 6px 0;
+  border-top: 1px solid var(--line);
+}
+.ss-row {
+  justify-content: center;
+  gap: 6px;
+}
+.ss-cloud {
+  font-size: 0.75rem;
+}
+.ss-streak {
+  font-size: 0.68rem;
+  margin-left: 2px;
+}
+
+/* ── Week summary: stronger numbers ──────────────────────────*/
+.week-summary {
+  margin-bottom: 18px;
+}
+.ws-left strong {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.ws-left span {
+  font-size: 0.78rem;
+}
+
+/* ── Review entries: spaced out ──────────────────────────────*/
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+/* ── Ambient button ──────────────────────────────────────────── */
+.ambient-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 200ms;
+  line-height: 1;
+}
+.ambient-btn:hover {
+  border-color: var(--leaf);
+  color: var(--ink);
+}
+.ambient-btn.active {
+  background: color-mix(in srgb, var(--leaf) 15%, var(--surface));
+  border-color: var(--leaf);
+  color: var(--leaf);
+}
+
+/* ── Char counter ────────────────────────────────────────────── */
+.char-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+/* ── Save button: renamed "留下" — same style, softer feel ────── */
+.save-btn {
+  letter-spacing: 0.02em;
+}
+
+/* ── System dark mode auto-detect ────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #f6f1e5;
+    --muted: #c2bba9;
+    --line: #285144;
+    --paper: #092f28;
+    --white: #103d33;
+    --panel: rgba(16, 61, 51, 0.92);
+    --panel-solid: #123f35;
+    --surface-1: #072720;
+    --surface-2: #0b493b;
+    --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+    --surface: #123f35;
+    --text: #f6f1e5;
   }
 }
