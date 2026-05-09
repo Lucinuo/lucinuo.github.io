@@ -853,6 +853,62 @@ input[type="file"] {
   font-weight: 750;
 }
 
+.month-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.month-memory-lead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--marigold) 12%, var(--panel-solid));
+}
+
+.month-memory-lead strong {
+  font-size: 20px;
+}
+
+.month-memory-lead span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.month-memory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.month-memory-item {
+  display: grid;
+  gap: 8px;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+}
+
+.month-memory-item .color-dot {
+  width: 28px;
+  height: 28px;
+}
+
+.month-memory-item strong {
+  line-height: 1.3;
+}
+
+.month-memory-item span:last-child {
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 900;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -876,7 +932,8 @@ input[type="file"] {
   }
 
   .two-col,
-  .flow-map {
+  .flow-map,
+  .month-memory-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -911,6 +968,11 @@ input[type="file"] {
   .plant-stage { font-size: 10px; }
 
   .week-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .month-memory-lead {
     align-items: flex-start;
     flex-direction: column;
   }

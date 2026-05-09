@@ -1,12 +1,11 @@
-const CACHE_NAME = "growth-compass-v6";
+const CACHE_NAME = "growth-compass-v8-google-oauth";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./script.js",
+  "./styles.css?v=8",
+  "./script.js?v=8",
   "./hero-plants.png",
   "./manifest.webmanifest",
-  "./supabase-schema.sql",
   "./icon.svg"
 ];
 
@@ -25,8 +24,25 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
 self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.mode === "navigate" || request.destination === "document") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          return response;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(request).then((cached) => cached || fetch(request))
   );
 });

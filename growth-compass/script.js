@@ -24,6 +24,7 @@ const translations = {
     flowTitle: "三條主要資料流",
     weeklyReviewTitle: "用五個面向，回看這一週的自己。",
     recentTraces: "最近留下的痕跡",
+    monthlyMemoryTitle: "這個月留下了什麼",
     exportMarkdown: "匯出 Markdown",
     exportJson: "備份 JSON",
     importJson: "匯入 JSON",
@@ -45,6 +46,9 @@ const translations = {
     cleared: "已清空輸入框，尚未改動已儲存紀錄。",
     existingToday: "今天已經有一筆痕跡，可以修改後重新儲存。",
     noEntries: "還沒有痕跡。今天留下第一句，從這裡開始。",
+    monthEmpty: "這個月還沒有紀錄。先不用補很多，今天一句就會進來。",
+    monthDays: "本月已記 {count} 天",
+    monthLead: "最常出現的是「{name}」",
     routeTitleDefault: "先選一種資訊狀態",
     routeSummaryDefault: "我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。",
     notSelected: "尚未選擇"
@@ -74,6 +78,7 @@ const translations = {
     flowTitle: "Three main flows",
     weeklyReviewTitle: "Weekly Review: look back at yourself through five dimensions.",
     recentTraces: "Recent traces",
+    monthlyMemoryTitle: "What this month is keeping",
     exportMarkdown: "Export Markdown",
     exportJson: "Backup JSON",
     importJson: "Import JSON",
@@ -95,6 +100,9 @@ const translations = {
     cleared: "Input cleared. Saved records were not changed.",
     existingToday: "You already have a trace today. Edit and save again if needed.",
     noEntries: "No traces yet. Leave your first sentence today.",
+    monthEmpty: "No records this month yet. No need to backfill; one sentence today will enter here.",
+    monthDays: "{count} logged days this month",
+    monthLead: "Most frequent: {name}",
     routeTitleDefault: "Choose an information state",
     routeSummaryDefault: "I will show where it belongs, what not to mix in, and the next step.",
     notSelected: "Not selected"
@@ -965,6 +973,7 @@ function renderReview() {
   entriesNode.innerHTML = "";
   if (entries.length === 0) {
     entriesNode.innerHTML = `<p class="helper">${t("noEntries")}</p>`;
+    renderMonthSummary();
     return;
   }
 
@@ -982,6 +991,41 @@ function renderReview() {
     `;
     entriesNode.appendChild(card);
   });
+
+  renderMonthSummary();
+}
+
+function renderMonthSummary() {
+  const node = document.getElementById("monthSummary");
+  if (!node) return;
+  const monthKey = todayKey().slice(0, 7);
+  const monthEntries = entries.filter((entry) => entry.date.startsWith(monthKey));
+  if (monthEntries.length === 0) {
+    node.innerHTML = `<p class="garden-empty-hint">${t("monthEmpty")}</p>`;
+    return;
+  }
+
+  const uniqueDays = new Set(monthEntries.map((entry) => entry.date)).size;
+  const counts = pillars.map((pillar) => ({
+    pillar,
+    count: monthEntries.filter((entry) => entry.pillar === pillar.id).length
+  }));
+  const lead = counts.reduce((winner, item) => item.count > winner.count ? item : winner, counts[0]);
+  node.innerHTML = `
+    <div class="month-memory-lead">
+      <strong>${t("monthDays").replace("{count}", uniqueDays)}</strong>
+      <span>${t("monthLead").replace("{name}", localize(lead.pillar.name))}</span>
+    </div>
+    <div class="month-memory-grid">
+      ${counts.map(({ pillar, count }) => `
+        <div class="month-memory-item">
+          <span class="color-dot" style="background:${pillar.color}"></span>
+          <strong>${localize(pillar.name)}</strong>
+          <span>${count}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function exportMarkdown() {

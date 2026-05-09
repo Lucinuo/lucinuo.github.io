@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -131,6 +131,14 @@
             <div class="entries" id="entries"></div>
           </section>
         </div>
+
+        <section class="panel progress-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Monthly memory</p>
+            <h3 data-i18n="monthlyMemoryTitle">這個月留下了什麼</h3>
+          </div>
+          <div class="month-summary" id="monthSummary"></div>
+        </section>
       </section>
 
       <section class="view" id="sync">
@@ -185,10 +193,27 @@
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=8"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js");
+      navigator.serviceWorker.register("sw.js?v=8").then((registration) => {
+        if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        registration.addEventListener("updatefound", () => {
+          const nextWorker = registration.installing;
+          if (!nextWorker) return;
+          nextWorker.addEventListener("statechange", () => {
+            if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
+              nextWorker.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+      });
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!sessionStorage.getItem("growth-compass-sw-refresh")) {
+          sessionStorage.setItem("growth-compass-sw-refresh", "1");
+          location.reload();
+        }
+      });
     }
   </script>
 </body>
