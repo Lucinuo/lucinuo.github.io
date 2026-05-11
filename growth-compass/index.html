@@ -10,8 +10,8 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=11">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css?v=12">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <header class="top-visual" aria-hidden="true">
@@ -160,7 +160,7 @@
             <div class="form-row">
               <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
             </div>
-            <p class="helper" id="cloudStatus">登入後，存完自動同步；切換裝置時自動拉取最新紀錄。</p>
+            <p class="helper" id="cloudStatus">登入後，資料會存到 Google Drive 的 app 專用空間。</p>
           </section>
         </div>
 
@@ -176,16 +176,16 @@
             <input id="importJson" type="file" accept="application/json,.json">
             <button class="danger" id="resetData" type="button">清除本機紀錄</button>
           </div>
-          <p class="helper">登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。</p>
+          <p class="helper">登入 Google 後，Mac / iPhone / iPad 會透過 Google Drive 自動合併同步；JSON 備份保留作為手動保險。</p>
         </section>
       </section>
     </main>
   </div>
 
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=11").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=12").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

@@ -6,7 +6,7 @@ This project is currently a static Web/PWA app:
 
 - UI: HTML, CSS, vanilla JavaScript
 - Local storage: browser `localStorage`
-- Existing cloud sync: Supabase Auth + `growth_entries`
+- Existing cloud sync: Google Drive `appDataFolder`
 - Apple native targets: none
 - SwiftUI/UIKit: not present
 - SwiftData/CoreData: not present
@@ -36,7 +36,7 @@ Fallback stack if SwiftData becomes limiting:
 - CoreData
 - `NSPersistentCloudKitContainer`
 
-Do not use Firebase, Supabase, or a custom backend for the Apple-native version
+Do not use Firebase or a custom backend for the Apple-native version
 unless CloudKit becomes impossible for the chosen target setup.
 
 ## CloudKit-Compatible Models
@@ -97,8 +97,8 @@ CloudKit sync works best when:
    - `weeklyReviews`
 5. Import records locally.
 6. Let SwiftData + CloudKit sync them through iCloud.
-7. After verifying sync across Mac, iPad, and iPhone, retire Supabase from the
-   Apple-native app.
+7. After verifying sync across Mac, iPad, and iPhone, retire Google Drive from
+   the Apple-native app if CloudKit becomes the primary sync layer.
 
 ## Required Manual Apple Setup
 

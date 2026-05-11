@@ -29,7 +29,7 @@ const translations = {
     exportJson: "備份 JSON",
     importJson: "匯入 JSON",
     resetData: "清除本機紀錄",
-    localSyncHint: "登入 Supabase 後，Mac / iPhone / iPad 會自動合併同步；JSON 備份保留作為手動保險。",
+    localSyncHint: "登入 Google 後，Mac / iPhone / iPad 會透過 Google Drive 自動合併同步；JSON 備份保留作為手動保險。",
     syncSetupTitle: "讓 iPhone / iPad / Mac 同步",
     projectUrl: "Project URL",
     anonKey: "Anon public key",
@@ -83,7 +83,7 @@ const translations = {
     exportJson: "Backup JSON",
     importJson: "Import JSON",
     resetData: "Clear local records",
-    localSyncHint: "After Supabase sign-in, Mac / iPhone / iPad merge automatically. JSON backup stays as a manual safety net.",
+    localSyncHint: "After Google sign-in, Mac / iPhone / iPad merge through Google Drive. JSON backup stays as a manual safety net.",
     syncSetupTitle: "Sync iPhone / iPad / Mac",
     projectUrl: "Project URL",
     anonKey: "Anon public key",
@@ -224,20 +224,21 @@ const routes = [
 
 const legacyStorageKey = "growth-compass-v1";
 const storageKey = "growth-compass-v2";
-const supabaseConfigKey = "growth-compass-supabase-v1";
 const languageKey = "growth-compass-language";
 const themeKey = "growth-compass-theme";
 const appDataVersion = 2;
-const defaultSupabaseConfig = {
-  url: "https://rmkqvximjjawadvkwviv.supabase.co",
-  anonKey: "sb_publishable_7mTarvg832jBS6CeEBaXBA_b_O8smld"
-};
+const googleClientId = "278079408254-7qv6codp91vp7sfjc5hin55el1c4ob9h.apps.googleusercontent.com";
+const googleDriveScope = "openid email profile https://www.googleapis.com/auth/drive.appdata";
+const driveFileName = "growth-compass-data.json";
 let selectedPillar = pillars[0].id;
 let appData = loadAppData();
 let entries = appData.dailyEntries;
-let supabaseClient = null;
+let googleTokenClient = null;
+let googleAccessToken = "";
+let driveFileId = localStorage.getItem("growth-compass-drive-file-id") || "";
 let syncState = "offline";   // offline | connecting | syncing | ok | error
 let lastSyncAt = localStorage.getItem("growth-compass-last-sync") || null;
+let googleInitAttempts = 0;
 
 function setSyncState(state) {
   syncState = state;
@@ -418,7 +419,7 @@ function init() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && currentUser) syncNow();
   });
-  initSupabaseFromStorage();
+  initGoogleDriveAuth();
   initKeyboardShortcuts();
   document.getElementById("dailyNote").focus();
 }
@@ -1071,89 +1072,77 @@ function mergeById(currentItems, incomingItems) {
   return Array.from(merged.values());
 }
 
-function loadSupabaseConfig() {
-  try {
-    return JSON.parse(localStorage.getItem(supabaseConfigKey)) || defaultSupabaseConfig;
-  } catch {
-    return defaultSupabaseConfig;
-  }
-}
-
-function saveSupabaseConfig() {
-  const url = document.getElementById("supabaseUrl").value.trim();
-  const anonKey = document.getElementById("supabaseAnon").value.trim();
-  if (!url || !anonKey) {
-    setSyncConfigStatus("請填入 Project URL 和 anon public key。");
-    return;
-  }
-  localStorage.setItem(supabaseConfigKey, JSON.stringify({ url, anonKey }));
-  setSyncConfigStatus("Supabase 設定已儲存。");
-  initSupabase(url, anonKey);
-}
-
-function clearSupabaseConfig() {
-  localStorage.removeItem(supabaseConfigKey);
-  supabaseClient = null;
-  currentUser = null;
-  document.getElementById("supabaseUrl").value = defaultSupabaseConfig.url;
-  document.getElementById("supabaseAnon").value = defaultSupabaseConfig.anonKey;
-  setSyncConfigStatus("已回復預設 Supabase 設定。");
-  setAuthStatus("尚未登入。");
-  setCloudStatus("設定並登入後，會把本機紀錄合併到雲端，也會拉回其他裝置的紀錄。");
-  initSupabase(defaultSupabaseConfig.url, defaultSupabaseConfig.anonKey);
-}
-
-function initSupabaseFromStorage() {
-  // Config is hardcoded — no manual entry needed
-  initSupabase(defaultSupabaseConfig.url, defaultSupabaseConfig.anonKey);
-}
-
-function initSupabase(url, anonKey) {
-  if (!window.supabase || !window.supabase.createClient) {
-    setSyncConfigStatus("Supabase library 尚未載入，請確認網路連線後重新整理。");
+function initGoogleDriveAuth() {
+  if (!googleClientId) {
+    setSyncConfigStatus("尚未設定 Google OAuth Client ID。");
+    setCloudStatus("請先把 Google Web Client ID 寫入 script.js，才能啟用 Drive 同步。");
+    setSyncState("offline");
     return;
   }
 
-  supabaseClient = window.supabase.createClient(url, anonKey);
-  setSyncConfigStatus("Supabase client 已就緒。");
-  setSyncState("connecting");
-
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    currentUser = session?.user || null;
-    updateAuthUi();
-    if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-      setTimeout(() => syncNow(), 0);
+  if (!window.google?.accounts?.oauth2) {
+    if (googleInitAttempts < 20) {
+      googleInitAttempts += 1;
+      setTimeout(initGoogleDriveAuth, 150);
+      return;
     }
-  });
+    setSyncConfigStatus("Google Identity Services 尚未載入，請確認網路後重新整理。");
+    return;
+  }
 
-  supabaseClient.auth.getSession().then(({ data }) => {
-    currentUser = data.session?.user || null;
-    updateAuthUi();
-    if (currentUser) syncNow();
+  googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: googleClientId,
+    scope: googleDriveScope,
+    callback: handleGoogleToken
   });
+  setSyncConfigStatus("Google Drive 同步已就緒。");
+  setCloudStatus("登入後，資料會存到 Google Drive 的 app 專用空間。");
+  setSyncState("offline");
+}
+
+async function handleGoogleToken(response) {
+  if (response.error) {
+    setSyncState("error");
+    setAuthStatus(`Google 登入失敗：${response.error}`);
+    return;
+  }
+  googleAccessToken = response.access_token;
+  setSyncState("connecting");
+  await loadGoogleUser();
+  updateAuthUi();
+  syncNow();
 }
 
 async function signInWithGoogle() {
-  if (!supabaseClient) {
-    setAuthStatus("Supabase 尚未就緒，請稍候再試。");
+  if (!googleClientId) {
+    setAuthStatus("尚未設定 Google OAuth Client ID。");
     return;
   }
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: location.href.split("#")[0]
-    }
-  });
-  if (error) {
-    setAuthStatus(`Google 登入失敗：${error.message}`);
-    return;
+  if (!googleTokenClient) {
+    initGoogleDriveAuth();
   }
-  setAuthStatus("正在前往 Google 登入…");
+  if (!googleTokenClient) return;
+  setAuthStatus("正在開啟 Google 登入…");
+  googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? "" : "consent" });
+}
+
+async function loadGoogleUser() {
+  try {
+    const profile = await driveFetch("https://www.googleapis.com/oauth2/v3/userinfo");
+    currentUser = {
+      id: profile.sub,
+      email: profile.email || profile.sub
+    };
+  } catch {
+    currentUser = { id: "google-user", email: "Google 已登入" };
+  }
 }
 
 async function signOut() {
-  if (!supabaseClient) return;
-  await supabaseClient.auth.signOut();
+  if (googleAccessToken && window.google?.accounts?.oauth2) {
+    window.google.accounts.oauth2.revoke(googleAccessToken);
+  }
+  googleAccessToken = "";
   currentUser = null;
   updateAuthUi();
   setCloudStatus("已登出。");
@@ -1171,57 +1160,135 @@ function updateAuthUi() {
 }
 
 async function syncNow() {
-  if (!supabaseClient || !currentUser) {
-    setCloudStatus("尚未連上 Supabase 或尚未登入；目前只使用本機紀錄。");
+  if (!googleAccessToken || !currentUser) {
+    setCloudStatus("尚未登入 Google；目前只使用本機紀錄。");
     return;
   }
 
-  setSyncState("syncing");
-  setCloudStatus("同步中…");
-  const remoteEntries = await fetchRemoteEntries();
-  if (remoteEntries === null) return;
+  try {
+    setSyncState("syncing");
+    setCloudStatus("正在和 Google Drive 同步…");
+    const remoteData = await fetchDriveData();
+    if (remoteData) mergeAppData(remoteData);
+    await saveDriveData();
+    const refreshedData = await fetchDriveData();
+    if (refreshedData) mergeAppData(refreshedData);
 
-  mergeEntries(remoteEntries);
-  await pushLocalEntries();
-  const refreshedEntries = await fetchRemoteEntries();
-  if (refreshedEntries !== null) mergeEntries(refreshedEntries);
-
-  renderGarden();
-  renderPillarBar();
-  renderSidebarStatus();
-  renderReview();
-  restoreToday();
-  const now = new Date();
-  lastSyncAt = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-  localStorage.setItem("growth-compass-last-sync", lastSyncAt);
-  setSyncState("ok");
-  const entryWord = currentLang === "zh" ? "筆紀錄" : "entries";
-  setCloudStatus(`${currentLang === "zh" ? "同步完成" : "Sync complete"} · ${entries.length} ${entryWord} · ${lastSyncAt}`);
+    renderGarden();
+    renderPillarBar();
+    renderSidebarStatus();
+    renderReview();
+    restoreToday();
+    const now = new Date();
+    lastSyncAt = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+    localStorage.setItem("growth-compass-last-sync", lastSyncAt);
+    setSyncState("ok");
+    const entryWord = currentLang === "zh" ? "筆紀錄" : "entries";
+    setCloudStatus(`${currentLang === "zh" ? "Google Drive 同步完成" : "Google Drive sync complete"} · ${entries.length} ${entryWord} · ${lastSyncAt}`);
+  } catch (error) {
+    setSyncState("error");
+    setCloudStatus(`Google Drive 同步失敗：${error.message}`);
+  }
 }
 
-async function fetchRemoteEntries() {
-  const { data, error } = await supabaseClient
-    .from("growth_entries")
-    .select("entry_date,pillar,note,updated_at")
-    .order("entry_date", { ascending: false });
+async function fetchDriveData() {
+  const file = await findDriveFile();
+  if (!file) return null;
+  driveFileId = file.id;
+  localStorage.setItem("growth-compass-drive-file-id", driveFileId);
+  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`);
+  return normalizeAppData(data);
+}
 
-  if (error) {
-    setSyncState("error");
-    setCloudStatus(`讀取雲端失敗：${error.message}`);
-    return null;
+async function findDriveFile() {
+  if (driveFileId) {
+    try {
+      return await driveFetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=id,name,modifiedTime`);
+    } catch {
+      driveFileId = "";
+      localStorage.removeItem("growth-compass-drive-file-id");
+    }
   }
 
-  return (data || []).map((row) => ({
-    id: `daily-${row.entry_date}-${row.pillar}`,
-    type: "DailyEntry",
-    date: row.entry_date,
-    pillar: row.pillar,
-    state: row.pillar,
-    reusableTrace: row.note,
-    note: row.note,
-    createdAt: row.updated_at,
-    updatedAt: row.updated_at
-  }));
+  const query = encodeURIComponent(`name='${driveFileName}' and trashed=false`);
+  const result = await driveFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}&fields=files(id,name,modifiedTime)&pageSize=1`);
+  return result.files?.[0] || null;
+}
+
+async function saveDriveData() {
+  const payload = JSON.stringify(buildDrivePayload(), null, 2);
+  if (!driveFileId) {
+    const metadata = {
+      name: driveFileName,
+      parents: ["appDataFolder"],
+      mimeType: "application/json"
+    };
+    const boundary = `growth_compass_${Date.now()}`;
+    const body = [
+      `--${boundary}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      JSON.stringify(metadata),
+      `--${boundary}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      payload,
+      `--${boundary}--`
+    ].join("\r\n");
+    const file = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime", {
+      method: "POST",
+      headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+      body
+    });
+    driveFileId = file.id;
+    localStorage.setItem("growth-compass-drive-file-id", driveFileId);
+    return;
+  }
+
+  await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media&fields=id,name,modifiedTime`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json; charset=UTF-8" },
+    body: payload
+  });
+}
+
+function buildDrivePayload() {
+  return {
+    ...normalizeAppData(appData),
+    version: appDataVersion,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+async function driveFetch(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${googleAccessToken}`,
+      ...(options.headers || {})
+    }
+  });
+  if (!response.ok) {
+    let message = `${response.status} ${response.statusText}`;
+    try {
+      const payload = await response.json();
+      message = payload.error?.message || message;
+    } catch {
+      // Keep the HTTP status when Google returns no JSON body.
+    }
+    throw new Error(message);
+  }
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+function mergeAppData(incomingData) {
+  const incoming = normalizeAppData(incomingData);
+  mergeEntries(incoming.dailyEntries);
+  appData.flowItems = mergeById(appData.flowItems, incoming.flowItems);
+  appData.weeklyReviews = mergeById(appData.weeklyReviews, incoming.weeklyReviews);
+  appData.traceCards = mergeById(appData.traceCards, incoming.traceCards);
+  saveAppData();
 }
 
 function mergeEntries(incoming) {
@@ -1246,54 +1313,9 @@ function showSavedPulse() {
   panel.classList.add("pulse");
 }
 
-async function pushLocalEntries() {
-  const rows = entries.map((entry) => ({
-    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
-    user_id: currentUser.id,
-    entry_date: entry.date,
-    pillar: entry.pillar,
-    note: entry.reusableTrace || entry.note,
-    updated_at: entry.updatedAt || new Date().toISOString()
-  }));
-
-  if (rows.length === 0) return;
-
-  const { error } = await supabaseClient
-    .from("growth_entries")
-    .upsert(rows, { onConflict: "id" });
-
-  if (error) { setSyncState("error"); setCloudStatus(`寫入雲端失敗：${error.message}`); }
-}
-
 async function syncEntry(entry) {
-  if (!supabaseClient || !currentUser) return;
-  const row = {
-    id: `${currentUser.id}:${entry.date}:${entry.pillar}`,
-    user_id: currentUser.id,
-    entry_date: entry.date,
-    pillar: entry.pillar,
-    note: entry.reusableTrace || entry.note,
-    updated_at: entry.updatedAt || new Date().toISOString()
-  };
-  const { error } = await supabaseClient
-    .from("growth_entries")
-    .upsert(row, { onConflict: "id" });
-  if (error) {
-    setCloudStatus(`今日痕跡已存在本機，但雲端同步失敗：${error.message}`);
-  } else {
-    setCloudStatus("今日痕跡已同步到雲端。");
-  }
-}
-
-function toggleAdvancedSync() {
-  const box = document.getElementById("advancedSyncBox");
-  const btn = document.getElementById("toggleAdvanced");
-  if (!box) return;
-  const open = box.style.display === "none" || box.style.display === "";
-  box.style.display = open ? "block" : "none";
-  if (btn) btn.textContent = open
-    ? (currentLang === "zh" ? "▴ 收起進階設定" : "▴ Hide advanced")
-    : (currentLang === "zh" ? "▾ 進階設定" : "▾ Advanced settings");
+  if (!googleAccessToken || !currentUser) return;
+  await syncNow();
 }
 
 function setSyncConfigStatus(message) {
