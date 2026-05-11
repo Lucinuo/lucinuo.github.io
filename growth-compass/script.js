@@ -490,7 +490,7 @@ function renderPillarBar() {
   const activePillar = pillars.find((p) => p.id === selectedPillar);
   const inputArea = document.querySelector(".main-input-area");
   if (inputArea && activePillar) inputArea.style.setProperty("--active-pillar", activePillar.color);
-  pillars.forEach((pillar, i) => {
+  pillars.forEach((pillar) => {
     const logged = entries.some((e) => e.pillar === pillar.id && e.date === today);
     const btn = document.createElement("button");
     btn.type = "button";
@@ -500,7 +500,6 @@ function renderPillarBar() {
     btn.innerHTML = `
       <span class="pc-dot${logged ? " logged" : ""}"></span>
       <span class="pc-name">${localize(pillar.name)}</span>
-      <span class="pc-num">${i + 1}</span>
     `;
     btn.addEventListener("click", () => {
       selectedPillar = pillar.id;

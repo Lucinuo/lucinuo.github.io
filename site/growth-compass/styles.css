@@ -1188,12 +1188,6 @@ input[type="file"] {
   opacity: 1;
 }
 
-.pc-num {
-  font-size: 0.65rem;
-  color: var(--muted);
-  margin-left: 1px;
-}
-
 /* ── Main input area ──────────────────────────────────────────── */
 .main-input-area {
   margin-bottom: 24px;
