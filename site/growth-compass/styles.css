@@ -526,7 +526,33 @@ input[type="file"] {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--muted) 6%, var(--panel-solid));
+  background: color-mix(in srgb, var(--leaf) 10%, var(--panel-solid));
+}
+
+#sync .two-col {
+  gap: 32px;
+}
+
+#sync .panel {
+  padding: 28px 30px;
+}
+
+#sync > .panel {
+  margin-top: 32px;
+}
+
+#sync .section-heading {
+  margin-bottom: 24px;
+}
+
+#sync .form-row {
+  gap: 16px;
+  margin-top: 20px;
+}
+
+#sync .helper {
+  max-width: 760px;
+  line-height: 1.55;
 }
 
 .week-summary strong {
