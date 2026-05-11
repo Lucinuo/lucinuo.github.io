@@ -402,6 +402,43 @@ textarea:focus,
   margin-top: 14px;
 }
 
+.google-signin-btn {
+  width: 100%;
+  min-height: 56px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font: inherit;
+  font-weight: 900;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.google-signin-btn:hover {
+  border-color: var(--forest);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.google-g {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4285f4;
+  background: #ffffff;
+  font-weight: 900;
+  font-size: 22px;
+}
+
 .primary,
 .secondary,
 .danger,

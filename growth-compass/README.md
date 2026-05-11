@@ -19,7 +19,7 @@ iPhone / iPad 使用方式見 `DEPLOY.md`。部署到 GitHub Pages HTTPS 網址�
 
 ## 資料儲存
 
-方案 B 使用 PWA + Supabase free。已預設連到 Supabase。使用 Email magic link 登入後，資料會同步到 `growth_entries` table；未登入時仍會先存在瀏覽器 `localStorage`。
+方案 B 使用 PWA + Supabase free。已預設連到 Supabase。使用 Google 登入後，資料會同步到 `growth_entries` table；未登入時仍會先存在瀏覽器 `localStorage`。
 
 這個版本不需要 Apple Developer Program，也不使用 CloudKit / iCloud entitlement。
 

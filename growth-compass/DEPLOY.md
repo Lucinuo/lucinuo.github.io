@@ -26,7 +26,7 @@ https://lucinuo.github.io/growth-compass/
 已設定 Supabase 自動同步：
 
 1. 打開 app 的「雲端同步」頁。
-2. 輸入 Email，按「寄登入連結」。
+2. 按「使用 Google 登入」。
 3. 在 iPhone / iPad / Mac 各自登入同一個 Email。
 4. 登入後紀錄會同步到 Supabase 的 `growth_entries` table。
 

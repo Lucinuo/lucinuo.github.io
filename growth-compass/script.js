@@ -35,8 +35,8 @@ const translations = {
     anonKey: "Anon public key",
     saveConfig: "儲存設定",
     resetConfig: "回復預設",
-    magicLinkTitle: "用 Email magic link 登入",
-    sendMagicLink: "寄登入連結",
+    googleSignInTitle: "用 Google 登入",
+    signInGoogle: "使用 Google 登入",
     signOut: "登出",
     syncStatusTitle: "同步狀態",
     syncNow: "立即同步",
@@ -89,8 +89,8 @@ const translations = {
     anonKey: "Anon public key",
     saveConfig: "Save settings",
     resetConfig: "Restore default",
-    magicLinkTitle: "Sign in with Email magic link",
-    sendMagicLink: "Send sign-in link",
+    googleSignInTitle: "Sign in with Google",
+    signInGoogle: "Sign in with Google",
     signOut: "Sign out",
     syncStatusTitle: "Sync status",
     syncNow: "Sync now",
@@ -412,7 +412,7 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
-  document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
+  document.getElementById("signInGoogle").addEventListener("click", signInWithGoogle);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
 
@@ -1151,27 +1151,22 @@ function initSupabase(url, anonKey) {
   });
 }
 
-async function sendMagicLink() {
+async function signInWithGoogle() {
   if (!supabaseClient) {
     setAuthStatus("Supabase 尚未就緒，請稍候再試。");
     return;
   }
-  const email = document.getElementById("authEmail").value.trim();
-  if (!email) {
-    setAuthStatus("請先輸入 Email。");
-    return;
-  }
-  const { error } = await supabaseClient.auth.signInWithOtp({
-    email,
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
     options: {
-      emailRedirectTo: location.href.split("#")[0]
+      redirectTo: location.href.split("#")[0]
     }
   });
   if (error) {
-    setAuthStatus(`寄送失敗：${error.message}`);
+    setAuthStatus(`Google 登入失敗：${error.message}`);
     return;
   }
-  setAuthStatus("登入連結已寄出。請到信箱點連結，再回到這個 app。");
+  setAuthStatus("正在前往 Google 登入…");
 }
 
 async function signOut() {
@@ -1184,7 +1179,6 @@ async function signOut() {
 
 function updateAuthUi() {
   if (currentUser) {
-    document.getElementById("authEmail").value = currentUser.email || "";
     const email = currentUser.email || currentUser.id;
     setAuthStatus(`✓ ${email}`);
     setSyncState("connecting");

@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -140,12 +140,13 @@
           <section class="panel">
             <div class="section-heading">
               <p class="eyebrow">Sign in</p>
-              <h3 data-i18n="magicLinkTitle">登入以開啟跨裝置同步</h3>
+              <h3 data-i18n="googleSignInTitle">用 Google 登入</h3>
             </div>
-            <label class="field-label" for="authEmail">Email magic link</label>
-            <input class="text-input" id="authEmail" type="email" placeholder="you@example.com">
+            <button class="google-signin-btn" id="signInGoogle" type="button">
+              <span class="google-g" aria-hidden="true">G</span>
+              <span data-i18n="signInGoogle">使用 Google 登入</span>
+            </button>
             <div class="form-row">
-              <button class="primary" id="sendMagicLink" type="button" data-i18n="sendMagicLink">寄登入連結</button>
               <button class="secondary" id="signOut" type="button" data-i18n="signOut">登出</button>
             </div>
             <p class="helper" id="authStatus">尚未登入。</p>
@@ -182,10 +183,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=9").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=10").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;
