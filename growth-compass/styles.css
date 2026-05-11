@@ -431,17 +431,19 @@ textarea:focus,
   display: none;
 }
 
-.google-g {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+.google-wordmark {
+  min-width: 58px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #4285f4;
-  background: #ffffff;
-  font-weight: 900;
-  font-size: 22px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 5%, var(--panel-solid));
+  font-weight: 850;
+  font-size: 12px;
 }
 
 .primary,
@@ -1419,7 +1421,6 @@ input[type="file"] {
 .sidebar-streak {
   margin-top: auto;
   padding: 10px 6px 0;
-  border-top: 1px solid var(--line);
 }
 .ss-row {
   justify-content: center;
