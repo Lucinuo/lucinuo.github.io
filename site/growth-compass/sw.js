@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v12-google-drive";
+const CACHE_NAME = "growth-compass-v13-neutral-week-summary";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=12",
-  "./script.js?v=12",
+  "./styles.css?v=13",
+  "./script.js?v=13",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"

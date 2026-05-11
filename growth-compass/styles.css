@@ -526,7 +526,7 @@ input[type="file"] {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--leaf) 10%, var(--panel-solid));
+  background: color-mix(in srgb, var(--muted) 6%, var(--panel-solid));
 }
 
 .week-summary strong {
