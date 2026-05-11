@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v8-google-oauth";
+const CACHE_NAME = "growth-compass-v9-email-only";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=8",
-  "./script.js?v=8",
+  "./styles.css?v=9",
+  "./script.js?v=9",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"

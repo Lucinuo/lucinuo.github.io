@@ -1001,48 +1001,6 @@ input[type="file"] {
   font-size: 0.75rem;
 }
 
-/* ── Route → Today pillar bridge ────────────────────────────── */
-.route-to-today {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-.route-pillars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-.route-pillar-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--line);
-  border-radius: 20px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: border-color 200ms, background 200ms;
-}
-.route-pillar-btn:hover {
-  border-color: var(--pcolor);
-  background: color-mix(in srgb, var(--pcolor) 10%, var(--surface));
-}
-.route-pillar-btn.suggested {
-  border-color: var(--pcolor);
-  background: color-mix(in srgb, var(--pcolor) 12%, var(--surface));
-  font-weight: 600;
-}
-.rp-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-
 /* ── Sync state badge ────────────────────────────────────────── */
 .ss-cloud {
   font-size: 0.85rem;
@@ -1066,45 +1024,6 @@ input[type="file"] {
 .nav-icon.sync-badge-syncing  { color: #c49a45; }
 .nav-icon.sync-badge-error    { color: #c96f5b; }
 .nav-icon.sync-badge-offline  { opacity: 0.5; }
-
-/* ── Advanced toggle button ──────────────────────────────────── */
-.google-signin-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  min-height: 44px;
-  width: 100%;
-  border-radius: 8px;
-  border: 1.5px solid var(--line);
-  background: var(--panel-solid);
-  color: var(--ink);
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 180ms, box-shadow 180ms;
-  margin-bottom: 4px;
-}
-.google-signin-btn:hover {
-  border-color: #4285F4;
-  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
-}
-
-.signin-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 12px 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.signin-divider::before,
-.signin-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-}
 
 .toggle-advanced-btn {
   background: none;
@@ -1208,20 +1127,10 @@ input[type="file"] {
 .input-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: 10px;
   padding: 0 2px;
-}
-
-.key-hint {
-  font-size: 0.72rem;
-  color: var(--muted);
-  font-family: ui-monospace, monospace;
-  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
-  border: 1px solid var(--line);
-  padding: 2px 7px;
-  border-radius: 5px;
-  flex-shrink: 0;
 }
 
 .input-actions .helper {

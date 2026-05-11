@@ -40,7 +40,7 @@ const translations = {
     signOut: "登出",
     syncStatusTitle: "同步狀態",
     syncNow: "立即同步",
-    unsaved: "今天還沒有痕跡。",
+    unsaved: "尚未留下。",
     saved: "留下了。",
     emptyNote: "先寫一句也可以。",
     cleared: "已清空輸入框，尚未改動已儲存紀錄。",
@@ -94,7 +94,7 @@ const translations = {
     signOut: "Sign out",
     syncStatusTitle: "Sync status",
     syncNow: "Sync now",
-    unsaved: "Today's trace has not been saved yet.",
+    unsaved: "Not saved yet.",
     saved: "Saved.",
     emptyNote: "One sentence is enough.",
     cleared: "Input cleared. Saved records were not changed.",
@@ -146,18 +146,6 @@ const pillars = [
     prompt: { zh: "這週，哪個情緒來了最多次？它在說什麼？", en: "Which emotion kept returning this week? What was it saying?" }
   }
 ];
-
-const routePillarMap = {
-  "paper-source": "knowledge",
-  "author-content": "knowledge",
-  "pre-meeting": null,
-  "experiment-raw": "knowledge",
-  "my-thinking": "knowledge",
-  "stable-knowledge": "knowledge",
-  "research-decision": "knowledge",
-  "task": null,
-  "data-file": "knowledge"
-};
 
 const routes = [
   {
@@ -424,7 +412,6 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
-  document.getElementById("signInGoogle").addEventListener("click", signInWithGoogle);
   document.getElementById("sendMagicLink").addEventListener("click", sendMagicLink);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
@@ -599,31 +586,6 @@ function renderTodayFocus() {
   `;
 }
 
-function renderRoutePillars(routeId) {
-  const container = document.getElementById("routeToToday");
-  const grid = document.getElementById("routePillars");
-  if (!container || !grid) return;
-  container.style.display = "block";
-  grid.innerHTML = "";
-  pillars.forEach((p) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `route-pillar-btn${routePillarMap[routeId] === p.id ? " suggested" : ""}`;
-    btn.style.setProperty("--pcolor", p.color);
-    btn.innerHTML = `<span class="rp-dot" style="background:${p.color}"></span>${localize(p.name)}`;
-    btn.addEventListener("click", () => {
-      selectedPillar = p.id;
-      document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
-      document.querySelector('.nav-tab[data-view="today"]').classList.add("active");
-      document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
-      document.getElementById("today").classList.add("active");
-      renderPillarBar();
-      document.getElementById("dailyNote").focus();
-    });
-    grid.appendChild(btn);
-  });
-}
-
 function renderRouter() {
   const options = document.getElementById("routerOptions");
   options.innerHTML = "";
@@ -649,7 +611,6 @@ function renderRouter() {
 }
 
 function setRoute(route) {
-  renderRoutePillars(route.id);
   document.getElementById("routeTitle").textContent = route.place;
   document.getElementById("routeSummary").textContent = route.summary;
   document.getElementById("routePlace").textContent = route.place;
@@ -661,9 +622,13 @@ function restoreForPillar(pillarId) {
   const existing = entries.find((e) => e.date === todayKey() && e.pillar === pillarId);
   const note = document.getElementById("dailyNote");
   const status = document.getElementById("dailyStatus");
-  if (!existing) { note.value = ""; status.textContent = t("unsaved"); return; }
+  if (!existing) {
+    note.value = "";
+    if (status) status.textContent = t("unsaved");
+    return;
+  }
   note.value = existing.reusableTrace || existing.note || "";
-  status.textContent = t("existingToday");
+  if (status) status.textContent = t("existingToday");
 }
 
 function restoreToday() {
@@ -673,7 +638,8 @@ function restoreToday() {
 function saveDaily() {
   const note = document.getElementById("dailyNote").value.trim();
   if (!note) {
-    document.getElementById("dailyStatus").textContent = t("emptyNote");
+    const status = document.getElementById("dailyStatus");
+    if (status) status.textContent = t("emptyNote");
     return;
   }
 
@@ -696,9 +662,11 @@ function saveDaily() {
   entries.unshift(entry);
   saveEntries();
   const statusEl = document.getElementById("dailyStatus");
-  statusEl.textContent = t("saved");
-  statusEl.classList.add("status-saved");
-  setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
+  if (statusEl) {
+    statusEl.textContent = t("saved");
+    statusEl.classList.add("status-saved");
+    setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
+  }
   renderPillarBar();
   renderGarden(entry.pillar);
   renderSidebarStatus();
@@ -1183,15 +1151,6 @@ function initSupabase(url, anonKey) {
   });
 }
 
-async function signInWithGoogle() {
-  if (!supabaseClient) return;
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: location.href.split("#")[0] }
-  });
-  if (error) setAuthStatus(`Google 登入失敗：${error.message}`);
-}
-
 async function sendMagicLink() {
   if (!supabaseClient) {
     setAuthStatus("Supabase 尚未就緒，請稍候再試。");
@@ -1381,7 +1340,8 @@ function resetData() {
   appData.traceCards = [];
   saveAppData();
   document.getElementById("dailyNote").value = "";
-  document.getElementById("dailyStatus").textContent = "本機紀錄已清除。";
+  const status = document.getElementById("dailyStatus");
+  if (status) status.textContent = "本機紀錄已清除。";
   renderGarden();
   renderPillarBar();
   renderReview();
