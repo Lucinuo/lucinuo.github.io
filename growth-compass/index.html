@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -46,7 +46,6 @@
         </button>
       </nav>
 
-      <div class="sidebar-status" id="sidebarStatus"></div>
       <div class="sidebar-streak" id="sidebarStreak"></div>
     </aside>
 
@@ -183,10 +182,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=11"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=10").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=11").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

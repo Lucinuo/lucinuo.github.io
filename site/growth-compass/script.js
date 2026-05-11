@@ -245,19 +245,14 @@ function setSyncState(state) {
 }
 
 function renderSyncBadge() {
-  // Update nav tab cloud icon
   const navTab = document.querySelector('.nav-tab[data-view="sync"]');
   if (navTab) {
     const icon = navTab.querySelector(".nav-icon");
     if (icon) {
-      const map = { offline: "雲", connecting: "雲", syncing: "↻", ok: "雲", error: "雲" };
-      icon.textContent = map[syncState] || "雲";
-      icon.className = `nav-icon sync-badge-${syncState}`;
+      icon.textContent = "雲";
+      icon.className = "nav-icon";
     }
   }
-  // Update sidebar status cloud dot
-  const el = document.getElementById("sidebarStatus");
-  if (!el) return;
   renderSidebarStatus();
 }
 let currentUser = null;
@@ -540,19 +535,6 @@ function initKeyboardShortcuts() {
 }
 
 function renderSidebarStatus() {
-  // Cloud sync badge in sidebar
-  const el = document.getElementById("sidebarStatus");
-  if (el) {
-    const cloudTitle = {
-      offline: currentLang === "zh" ? "未連線" : "Offline",
-      connecting: currentLang === "zh" ? "連線中…" : "Connecting…",
-      syncing: currentLang === "zh" ? "同步中…" : "Syncing…",
-      ok: lastSyncAt ? `${lastSyncAt}` : (currentLang === "zh" ? "已同步" : "Synced"),
-      error: currentLang === "zh" ? "同步失敗" : "Sync error"
-    }[syncState] || "";
-    el.innerHTML = `<span class="ss-cloud sync-badge-${syncState}" title="${cloudTitle}">${syncState === "syncing" ? "↻" : "☁"}</span>`;
-  }
-  // Streak display
   const streakEl = document.getElementById("sidebarStreak");
   if (streakEl) {
     const streak = getStreakDays();

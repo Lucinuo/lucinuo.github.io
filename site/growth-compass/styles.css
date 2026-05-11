@@ -1016,11 +1016,7 @@ input[type="file"] {
 }
 
 
-/* ── Sidebar status (cloud + streak) ─────────────────────────── */
-.sidebar-status {
-  padding: 8px 0 2px;
-  text-align: center;
-}
+/* ── Sidebar streak ─────────────────────────────────────────── */
 .sidebar-streak {
   text-align: center;
   padding: 0 0 6px;
@@ -1038,29 +1034,10 @@ input[type="file"] {
   font-size: 0.75rem;
 }
 
-/* ── Sync state badge ────────────────────────────────────────── */
-.ss-cloud {
-  font-size: 0.85rem;
-  margin-left: auto;
-  opacity: 0.7;
-  transition: color 300ms, opacity 300ms;
-}
-.sync-badge-offline  { color: var(--muted); opacity: 0.45; }
-.sync-badge-connecting { color: var(--muted); }
-.sync-badge-syncing  { color: #c49a45; animation: spin 1s linear infinite; display: inline-block; }
-.sync-badge-ok       { color: #4f8a73; opacity: 1; }
-.sync-badge-error    { color: #c96f5b; opacity: 1; }
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-
-/* nav icon gets same color treatment */
-.nav-icon.sync-badge-ok       { color: #4f8a73; }
-.nav-icon.sync-badge-syncing  { color: #c49a45; }
-.nav-icon.sync-badge-error    { color: #c96f5b; }
-.nav-icon.sync-badge-offline  { opacity: 0.5; }
 
 .toggle-advanced-btn {
   background: none;
@@ -1319,8 +1296,8 @@ input[type="file"] {
   font-size: 0.9rem;
 }
 
-/* Sidebar status: push to bottom */
-.sidebar-status {
+/* Sidebar streak: push to bottom */
+.sidebar-streak {
   margin-top: auto;
   padding: 10px 6px 0;
   border-top: 1px solid var(--line);
@@ -1328,9 +1305,6 @@ input[type="file"] {
 .ss-row {
   justify-content: center;
   gap: 6px;
-}
-.ss-cloud {
-  font-size: 0.75rem;
 }
 .ss-streak {
   font-size: 0.68rem;

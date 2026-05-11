@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v10-google-only";
+const CACHE_NAME = "growth-compass-v11-sync-nav-cleanup";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=10",
-  "./script.js?v=10",
+  "./styles.css?v=11",
+  "./script.js?v=11",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"
