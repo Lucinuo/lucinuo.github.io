@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -135,57 +135,47 @@
       </section>
 
       <section class="view" id="sync">
-        <div class="grid two-col">
-          <section class="panel">
+        <section class="panel sync-status-panel">
+          <div class="sync-status-copy">
             <div class="section-heading">
-              <p class="eyebrow">Sign in</p>
-              <h3 data-i18n="googleSignInTitle">用 Google 登入</h3>
+              <p class="eyebrow">Cloud sync</p>
+              <h3>目前連結狀態</h3>
             </div>
+            <p class="sync-config-line" id="syncConfigStatus">連線中…</p>
+            <p class="sync-auth-line" id="authStatus">尚未登入。</p>
+            <p class="helper" id="cloudStatus">登入後，資料會存到 Google Drive 的 app 專用空間。</p>
+          </div>
+          <div class="sync-actions">
             <button class="google-signin-btn" id="signInGoogle" type="button">
               <span class="google-g" aria-hidden="true">G</span>
               <span data-i18n="signInGoogle">使用 Google 登入</span>
             </button>
             <div class="form-row">
+              <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
               <button class="secondary" id="signOut" type="button" data-i18n="signOut">登出</button>
             </div>
-            <p class="helper" id="authStatus">尚未登入。</p>
-          </section>
-
-          <section class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Cloud sync</p>
-              <h3 data-i18n="syncStatusTitle">同步狀態</h3>
-            </div>
-            <p class="helper" id="syncConfigStatus">連線中…</p>
-            <div class="form-row">
-              <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
-            </div>
-            <p class="helper" id="cloudStatus">登入後，資料會存到 Google Drive 的 app 專用空間。</p>
-          </section>
-        </div>
-
-        <section class="panel">
-          <div class="section-heading">
-            <p class="eyebrow">Data</p>
-            <h3>資料管理</h3>
           </div>
-          <div class="form-row">
+        </section>
+
+        <section class="sync-toolstrip" aria-label="資料工具">
+          <span class="toolstrip-label">資料工具</span>
+          <div class="toolstrip-actions">
             <button class="secondary" id="exportMarkdown" type="button">匯出 Markdown</button>
             <button class="secondary" id="exportJson" type="button">備份 JSON</button>
             <label class="import-button" for="importJson">匯入 JSON</label>
             <input id="importJson" type="file" accept="application/json,.json">
             <button class="danger" id="resetData" type="button">清除本機紀錄</button>
           </div>
-          <p class="helper">登入 Google 後，Mac / iPhone / iPad 會透過 Google Drive 自動合併同步；JSON 備份保留作為手動保險。</p>
+          <p class="helper">JSON 備份保留作為手動保險。</p>
         </section>
       </section>
     </main>
   </div>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=15"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=14").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=15").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

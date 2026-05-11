@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v14-sync-spacing";
+const CACHE_NAME = "growth-compass-v15-sync-status-panel";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=14",
-  "./script.js?v=14",
+  "./styles.css?v=15",
+  "./script.js?v=15",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"
