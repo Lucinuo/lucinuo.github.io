@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v16-remove-pillar-shortcut-numbers";
+const CACHE_NAME = "growth-compass-v17-connected-sync-state";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=16",
-  "./script.js?v=16",
+  "./styles.css?v=17",
+  "./script.js?v=17",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"

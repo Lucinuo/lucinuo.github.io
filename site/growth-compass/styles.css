@@ -426,6 +426,11 @@ textarea:focus,
   transform: translateY(-1px);
 }
 
+.google-signin-btn[hidden],
+.connected-account[hidden] {
+  display: none;
+}
+
 .google-g {
   width: 28px;
   height: 28px;
@@ -565,6 +570,34 @@ input[type="file"] {
   gap: 16px;
 }
 
+.connected-account {
+  min-height: 56px;
+  border: 1px solid color-mix(in srgb, var(--leaf) 44%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--leaf) 10%, var(--panel-solid));
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.connected-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--leaf);
+  color: #ffffff;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .sync-actions .form-row {
   margin-top: 0;
   gap: 12px;
@@ -579,6 +612,14 @@ input[type="file"] {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--muted) 4%, var(--panel-solid));
+}
+
+.sync-toolstrip .secondary,
+.sync-toolstrip .import-button,
+.sync-toolstrip .danger {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
 }
 
 .toolstrip-label {

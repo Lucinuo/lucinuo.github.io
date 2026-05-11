@@ -1148,12 +1148,21 @@ async function signOut() {
 }
 
 function updateAuthUi() {
+  const signInButton = document.getElementById("signInGoogle");
+  const connectedAccount = document.getElementById("connectedAccount");
+  const connectedEmail = document.getElementById("connectedEmail");
   if (currentUser) {
     const email = currentUser.email || currentUser.id;
     setAuthStatus(`✓ ${email}`);
+    if (signInButton) signInButton.hidden = true;
+    if (connectedAccount) connectedAccount.hidden = false;
+    if (connectedEmail) connectedEmail.textContent = email;
     setSyncState("connecting");
   } else {
     setAuthStatus(currentLang === "zh" ? "尚未登入。" : "Not signed in.");
+    if (signInButton) signInButton.hidden = false;
+    if (connectedAccount) connectedAccount.hidden = true;
+    if (connectedEmail) connectedEmail.textContent = currentLang === "zh" ? "Google 已連結" : "Google connected";
     setSyncState("offline");
   }
 }
