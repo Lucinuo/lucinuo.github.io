@@ -36,7 +36,7 @@ const translations = {
     saveConfig: "儲存設定",
     resetConfig: "回復預設",
     googleSignInTitle: "用 Google 登入",
-    signInGoogle: "使用 Google 登入",
+    signInGoogle: "連結 Google Drive",
     signOut: "登出",
     syncStatusTitle: "同步狀態",
     syncNow: "立即同步",
@@ -90,7 +90,7 @@ const translations = {
     saveConfig: "Save settings",
     resetConfig: "Restore default",
     googleSignInTitle: "Sign in with Google",
-    signInGoogle: "Sign in with Google",
+    signInGoogle: "Connect Google Drive",
     signOut: "Sign out",
     syncStatusTitle: "Sync status",
     syncNow: "Sync now",
@@ -243,6 +243,7 @@ let googleInitAttempts = 0;
 function setSyncState(state) {
   syncState = state;
   renderSyncBadge();
+  renderSyncPanelState();
 }
 
 function renderSyncBadge() {
@@ -1151,20 +1152,29 @@ function updateAuthUi() {
   const signInButton = document.getElementById("signInGoogle");
   const connectedAccount = document.getElementById("connectedAccount");
   const connectedEmail = document.getElementById("connectedEmail");
+  const panel = document.getElementById("syncStatusPanel");
   if (currentUser) {
     const email = currentUser.email || currentUser.id;
     setAuthStatus(`✓ ${email}`);
     if (signInButton) signInButton.hidden = true;
     if (connectedAccount) connectedAccount.hidden = false;
     if (connectedEmail) connectedEmail.textContent = email;
+    if (panel) panel.classList.add("is-connected");
     setSyncState("connecting");
   } else {
     setAuthStatus(currentLang === "zh" ? "尚未登入。" : "Not signed in.");
     if (signInButton) signInButton.hidden = false;
     if (connectedAccount) connectedAccount.hidden = true;
     if (connectedEmail) connectedEmail.textContent = currentLang === "zh" ? "Google 已連結" : "Google connected";
+    if (panel) panel.classList.remove("is-connected");
     setSyncState("offline");
   }
+}
+
+function renderSyncPanelState() {
+  const panel = document.getElementById("syncStatusPanel");
+  if (!panel) return;
+  panel.dataset.syncState = syncState;
 }
 
 async function syncNow() {

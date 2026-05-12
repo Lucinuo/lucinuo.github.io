@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v18-neutral-google-button";
+const CACHE_NAME = "growth-compass-v19-sync-hub-redesign";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=18",
-  "./script.js?v=18",
+  "./styles.css?v=19",
+  "./script.js?v=19",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"

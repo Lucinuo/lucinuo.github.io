@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -135,15 +135,23 @@
       </section>
 
       <section class="view" id="sync">
-        <section class="panel sync-status-panel">
+        <section class="panel sync-status-panel" id="syncStatusPanel">
           <div class="sync-status-copy">
             <div class="section-heading">
               <p class="eyebrow">Cloud sync</p>
               <h3>目前連結狀態</h3>
             </div>
-            <p class="sync-config-line" id="syncConfigStatus">連線中…</p>
+            <div class="sync-state-row">
+              <span class="sync-state-dot" aria-hidden="true"></span>
+              <p class="sync-config-line" id="syncConfigStatus">連線中…</p>
+            </div>
             <p class="sync-auth-line" id="authStatus">尚未登入。</p>
             <p class="helper" id="cloudStatus">登入後，資料會存到 Google Drive 的 app 專用空間。</p>
+            <div class="sync-path" aria-label="同步路徑">
+              <span>本機</span>
+              <span>Google Drive</span>
+              <span>其他裝置</span>
+            </div>
           </div>
           <div class="sync-actions">
             <div class="connected-account" id="connectedAccount" hidden>
@@ -151,8 +159,7 @@
               <span id="connectedEmail">Google 已連結</span>
             </div>
             <button class="google-signin-btn" id="signInGoogle" type="button">
-              <span class="google-wordmark" aria-hidden="true">Google</span>
-              <span data-i18n="signInGoogle">使用 Google 登入</span>
+              <span data-i18n="signInGoogle">連結 Google Drive</span>
             </button>
             <div class="form-row">
               <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
@@ -176,10 +183,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=18"></script>
+  <script src="script.js?v=19"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=18").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=19").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

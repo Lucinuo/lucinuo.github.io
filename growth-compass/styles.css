@@ -537,31 +537,82 @@ input[type="file"] {
 }
 
 #sync {
-  max-width: 1120px;
+  max-width: 1040px;
 }
 
 .sync-status-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 30px;
   align-items: center;
-  padding: 30px 34px;
+  min-height: 270px;
+  padding: 34px 38px;
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--leaf) 18%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--leaf) 8%, transparent), transparent 48%),
+    var(--panel);
+}
+
+.sync-status-panel::after {
+  content: "";
+  position: absolute;
+  right: 30px;
+  bottom: 24px;
+  width: 120px;
+  height: 120px;
+  border: 1px solid color-mix(in srgb, var(--leaf) 16%, transparent);
+  border-radius: 50%;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .sync-status-panel .section-heading {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.sync-state-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sync-state-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--muted);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--muted) 10%, transparent);
 }
 
 .sync-config-line {
-  margin: 0 0 8px;
+  margin: 0;
   color: var(--ink);
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 850;
   line-height: 1.35;
 }
 
+.sync-status-panel[data-sync-state="ok"] .sync-state-dot,
+.sync-status-panel[data-sync-state="connecting"] .sync-state-dot {
+  background: var(--leaf);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--leaf) 14%, transparent);
+}
+
+.sync-status-panel[data-sync-state="syncing"] .sync-state-dot {
+  background: #c49a45;
+  box-shadow: 0 0 0 5px color-mix(in srgb, #c49a45 16%, transparent);
+}
+
+.sync-status-panel[data-sync-state="error"] .sync-state-dot {
+  background: #9f3e3a;
+  box-shadow: 0 0 0 5px color-mix(in srgb, #9f3e3a 14%, transparent);
+}
+
 .sync-auth-line {
-  margin: 0 0 12px;
+  margin: 0 0 18px;
   color: var(--muted);
   font-size: 15px;
   line-height: 1.4;
@@ -569,12 +620,14 @@ input[type="file"] {
 
 .sync-actions {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
 }
 
 .connected-account {
-  min-height: 56px;
-  border: 1px solid color-mix(in srgb, var(--leaf) 44%, var(--line));
+  min-height: 52px;
+  border: 1px solid color-mix(in srgb, var(--leaf) 36%, var(--line));
   border-radius: 8px;
   background: color-mix(in srgb, var(--leaf) 10%, var(--panel-solid));
   color: var(--ink);
@@ -584,6 +637,30 @@ input[type="file"] {
   padding: 0 16px;
   font-weight: 850;
   overflow-wrap: anywhere;
+}
+
+.sync-path {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sync-path span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-path span:not(:last-child)::after {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: color-mix(in srgb, var(--muted) 38%, transparent);
 }
 
 .connected-mark {
@@ -609,11 +686,12 @@ input[type="file"] {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 24px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
+  margin-top: 18px;
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--muted) 4%, var(--panel-solid));
+  background: transparent;
 }
 
 .sync-toolstrip .secondary,
