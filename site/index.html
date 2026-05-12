@@ -192,22 +192,11 @@
       color: var(--text);
     }
 
-    .keyword-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      margin-top: 2.25rem;
-    }
-
-    .kw {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 0.3em 0.75em;
-      border: 1px solid var(--border);
-      border-radius: 2px;
+    .research-kw {
+      margin-top: 2rem;
+      font-size: 0.8125rem;
       color: var(--muted);
+      line-height: 1.6;
     }
 
     /* ── About ── */
@@ -340,12 +329,10 @@
 
     .contact-social { margin-top: 1.5rem; }
     .contact-social a {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--accent);
+      font-size: 0.8125rem;
+      color: var(--muted);
     }
+    .contact-social a:hover { color: var(--text); text-decoration: none; }
 
     /* ── Footer ── */
     footer {
@@ -440,7 +427,6 @@
         <span class="en-only">Research &darr;</span><span class="zh-only">研究 &darr;</span></a>
       <a href="mailto:stu9500149@gmail.com" class="hero-link">
         <span class="en-only">Email</span><span class="zh-only">信箱</span></a>
-      <a href="https://github.com/lucinuo" class="hero-link">GitHub</a>
     </div>
   </div>
 </section>
@@ -472,15 +458,10 @@
       以評估海洋天然化合物作為改善燒燙傷癒合輔助劑的潛力。
     </p>
 
-    <div class="keyword-row">
-      <span class="kw">Fucoidan</span>
-      <span class="kw">Platelet Activation</span>
-      <span class="kw">GPVI Signaling</span>
-      <span class="kw">Wound Healing</span>
-      <span class="kw">Burn Injury</span>
-      <span class="kw">Hemostasis</span>
-      <span class="kw">Translational Medicine</span>
-    </div>
+    <p class="research-kw">
+      <span class="en-only">Fucoidan &middot; Platelet Activation &middot; GPVI Signaling &middot; Wound Healing &middot; Burn Injury &middot; Hemostasis &middot; Translational Medicine</span>
+      <span class="zh-only">褐藻醣膠 &middot; 血小板活化 &middot; GPVI 訊號傳遞 &middot; 傷口癒合 &middot; 燒燙傷 &middot; 止血 &middot; 轉譯醫學</span>
+    </p>
   </div>
 </section>
 
@@ -670,7 +651,7 @@
       </span>
     </p>
     <div class="contact-social">
-      <a href="https://github.com/lucinuo">GitHub &nearr;</a>
+      <a href="https://github.com/lucinuo">github.com/lucinuo</a>
     </div>
   </div>
 </section>
