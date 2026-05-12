@@ -56,14 +56,7 @@
       height: 54px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-
-    .nav-name {
-      font-size: 0.875rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--text);
+      justify-content: flex-end;
     }
 
     .nav-links {
@@ -118,7 +111,7 @@
     }
 
     /* ── Sections ── */
-    section { padding: 6rem 2rem; }
+    section { padding: 7rem 2rem; }
     section:nth-child(even) { background: var(--bg-alt); }
 
     .inner {
@@ -143,35 +136,44 @@
     }
 
     .hero-name {
-      font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+      font-size: clamp(2.8rem, 6vw, 4.5rem);
       font-weight: 600;
-      letter-spacing: -0.025em;
-      line-height: 1.05;
-      margin-bottom: 1.5rem;
+      letter-spacing: -0.03em;
+      line-height: 1.0;
+      margin-bottom: 1.75rem;
     }
 
     .hero-rule {
       width: 2rem;
       height: 2px;
       background: var(--accent);
-      opacity: 0.45;
-      margin-bottom: 1.5rem;
+      opacity: 0.4;
+      margin-bottom: 1.75rem;
     }
 
     .hero-sub {
-      font-size: 1rem;
+      font-size: 1.0625rem;
       color: var(--muted);
       line-height: 1.6;
-      max-width: 480px;
+      max-width: 520px;
     }
 
     .hero-sub strong { font-weight: 500; color: var(--text); }
+
+    .hero-position {
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.75;
+      max-width: 580px;
+      margin-top: 1.5rem;
+      font-weight: 300;
+    }
 
     .hero-links {
       display: flex;
       gap: 1.5rem;
       flex-wrap: wrap;
-      margin-top: 2.5rem;
+      margin-top: 2rem;
     }
 
     .hero-link {
@@ -188,26 +190,50 @@
     .research-text {
       font-size: 1.0625rem;
       line-height: 1.85;
-      max-width: 680px;
+      max-width: 68ch;
       color: var(--text);
     }
 
-    .keyword-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      margin-top: 2.25rem;
+    .research-kw {
+      margin-top: 2rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 1.6;
     }
 
-    .kw {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
+    .research-focus { margin-top: 3rem; }
+
+    .focus-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 0.3em 0.75em;
-      border: 1px solid var(--border);
-      border-radius: 2px;
       color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .focus-list {
+      list-style: none;
+      max-width: 68ch;
+    }
+
+    .focus-list li {
+      font-size: 0.9375rem;
+      color: var(--text);
+      padding: 0.65rem 0 0.65rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .focus-list li:last-child { border-bottom: none; }
+
+    .focus-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+      font-weight: 300;
     }
 
     /* ── About ── */
@@ -340,12 +366,10 @@
 
     .contact-social { margin-top: 1.5rem; }
     .contact-social a {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--accent);
+      font-size: 0.8125rem;
+      color: var(--muted);
     }
+    .contact-social a:hover { color: var(--text); text-decoration: none; }
 
     /* ── Footer ── */
     footer {
@@ -380,8 +404,9 @@
       }
       .nav-links.open a { font-size: 0.9375rem; color: var(--text); }
 
-      section { padding: 4rem 1.5rem; }
+      section { padding: 4.5rem 1.5rem; }
       #hero { padding-top: 8rem; padding-bottom: 5rem; }
+      .research-focus { margin-top: 2.5rem; }
 
       .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
       .about-photo { max-width: 200px; aspect-ratio: 3 / 4; }
@@ -397,7 +422,6 @@
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <span class="nav-name">Lucille Huang</span>
     <ul class="nav-links" id="navLinks">
       <li><a href="#research">
           <span class="en-only">Research</span><span class="zh-only">研究</span></a></li>
@@ -430,17 +454,18 @@
     <h1 class="hero-name">Lucille Huang</h1>
     <div class="hero-rule"></div>
     <p class="hero-sub">
-      <span class="en-only">PhD Candidate &thinsp;&middot;&thinsp; Graduate Institute of Life Sciences<br>
-        <strong>National Defense Medical University, Taiwan</strong></span>
-      <span class="zh-only">博士候選人 &thinsp;&middot;&thinsp; 生命科學研究所<br>
-        <strong>國防醫學大學，台灣</strong></span>
+      <span class="en-only">PhD Candidate in Life Sciences &thinsp;&middot;&thinsp; <strong>National Defense Medical University, Taiwan</strong></span>
+      <span class="zh-only">生命科學博士候選人 &thinsp;&middot;&thinsp; <strong>國防醫學大學，台灣</strong></span>
+    </p>
+    <p class="hero-position">
+      <span class="en-only">Biomedical research at the interface of platelet biology, wound repair, and molecular signaling.</span>
+      <span class="zh-only">血小板生物學、傷口修復與分子訊號傳遞的跨域生醫研究。</span>
     </p>
     <div class="hero-links">
       <a href="#research" class="hero-link">
         <span class="en-only">Research &darr;</span><span class="zh-only">研究 &darr;</span></a>
       <a href="mailto:stu9500149@gmail.com" class="hero-link">
         <span class="en-only">Email</span><span class="zh-only">信箱</span></a>
-      <a href="https://github.com/lucinuo" class="hero-link">GitHub</a>
     </div>
   </div>
 </section>
@@ -456,8 +481,9 @@
       from the brown alga <em>Saccharina japonica</em>&mdash;modulates early platelet
       activation in the setting of burn wound healing. Platelets are among the first
       cellular responders to vascular injury, and their activation state critically shapes
-      downstream hemostasis, inflammatory signaling, and tissue repair. Using biochemical
-      and cell-based approaches, I examine the receptor-level mechanisms by which
+      downstream hemostasis, inflammatory signaling, and tissue repair. Using biochemical,
+      cell-based, and phosphoproteomic approaches, I examine the receptor-level mechanisms
+      by which
       <em>S.&thinsp;japonica</em>-derived fucoidan (SJF) influences platelet surface
       receptor expression and intracellular signaling cascades, with the broader aim of
       characterizing marine-derived bioactive compounds as candidate adjuvants for
@@ -472,14 +498,25 @@
       以評估海洋天然化合物作為改善燒燙傷癒合輔助劑的潛力。
     </p>
 
-    <div class="keyword-row">
-      <span class="kw">Fucoidan</span>
-      <span class="kw">Platelet Activation</span>
-      <span class="kw">GPVI Signaling</span>
-      <span class="kw">Wound Healing</span>
-      <span class="kw">Burn Injury</span>
-      <span class="kw">Hemostasis</span>
-      <span class="kw">Translational Medicine</span>
+    <p class="research-kw">
+      <span class="en-only">Fucoidan &middot; Platelet Activation &middot; GPVI Signaling &middot; Wound Healing &middot; Burn Injury &middot; Phosphoproteomics &middot; Translational Medicine</span>
+      <span class="zh-only">褐藻醣膠 &middot; 血小板活化 &middot; GPVI 訊號傳遞 &middot; 傷口癒合 &middot; 燒燙傷 &middot; 磷酸蛋白質體學 &middot; 轉譯醫學</span>
+    </p>
+
+    <div class="research-focus">
+      <p class="focus-label">
+        <span class="en-only">Current Focus</span><span class="zh-only">目前研究方向</span>
+      </p>
+      <ul class="focus-list">
+        <li class="en-only">Receptor-level mechanisms of SJF-mediated platelet modulation</li>
+        <li class="en-only">NRP-1 &rarr; FAK &rarr; Akt signaling axis in platelet biology</li>
+        <li class="en-only">Phosphoproteomic profiling of agonist-activated platelets</li>
+        <li class="en-only">In vivo characterization using murine burn wound models</li>
+        <li class="zh-only">SJF 調控血小板活化的受體層面分子機制</li>
+        <li class="zh-only">血小板生物學中的 NRP-1 &rarr; FAK &rarr; Akt 訊號軸</li>
+        <li class="zh-only">促效劑活化血小板的磷酸蛋白質體學分析</li>
+        <li class="zh-only">小鼠燒燙傷模型的活體功能驗證</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -494,8 +531,8 @@
         <p class="en-only">
           I am a third-year PhD candidate in the Graduate Institute of Life Sciences
           at National Defense Medical University (NDMU), Taiwan, supervised by
-          Prof.&thinsp;Chih-Chin Shih. My research sits at the intersection of vascular
-          biology, pharmacology, and natural product science.
+          Prof.&thinsp;Chih-Chin Shih. My research bridges vascular biology,
+          natural product science, and quantitative proteomics.
         </p>
         <p class="zh-only">
           我是國防醫學大學生命科學研究所博士三年級生，指導教授為施志勤教授。
@@ -670,7 +707,7 @@
       </span>
     </p>
     <div class="contact-social">
-      <a href="https://github.com/lucinuo">GitHub &nearr;</a>
+      <a href="https://github.com/lucinuo">github.com/lucinuo</a>
     </div>
   </div>
 </section>
