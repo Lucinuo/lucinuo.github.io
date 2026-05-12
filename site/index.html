@@ -213,13 +213,24 @@
     /* ── About ── */
     .about-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 1fr 260px;
       gap: 4rem;
       align-items: start;
     }
 
     .bio p { font-size: 1rem; line-height: 1.8; }
     .bio p + p { margin-top: 1em; }
+
+    .about-sidebar { display: flex; flex-direction: column; gap: 0; }
+
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      margin-bottom: 1.75rem;
+    }
 
     .meta {
       font-size: 0.8125rem;
@@ -372,7 +383,8 @@
       section { padding: 4rem 1.5rem; }
       #hero { padding-top: 8rem; padding-bottom: 5rem; }
 
-      .about-grid,
+      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .about-photo { max-width: 200px; aspect-ratio: 3 / 4; }
       .exp-grid { grid-template-columns: 1fr; gap: 2rem; }
 
       .edu-item { grid-template-columns: 1fr; gap: 0.5rem; }
@@ -499,21 +511,24 @@
           奠定了實驗設計與分子藥理學的基礎。已於 2024 年通過博士資格考試。
         </p>
       </div>
-      <dl class="meta">
-        <dt><span class="en-only">Institution</span><span class="zh-only">學校</span></dt>
-        <dd><span class="en-only">National Defense Medical University</span>
-            <span class="zh-only">國防醫學大學</span></dd>
-        <dt><span class="en-only">Department</span><span class="zh-only">系所</span></dt>
-        <dd><span class="en-only">Graduate Institute of Life Sciences</span>
-            <span class="zh-only">生命科學研究所</span></dd>
-        <dt><span class="en-only">Supervisor</span><span class="zh-only">指導教授</span></dt>
-        <dd><span class="en-only">Prof. Chih-Chin Shih</span>
-            <span class="zh-only">施志勤教授</span></dd>
-        <dt><span class="en-only">Location</span><span class="zh-only">地點</span></dt>
-        <dd>Taipei, Taiwan</dd>
-        <dt>Email</dt>
-        <dd><a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a></dd>
-      </dl>
+      <div class="about-sidebar">
+        <img src="images/lucille.jpg" alt="Lucille Huang" class="about-photo">
+        <dl class="meta">
+          <dt><span class="en-only">Institution</span><span class="zh-only">學校</span></dt>
+          <dd><span class="en-only">National Defense Medical University</span>
+              <span class="zh-only">國防醫學大學</span></dd>
+          <dt><span class="en-only">Department</span><span class="zh-only">系所</span></dt>
+          <dd><span class="en-only">Graduate Institute of Life Sciences</span>
+              <span class="zh-only">生命科學研究所</span></dd>
+          <dt><span class="en-only">Supervisor</span><span class="zh-only">指導教授</span></dt>
+          <dd><span class="en-only">Prof. Chih-Chin Shih</span>
+              <span class="zh-only">施志勤教授</span></dd>
+          <dt><span class="en-only">Location</span><span class="zh-only">地點</span></dt>
+          <dd>Taipei, Taiwan</dd>
+          <dt>Email</dt>
+          <dd><a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a></dd>
+        </dl>
+      </div>
     </div>
   </div>
 </section>
