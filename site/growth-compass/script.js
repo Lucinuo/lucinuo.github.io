@@ -236,14 +236,17 @@ let entries = appData.dailyEntries;
 let googleTokenClient = null;
 let googleAccessToken = "";
 let driveFileId = localStorage.getItem("growth-compass-drive-file-id") || "";
-let syncState = "offline";   // offline | connecting | syncing | ok | error
+let syncState = "offline";   // offline | connecting | syncing | ok | reconnect | error
 let lastSyncAt = localStorage.getItem("growth-compass-last-sync") || null;
 let googleInitAttempts = 0;
+let lastGoogleEmail = localStorage.getItem("growth-compass-google-email") || "";
+let googleAuthWatchTimer = null;
 
 function setSyncState(state) {
   syncState = state;
   renderSyncBadge();
   renderSyncPanelState();
+  renderSyncCta();
 }
 
 function renderSyncBadge() {
@@ -469,6 +472,7 @@ function renderLanguage() {
       renderReview();
     }, { once: true });
   });
+  renderSyncCta();
 }
 
 function renderTabs() {
@@ -1095,15 +1099,17 @@ function initGoogleDriveAuth() {
     scope: googleDriveScope,
     callback: handleGoogleToken
   });
-  setSyncConfigStatus("Google Drive 同步已就緒。");
-  setCloudStatus("登入後，資料會存到 Google Drive 的 app 專用空間。");
+  setSyncConfigStatus("還沒連結 Google Drive。");
+  setCloudStatus("連結一次後，Mac / iPhone / iPad 會自動合併同步。");
   setSyncState("offline");
 }
 
 async function handleGoogleToken(response) {
+  clearGoogleAuthWatch();
   if (response.error) {
     setSyncState("error");
-    setAuthStatus(`Google 登入失敗：${response.error}`);
+    setAuthStatus("Google 登入沒有完成。");
+    setCloudStatus("請再試一次，或確認瀏覽器沒有阻擋 Google 登入視窗。");
     return;
   }
   googleAccessToken = response.access_token;
@@ -1122,8 +1128,28 @@ async function signInWithGoogle() {
     initGoogleDriveAuth();
   }
   if (!googleTokenClient) return;
+  setSyncState("connecting");
   setAuthStatus("正在開啟 Google 登入…");
+  setCloudStatus("完成 Google 授權後，會自動同步一次。");
+  startGoogleAuthWatch();
   googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? "" : "consent" });
+}
+
+function startGoogleAuthWatch() {
+  clearGoogleAuthWatch();
+  googleAuthWatchTimer = window.setTimeout(() => {
+    if (googleAccessToken || currentUser) return;
+    setSyncState("error");
+    setAuthStatus(lastGoogleEmail ? `上次連結：${lastGoogleEmail}` : "尚未登入。");
+    setSyncConfigStatus("Google 授權被擋住。");
+    setCloudStatus("如果跳出 Authorization Error，請檢查 Google Cloud OAuth 設定後再重新連結。");
+  }, 9000);
+}
+
+function clearGoogleAuthWatch() {
+  if (!googleAuthWatchTimer) return;
+  window.clearTimeout(googleAuthWatchTimer);
+  googleAuthWatchTimer = null;
 }
 
 async function loadGoogleUser() {
@@ -1133,8 +1159,10 @@ async function loadGoogleUser() {
       id: profile.sub,
       email: profile.email || profile.sub
     };
+    lastGoogleEmail = currentUser.email;
+    localStorage.setItem("growth-compass-google-email", lastGoogleEmail);
   } catch {
-    currentUser = { id: "google-user", email: "Google 已登入" };
+    currentUser = { id: "google-user", email: lastGoogleEmail || "Google 已登入" };
   }
 }
 
@@ -1142,9 +1170,11 @@ async function signOut() {
   if (googleAccessToken && window.google?.accounts?.oauth2) {
     window.google.accounts.oauth2.revoke(googleAccessToken);
   }
+  clearGoogleAuthWatch();
   googleAccessToken = "";
   currentUser = null;
   updateAuthUi();
+  setSyncConfigStatus("還沒連結 Google Drive。");
   setCloudStatus("已登出。");
 }
 
@@ -1160,7 +1190,7 @@ function updateAuthUi() {
     if (connectedAccount) connectedAccount.hidden = false;
     if (connectedEmail) connectedEmail.textContent = email;
     if (panel) panel.classList.add("is-connected");
-    setSyncState("connecting");
+    if (["offline", "reconnect", "error"].includes(syncState)) setSyncState("connecting");
   } else {
     setAuthStatus(currentLang === "zh" ? "尚未登入。" : "Not signed in.");
     if (signInButton) signInButton.hidden = false;
@@ -1169,12 +1199,43 @@ function updateAuthUi() {
     if (panel) panel.classList.remove("is-connected");
     setSyncState("offline");
   }
+  renderSyncCta();
 }
 
 function renderSyncPanelState() {
   const panel = document.getElementById("syncStatusPanel");
   if (!panel) return;
   panel.dataset.syncState = syncState;
+}
+
+function renderSyncCta() {
+  const signInButton = document.getElementById("signInGoogle");
+  const syncNowButton = document.getElementById("syncNow");
+  const signOutButton = document.getElementById("signOut");
+  const connectedAccount = document.getElementById("connectedAccount");
+  const panel = document.getElementById("syncStatusPanel");
+  const signInLabel = signInButton?.querySelector("[data-i18n='signInGoogle']");
+  const isZh = currentLang === "zh";
+  const needsReconnect = syncState === "reconnect" || syncState === "error";
+
+  if (signInLabel) {
+    signInLabel.textContent = needsReconnect
+      ? (isZh ? "重新連結 Google Drive" : "Reconnect Google Drive")
+      : translations[currentLang].signInGoogle;
+  }
+
+  if (syncNowButton) {
+    syncNowButton.textContent = syncState === "syncing"
+      ? (isZh ? "同步中..." : "Syncing...")
+      : translations[currentLang].syncNow;
+    syncNowButton.disabled = syncState === "syncing";
+    syncNowButton.hidden = !currentUser;
+  }
+
+  if (signInButton) signInButton.hidden = Boolean(currentUser);
+  if (signOutButton) signOutButton.hidden = !currentUser;
+  if (connectedAccount) connectedAccount.hidden = !currentUser;
+  if (panel) panel.classList.toggle("is-connected", Boolean(currentUser));
 }
 
 async function syncNow() {
@@ -1202,10 +1263,19 @@ async function syncNow() {
     localStorage.setItem("growth-compass-last-sync", lastSyncAt);
     setSyncState("ok");
     const entryWord = currentLang === "zh" ? "筆紀錄" : "entries";
+    setSyncConfigStatus("Google Drive 已連結。");
     setCloudStatus(`${currentLang === "zh" ? "Google Drive 同步完成" : "Google Drive sync complete"} · ${entries.length} ${entryWord} · ${lastSyncAt}`);
   } catch (error) {
-    setSyncState("error");
-    setCloudStatus(`Google Drive 同步失敗：${error.message}`);
+    const formatted = formatSyncError(error);
+    setSyncState(formatted.state);
+    if (formatted.state === "reconnect") {
+      googleAccessToken = "";
+      currentUser = null;
+      setAuthStatus(lastGoogleEmail ? `上次連結：${lastGoogleEmail}` : "Google 連線已過期。");
+      renderSyncCta();
+    }
+    setSyncConfigStatus(formatted.title);
+    setCloudStatus(formatted.message);
   }
 }
 
@@ -1294,10 +1364,41 @@ async function driveFetch(url, options = {}) {
     } catch {
       // Keep the HTTP status when Google returns no JSON body.
     }
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
   if (response.status === 204) return null;
   return response.json();
+}
+
+function formatSyncError(error) {
+  const raw = String(error?.message || "");
+  const lower = raw.toLowerCase();
+  const isAuthError = error?.status === 401 || lower.includes("invalid authentication credentials") || lower.includes("oauth 2");
+  const isDriveDisabled = lower.includes("api has not been used") || lower.includes("disabled");
+
+  if (isAuthError) {
+    return {
+      state: "reconnect",
+      title: "需要重新連結 Google Drive。",
+      message: "這台裝置的 Google 授權過期了。按「重新連結」後會自動再同步一次。"
+    };
+  }
+
+  if (isDriveDisabled) {
+    return {
+      state: "error",
+      title: "Google Drive API 還沒啟用。",
+      message: "Google Cloud 專案需要先啟用 Drive API；啟用後通常等幾分鐘再同步即可。"
+    };
+  }
+
+  return {
+    state: "error",
+    title: "這次同步沒有完成。",
+    message: "資料仍保留在本機。請稍後再按一次同步。"
+  };
 }
 
 function mergeAppData(incomingData) {

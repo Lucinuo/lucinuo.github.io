@@ -466,6 +466,11 @@ textarea:focus,
   border-color: var(--forest);
 }
 
+.primary:disabled {
+  opacity: 0.72;
+  cursor: progress;
+}
+
 .secondary {
   color: var(--ink);
   background: var(--panel-solid);
@@ -542,34 +547,35 @@ input[type="file"] {
 
 .sync-status-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
-  gap: 30px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: clamp(22px, 4vw, 46px);
   align-items: center;
-  min-height: 270px;
-  padding: 34px 38px;
+  min-height: 252px;
+  padding: clamp(24px, 4vw, 42px);
   position: relative;
   overflow: hidden;
   border-color: color-mix(in srgb, var(--leaf) 18%, var(--line));
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--leaf) 8%, transparent), transparent 48%),
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--leaf) 10%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--leaf) 5%, transparent), transparent 54%),
     var(--panel);
 }
 
 .sync-status-panel::after {
   content: "";
   position: absolute;
-  right: 30px;
-  bottom: 24px;
-  width: 120px;
-  height: 120px;
-  border: 1px solid color-mix(in srgb, var(--leaf) 16%, transparent);
+  right: clamp(20px, 4vw, 46px);
+  bottom: clamp(18px, 4vw, 40px);
+  width: clamp(72px, 10vw, 118px);
+  height: clamp(72px, 10vw, 118px);
+  border: 1px solid color-mix(in srgb, var(--leaf) 12%, transparent);
   border-radius: 50%;
-  opacity: 0.45;
+  opacity: 0.35;
   pointer-events: none;
 }
 
 .sync-status-panel .section-heading {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .sync-state-row {
@@ -580,19 +586,20 @@ input[type="file"] {
 }
 
 .sync-state-dot {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 999px;
   background: var(--muted);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--muted) 10%, transparent);
+  flex: 0 0 auto;
 }
 
 .sync-config-line {
   margin: 0;
   color: var(--ink);
-  font-size: 24px;
+  font-size: clamp(21px, 2.7vw, 28px);
   font-weight: 850;
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 .sync-status-panel[data-sync-state="ok"] .sync-state-dot,
@@ -611,6 +618,11 @@ input[type="file"] {
   box-shadow: 0 0 0 5px color-mix(in srgb, #9f3e3a 14%, transparent);
 }
 
+.sync-status-panel[data-sync-state="reconnect"] .sync-state-dot {
+  background: #c15d42;
+  box-shadow: 0 0 0 5px color-mix(in srgb, #c15d42 14%, transparent);
+}
+
 .sync-auth-line {
   margin: 0 0 18px;
   color: var(--muted);
@@ -618,11 +630,22 @@ input[type="file"] {
   line-height: 1.4;
 }
 
+.sync-message {
+  max-width: 620px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
 .sync-actions {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   position: relative;
   z-index: 1;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-solid) 86%, transparent);
+  box-shadow: 0 16px 36px rgba(35, 35, 31, 0.06);
 }
 
 .connected-account {
@@ -682,12 +705,22 @@ input[type="file"] {
   gap: 12px;
 }
 
+.sync-actions .primary {
+  min-height: 52px;
+  flex: 1 1 160px;
+  font-size: 18px;
+}
+
+.sync-actions .secondary {
+  min-height: 52px;
+}
+
 .sync-toolstrip {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 18px;
-  padding: 12px 0;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px 4px;
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
   border-radius: 8px;
@@ -1168,6 +1201,17 @@ input[type="file"] {
 
   .sync-status-panel {
     grid-template-columns: 1fr;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .sync-status-panel::after {
+    right: 24px;
+    bottom: 24px;
+  }
+
+  .sync-actions {
+    max-width: 520px;
   }
 
   .sync-toolstrip {
@@ -1181,20 +1225,64 @@ input[type="file"] {
 }
 
 @media (max-width: 640px) {
+  body {
+    padding-bottom: 74px;
+  }
+
   .top-visual {
-    height: 118px;
+    height: 76px;
+  }
+
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    z-index: 20;
+    min-height: 58px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--panel-solid) 92%, transparent);
+    box-shadow: 0 18px 44px rgba(35, 35, 31, 0.16);
+    backdrop-filter: blur(18px);
+  }
+
+  .control-row,
+  .sidebar-streak {
+    display: none;
+  }
+
+  .nav-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .nav-tab {
+    min-height: 42px;
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  .nav-tab.active {
+    background: color-mix(in srgb, var(--forest) 8%, var(--panel-solid));
+  }
+
+  .nav-icon {
+    width: 32px;
+    height: 32px;
   }
 
   .main {
-    padding: 22px 16px;
+    padding: 22px 14px 10px;
   }
 
   .hero {
     display: grid;
-  }
-
-  .nav-tabs {
-    grid-template-columns: 1fr;
   }
 
   .garden {
@@ -1217,6 +1305,100 @@ input[type="file"] {
   .month-memory-lead {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  #sync {
+    max-width: none;
+  }
+
+  .sync-status-panel {
+    min-height: auto;
+    padding: 22px 18px;
+    border-radius: 14px;
+    box-shadow: 0 14px 32px rgba(35, 35, 31, 0.08);
+  }
+
+  .sync-status-panel::after {
+    display: none;
+  }
+
+  .sync-status-panel .section-heading {
+    margin-bottom: 18px;
+  }
+
+  .sync-state-row {
+    align-items: flex-start;
+  }
+
+  .sync-state-dot {
+    margin-top: 8px;
+  }
+
+  .sync-config-line {
+    font-size: 22px;
+  }
+
+  .sync-message {
+    font-size: 15px;
+  }
+
+  .sync-path {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .sync-path span:not(:last-child)::after {
+    width: 14px;
+  }
+
+  .sync-actions {
+    max-width: none;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .google-signin-btn,
+  .connected-account,
+  .sync-actions .primary,
+  .sync-actions .secondary {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .sync-actions .form-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .sync-toolstrip {
+    margin-top: 14px;
+    padding: 10px 0;
+    overflow-x: auto;
+    flex-direction: row;
+    align-items: center;
+    scrollbar-width: none;
+  }
+
+  .sync-toolstrip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolstrip-label {
+    position: sticky;
+    left: 0;
+    padding-right: 4px;
+    background: var(--paper);
+  }
+
+  .toolstrip-actions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+
+  .sync-toolstrip .helper {
+    display: none;
   }
 }
 
