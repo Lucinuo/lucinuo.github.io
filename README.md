@@ -1,57 +1,47 @@
 # lucinuo.github.io
 
-Personal academic website of **Lucille Huang**, PhD Candidate at the Graduate Institute of Life Sciences, National Defense Medical University (NDMU), Taiwan.
+Personal academic website of **Lucille Huang**, PhD Candidate in the Graduate Institute of Life Sciences, National Defense Medical University (NDMU), Taiwan.
 
-🔗 **Live site:** [lucinuo.github.io](https://lucinuo.github.io)
-
----
-
-## About
-
-Personal academic website presenting a concise professional introduction for a PhD Candidate in biomedical research.
-
-**Keywords:** biomedical research · platelet biology · wound healing · molecular signaling · translational medicine
+Live site: [lucinuo.github.io](https://lucinuo.github.io)
 
 ---
 
-## Site Structure
+## Site structure
 
 | Section | Content |
 |---------|---------|
-| **Home** | Name, title, role statement |
-| **About** | Introduction, institution, contact info |
-| **Education** | PhD Candidate · Graduate Institute of Life Sciences · NDMU · Passed Qualifying Examination |
-| **Academic Interests** | Biomedical research · Platelet biology · Wound healing · Molecular signaling · Translational medicine |
-| **Skills** | Experimental design · Molecular biology · Cell-based assays · Scientific writing · Literature review |
-| **CV** | Available upon request |
-| **Contact** | Email form |
-| **Growth Compass** | Private daily growth and research workflow app at `/growth-compass/` |
+| Hero | Name, title, institution |
+| Research | Doctoral research description — fucoidan, platelet activation, burn wound healing |
+| About | Academic biography, supervisor, institutional affiliation |
+| Education | PhD (in progress) · M.S. Pharmacology · NDMU |
+| Expertise | Molecular & cell biology, platelet assays, data analysis, scientific communication |
+| CV | Available upon request |
+| Contact | Email, institutional address |
 
-Bilingual EN / 中文 switcher — language preference persisted via `localStorage`.
+Bilingual EN / 中文 — language preference persisted via `localStorage`.
 
 ---
 
 ## Stack
 
-- Pure custom static HTML, deployed from `/site`
-- GitHub Actions → GitHub Pages (no build step)
-- Google Fonts: Roboto + Noto Sans TC
+- Self-contained static HTML/CSS, no framework dependencies
+- Google Fonts: Inter
+- Deployed from `/site` via GitHub Actions → GitHub Pages (no build step)
 
 ---
 
-## Repository Structure
+## Repository structure
 
 ```
-site/           ← deployed files (GitHub Pages serves this)
+site/               ← deployed directory (GitHub Pages serves this)
   index.html
-  growth-compass/
-  css_yen/
-  js_yen/
-  images_yen/
+  images/
+    lucille.jpg
+  growth-compass/   ← separate internal tool, not linked from main site
 .github/
   workflows/
-    deploy.yml  ← checkout → upload ./site → deploy to Pages
-content/        ← Hugo-compatible markdown scaffold (not deployed)
+    deploy.yml      ← push to main → upload ./site → Pages
+content/            ← markdown scaffold, not deployed
 ```
 
 ---
@@ -60,15 +50,9 @@ content/        ← Hugo-compatible markdown scaffold (not deployed)
 
 Push to `main` → GitHub Actions runs `deploy.yml` → uploads `./site` → GitHub Pages serves it.
 
-After deployment, Growth Compass is available at:
-
-https://lucinuo.github.io/growth-compass/
-
-On iPhone / iPad, open the URL in Safari → Share → Add to Home Screen.
-
 ---
 
 ## Contact
 
-📧 stu9500149@gmail.com
-🏫 National Defense Medical University, Taipei, Taiwan
+stu9500149@gmail.com  
+National Defense Medical University, Taipei, Taiwan
