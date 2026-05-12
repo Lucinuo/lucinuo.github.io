@@ -366,35 +366,44 @@
     .contact-body {
       font-size: 0.9375rem;
       color: var(--muted);
-      line-height: 2;
+      line-height: 1.9;
       max-width: 420px;
     }
 
-    .contact-body a { color: var(--text); font-weight: 500; }
-
-    .contact-social {
-      margin-top: 1.75rem;
+    .contact-actions {
       display: flex;
+      gap: 1rem;
+      margin-top: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-btn {
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-    }
-    .contact-social a {
-      font-size: 0.9375rem;
+      padding: 0.65rem 1.35rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.875rem;
       font-weight: 500;
-      color: var(--accent);
-      letter-spacing: 0.01em;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      background: transparent;
     }
-    .contact-social a:hover { color: var(--text); text-decoration: none; }
-    .contact-social::before {
-      content: '';
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23364F6B'%3E%3Cpath d='M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z'/%3E%3C/svg%3E");
-      background-size: contain;
-      background-repeat: no-repeat;
-      opacity: 0.7;
+
+    .contact-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+      background: transparent;
+    }
+
+    .contact-btn svg {
+      width: 14px;
+      height: 14px;
       flex-shrink: 0;
+      opacity: 0.7;
     }
 
     /* ── Footer ── */
@@ -708,24 +717,18 @@
     <p class="section-label">
       <span class="en-only">Contact</span><span class="zh-only">聯絡</span></p>
     <p class="contact-body">
-      <span class="en-only">
-        Inquiries regarding research collaboration, conference participation,
-        or postdoctoral opportunities are welcome.<br><br>
-        Graduate Institute of Life Sciences<br>
-        National Defense Medical University<br>
-        Taipei, Taiwan<br><br>
-        <a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a>
-      </span>
-      <span class="zh-only">
-        歡迎研究合作、學術交流或博士後機會相關諮詢。<br><br>
-        生命科學研究所<br>
-        國防醫學大學<br>
-        台灣，台北<br><br>
-        <a href="mailto:stu9500149@gmail.com">stu9500149@gmail.com</a>
-      </span>
+      <span class="en-only">Inquiries regarding research collaboration, conference participation, or postdoctoral opportunities are welcome.<br><br>Graduate Institute of Life Sciences<br>National Defense Medical University<br>Taipei, Taiwan</span>
+      <span class="zh-only">歡迎研究合作、學術交流或博士後機會相關諮詢。<br><br>生命科學研究所<br>國防醫學大學<br>台灣，台北</span>
     </p>
-    <div class="contact-social">
-      <a href="https://github.com/lucinuo">github.com/lucinuo</a>
+    <div class="contact-actions">
+      <a href="mailto:stu9500149@gmail.com" class="contact-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        <span class="en-only">Send Email</span><span class="zh-only">寄送郵件</span>
+      </a>
+      <a href="https://github.com/lucinuo" target="_blank" rel="noopener" class="contact-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
     </div>
   </div>
 </section>
