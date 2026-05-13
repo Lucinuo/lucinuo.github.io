@@ -226,6 +226,7 @@ const legacyStorageKey = "growth-compass-v1";
 const storageKey = "growth-compass-v2";
 const languageKey = "growth-compass-language";
 const themeKey = "growth-compass-theme";
+const googleConnectedKey = "growth-compass-google-connected";
 const appDataVersion = 2;
 const googleClientId = "278079408254-7qv6codp91vp7sfjc5hin55el1c4ob9h.apps.googleusercontent.com";
 const googleDriveScope = "openid email profile https://www.googleapis.com/auth/drive.appdata";
@@ -241,6 +242,7 @@ let lastSyncAt = localStorage.getItem("growth-compass-last-sync") || null;
 let googleInitAttempts = 0;
 let lastGoogleEmail = localStorage.getItem("growth-compass-google-email") || "";
 let googleAuthWatchTimer = null;
+let googleAuthMode = "interactive";
 
 function setSyncState(state) {
   syncState = state;
@@ -418,10 +420,10 @@ function init() {
 
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   window.addEventListener("online", () => {
-    if (currentUser) syncNow();
+    restoreGoogleDriveSession("online");
   });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && currentUser) syncNow();
+    if (document.visibilityState === "visible") restoreGoogleDriveSession("visible");
   });
   initGoogleDriveAuth();
   initKeyboardShortcuts();
@@ -1099,17 +1101,17 @@ function initGoogleDriveAuth() {
     scope: googleDriveScope,
     callback: handleGoogleToken
   });
-  setSyncConfigStatus("還沒連結 Google Drive。");
-  setCloudStatus("連結一次後，Mac / iPhone / iPad 會自動合併同步。");
-  setSyncState("offline");
+  if (hasStoredGoogleConnection()) {
+    restoreGoogleDriveSession("init");
+    return;
+  }
+  renderSignedOutSyncState();
 }
 
 async function handleGoogleToken(response) {
   clearGoogleAuthWatch();
   if (response.error) {
-    setSyncState("error");
-    setAuthStatus("Google 登入沒有完成。");
-    setCloudStatus("請再試一次，或確認瀏覽器沒有阻擋 Google 登入視窗。");
+    handleGoogleAuthError(response.error);
     return;
   }
   googleAccessToken = response.access_token;
@@ -1120,6 +1122,10 @@ async function handleGoogleToken(response) {
 }
 
 async function signInWithGoogle() {
+  requestGoogleAccessToken({ interactive: true });
+}
+
+function requestGoogleAccessToken({ interactive = false } = {}) {
   if (!googleClientId) {
     setAuthStatus("尚未設定 Google OAuth Client ID。");
     return;
@@ -1128,11 +1134,12 @@ async function signInWithGoogle() {
     initGoogleDriveAuth();
   }
   if (!googleTokenClient) return;
+  googleAuthMode = interactive ? "interactive" : "silent";
   setSyncState("connecting");
-  setAuthStatus("正在開啟 Google 登入…");
-  setCloudStatus("完成 Google 授權後，會自動同步一次。");
-  startGoogleAuthWatch();
-  googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? "" : "consent" });
+  setAuthStatus(interactive ? "正在開啟 Google 登入…" : getRememberedGoogleText());
+  setCloudStatus(interactive ? "完成 Google 授權後，會自動同步一次。" : "正在恢復 Google Drive 連線…");
+  if (interactive) startGoogleAuthWatch();
+  googleTokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
 }
 
 function startGoogleAuthWatch() {
@@ -1152,6 +1159,61 @@ function clearGoogleAuthWatch() {
   googleAuthWatchTimer = null;
 }
 
+function hasStoredGoogleConnection() {
+  return localStorage.getItem(googleConnectedKey) === "true" || Boolean(lastGoogleEmail);
+}
+
+function getRememberedGoogleText() {
+  return lastGoogleEmail ? `上次連結：${lastGoogleEmail}` : "已記住 Google Drive 連結。";
+}
+
+function restoreGoogleDriveSession(reason = "manual") {
+  if (!hasStoredGoogleConnection()) {
+    renderSignedOutSyncState();
+    return;
+  }
+
+  if (lastGoogleEmail && !currentUser) {
+    currentUser = { id: "remembered-google-user", email: lastGoogleEmail };
+    updateAuthUi();
+  }
+
+  setSyncConfigStatus("Google Drive 已連結。");
+  setAuthStatus(getRememberedGoogleText());
+
+  if (googleAccessToken && currentUser) {
+    if (reason !== "init") syncNow();
+    return;
+  }
+
+  setCloudStatus("正在恢復 Google Drive 連線…");
+  requestGoogleAccessToken({ interactive: false });
+}
+
+function renderSignedOutSyncState() {
+  currentUser = null;
+  setSyncConfigStatus("還沒連結 Google Drive。");
+  setCloudStatus("連結一次後，Mac / iPhone / iPad 會自動合併同步。");
+  updateAuthUi();
+}
+
+function handleGoogleAuthError(error) {
+  const silent = googleAuthMode === "silent";
+  googleAccessToken = "";
+  if (silent && hasStoredGoogleConnection()) {
+    setSyncState("reconnect");
+    currentUser = null;
+    setAuthStatus(getRememberedGoogleText());
+    setSyncConfigStatus("Google Drive 已連結，需要重新授權。");
+    setCloudStatus("Google 登入狀態過期了。按「重新連結」後會自動同步一次。");
+    renderSyncCta();
+    return;
+  }
+  setSyncState("error");
+  setAuthStatus("Google 登入沒有完成。");
+  setCloudStatus("請再試一次，或確認瀏覽器沒有阻擋 Google 登入視窗。");
+}
+
 async function loadGoogleUser() {
   try {
     const profile = await driveFetch("https://www.googleapis.com/oauth2/v3/userinfo");
@@ -1161,8 +1223,10 @@ async function loadGoogleUser() {
     };
     lastGoogleEmail = currentUser.email;
     localStorage.setItem("growth-compass-google-email", lastGoogleEmail);
+    localStorage.setItem(googleConnectedKey, "true");
   } catch {
     currentUser = { id: "google-user", email: lastGoogleEmail || "Google 已登入" };
+    localStorage.setItem(googleConnectedKey, "true");
   }
 }
 
@@ -1173,6 +1237,9 @@ async function signOut() {
   clearGoogleAuthWatch();
   googleAccessToken = "";
   currentUser = null;
+  lastGoogleEmail = "";
+  localStorage.removeItem("growth-compass-google-email");
+  localStorage.removeItem(googleConnectedKey);
   updateAuthUi();
   setSyncConfigStatus("還沒連結 Google Drive。");
   setCloudStatus("已登出。");
@@ -1240,7 +1307,11 @@ function renderSyncCta() {
 
 async function syncNow() {
   if (!googleAccessToken || !currentUser) {
-    setCloudStatus("尚未登入 Google；目前只使用本機紀錄。");
+    if (hasStoredGoogleConnection()) {
+      restoreGoogleDriveSession("sync");
+      return;
+    }
+    setCloudStatus("尚未連結 Google Drive；目前只使用本機紀錄。");
     return;
   }
 
@@ -1271,7 +1342,7 @@ async function syncNow() {
     if (formatted.state === "reconnect") {
       googleAccessToken = "";
       currentUser = null;
-      setAuthStatus(lastGoogleEmail ? `上次連結：${lastGoogleEmail}` : "Google 連線已過期。");
+      setAuthStatus(hasStoredGoogleConnection() ? getRememberedGoogleText() : "Google 連線已過期。");
       renderSyncCta();
     }
     setSyncConfigStatus(formatted.title);
