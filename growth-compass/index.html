@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -61,6 +61,7 @@
         <div class="main-input-area">
           <textarea id="dailyNote" rows="6" placeholder="今天最值得留下來的是什麼？"></textarea>
           <div class="input-actions">
+            <p class="save-feedback" id="dailyStatus">今天還沒留下痕跡。</p>
             <button class="save-btn" id="saveDaily" type="button">留下</button>
           </div>
         </div>
@@ -184,10 +185,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=22"></script>
+  <script src="script.js?v=23"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=22").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=23").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

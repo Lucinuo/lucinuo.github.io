@@ -461,6 +461,15 @@ function localize(value) {
   return value[currentLang] || value.zh || "";
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderLanguage() {
   document.documentElement.lang = currentLang === "zh" ? "zh-Hant" : "en";
   document.querySelectorAll("[data-i18n]").forEach((node) => {
@@ -662,7 +671,14 @@ function saveDaily() {
   saveEntries();
   const statusEl = document.getElementById("dailyStatus");
   if (statusEl) {
-    statusEl.textContent = t("saved");
+    const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
+    const stage = getPillarStage(entry.pillar);
+    const stageText = currentLang === "zh"
+      ? ["被照到了", "發芽了", "正在成長", "更茂盛了", "盛開中"][stage]
+      : ["has been noticed", "sprouted", "is growing", "is thriving", "is blooming"][stage];
+    statusEl.textContent = currentLang === "zh"
+      ? `已留下。今天的${localize(pillar.name)}${stageText}。`
+      : `Saved. ${localize(pillar.name)} ${stageText} today.`;
     statusEl.classList.add("status-saved");
     setTimeout(() => statusEl.classList.remove("status-saved"), 1800);
   }
@@ -828,7 +844,8 @@ function renderGarden(justGrownPillar = null) {
       })()).length
     ) : 0;
 
-    const item = document.createElement("div");
+    const item = document.createElement("button");
+    item.type = "button";
     item.className = `garden-plant${hasToday ? " today" : ""}${isJustGrew ? " just-grew" : ""}`;
     if (hasToday) item.style.setProperty("--plant-color", pillar.color);
     const progressHint = stage < 4 && stepsToNext > 0
@@ -837,10 +854,12 @@ function renderGarden(justGrownPillar = null) {
       ? `<span class="plant-progress bloom">${currentLang === "zh" ? "盛開中" : "Blooming"}</span>`
       : "";
     const lastForPillar = entries.find((e) => e.pillar === pillar.id);
-    const tooltipText = lastForPillar
-      ? (lastForPillar.reusableTrace || lastForPillar.note || "").slice(0, 80)
+    const lastTrace = lastForPillar ? (lastForPillar.reusableTrace || lastForPillar.note || "") : "";
+    const tooltipText = lastTrace
+      ? lastTrace.slice(0, 80)
       : (currentLang === "zh" ? "還沒有痕跡" : "No trace yet");
     item.title = tooltipText;
+    item.setAttribute("aria-label", `${localize(pillar.name)} · ${tooltipText}`);
     item.innerHTML = `
       <div class="plant-svg-wrap">${plantSVG(stage, pillar.color)}</div>
       <div class="plant-info">
@@ -848,7 +867,17 @@ function renderGarden(justGrownPillar = null) {
         <span class="plant-stage" style="color:${pillar.color}">${(stageLabels[currentLang] || stageLabels.zh)[stage]}</span>
         ${progressHint}
       </div>
+      <span class="plant-last">
+        <span class="plant-last-label">${lastForPillar ? (currentLang === "zh" ? "上次留下" : "Last trace") : (currentLang === "zh" ? "還沒有痕跡" : "No trace yet")}</span>
+        <span class="plant-last-text">${escapeHtml(lastTrace || (currentLang === "zh" ? "等哪天它被你照到，就會在這裡出現。" : "When it gets a trace, it will show here."))}</span>
+      </span>
     `;
+    item.addEventListener("click", () => {
+      garden.querySelectorAll(".garden-plant.show-last").forEach((node) => {
+        if (node !== item) node.classList.remove("show-last");
+      });
+      item.classList.toggle("show-last");
+    });
     garden.appendChild(item);
   });
 
@@ -977,11 +1006,17 @@ function renderMonthSummary() {
     pillar,
     count: monthEntries.filter((entry) => entry.pillar === pillar.id).length
   }));
-  const lead = counts.reduce((winner, item) => item.count > winner.count ? item : winner, counts[0]);
+  const ranked = [...counts].sort((a, b) => b.count - a.count);
+  const lead = ranked[0];
+  const second = ranked.find((item) => item.count > 0 && item.pillar.id !== lead.pillar.id);
+  const totalTraces = monthEntries.length;
+  const monthSentence = currentLang === "zh"
+    ? `這個月，你最常回到「${localize(lead.pillar.name)}」；已留下 ${uniqueDays} 天、${totalTraces} 個片刻${second ? `，「${localize(second.pillar.name)}」也開始有痕跡` : ""}。`
+    : `This month, you return most to ${localize(lead.pillar.name)}; ${uniqueDays} days and ${totalTraces} traces are kept${second ? `, with ${localize(second.pillar.name)} also showing up` : ""}.`;
   node.innerHTML = `
     <div class="month-memory-lead">
-      <strong>${t("monthDays").replace("{count}", uniqueDays)}</strong>
-      <span>${t("monthLead").replace("{name}", localize(lead.pillar.name))}</span>
+      <strong>${currentLang === "zh" ? "這個月的你" : "This month"}</strong>
+      <span>${monthSentence}</span>
     </div>
     <div class="month-memory-grid">
       ${counts.map(({ pillar, count }) => `

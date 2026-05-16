@@ -845,6 +845,64 @@ input[type="file"] {
   align-items: center;
   gap: 8px;
   position: relative;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 6px 4px 8px;
+  border-radius: 10px;
+}
+
+.garden-plant:hover,
+.garden-plant:focus-visible,
+.garden-plant.show-last {
+  background: color-mix(in srgb, var(--leaf) 6%, transparent);
+  outline: none;
+}
+
+.plant-last {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 4;
+  width: min(220px, 72vw);
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  text-align: left;
+  transform: translate(-50%, 6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.garden-plant:hover .plant-last,
+.garden-plant:focus-visible .plant-last,
+.garden-plant.show-last .plant-last {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.plant-last-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.plant-last-text {
+  display: block;
+  max-height: 6.2em;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .plant-svg-wrap {
@@ -1578,6 +1636,21 @@ input[type="file"] {
 .input-actions .helper {
   flex: 1;
   margin: 0;
+}
+
+.save-feedback {
+  flex: 1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  transition: color 200ms, transform 200ms;
+}
+
+.save-feedback.status-saved {
+  color: var(--moss);
+  font-weight: 750;
+  transform: translateY(-1px);
 }
 
 .save-btn {
