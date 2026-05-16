@@ -25,7 +25,7 @@ https://lucinuo.github.io/growth-compass/
 
 已設定 Google Drive appDataFolder 自動同步：
 
-1. 打開 app 的「雲端同步」頁。
+1. 打開 app 右上角的同步狀態按鈕，進入 Settings。
 2. 按「使用 Google 登入」。
 3. 在 iPhone / iPad / Mac 各自登入同一個 Email。
 4. 登入後紀錄會同步到 Google Drive 的 app 專用隱藏 JSON。

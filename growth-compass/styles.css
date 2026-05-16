@@ -239,6 +239,8 @@ h3 {
 .hero {
   padding: 16px 0 20px;
   display: flex;
+  justify-content: space-between;
+  gap: 12px;
   align-items: center;
   min-height: unset;
   margin-bottom: 0;
@@ -253,6 +255,51 @@ h3 {
   background: var(--panel);
   text-align: center;
   font-weight: 800;
+}
+
+.sync-status-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-solid) 90%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  box-shadow: 0 8px 20px rgba(35, 35, 31, 0.05);
+}
+
+.sync-status-button:hover {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--forest) 34%, var(--line));
+}
+
+.sync-mini-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c15d42;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #c15d42 12%, transparent);
+}
+
+.sync-status-button[data-sync-state="ok"] .sync-mini-dot {
+  background: var(--leaf);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--leaf) 12%, transparent);
+}
+
+.sync-status-button[data-sync-state="syncing"] .sync-mini-dot,
+.sync-status-button[data-sync-state="connecting"] .sync-mini-dot {
+  background: #c49a45;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #c49a45 14%, transparent);
+}
+
+.sync-status-button[data-sync-state="error"] .sync-mini-dot,
+.sync-status-button[data-sync-state="reconnect"] .sync-mini-dot {
+  background: #9f3e3a;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #9f3e3a 12%, transparent);
 }
 
 .view {
@@ -541,7 +588,7 @@ input[type="file"] {
   background: color-mix(in srgb, var(--leaf) 10%, var(--panel-solid));
 }
 
-#sync {
+#settings {
   max-width: 1040px;
 }
 
@@ -1186,7 +1233,7 @@ input[type="file"] {
   }
 
   .nav-tabs {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .sidebar-panel {
@@ -1258,7 +1305,7 @@ input[type="file"] {
   }
 
   .nav-tabs {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -1307,7 +1354,7 @@ input[type="file"] {
     flex-direction: column;
   }
 
-  #sync {
+  #settings {
     max-width: none;
   }
 
