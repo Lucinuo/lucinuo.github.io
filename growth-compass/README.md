@@ -2,6 +2,14 @@
 
 一個 PWA 互動式小 app，把 research workflow 和五支柱成長框架融合成每天 3-5 分鐘可執行的節奏。
 
+## Repo 角色
+
+這個資料夾是 public GitHub Pages 發布版本。
+
+canonical source 已移到 private repo：
+
+`Lucinuo/growth-compass`
+
 ## 使用方式
 
 本機預覽可以直接用瀏覽器打開：
