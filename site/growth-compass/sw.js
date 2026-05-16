@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v21-persistent-google-link";
+const CACHE_NAME = "growth-compass-v22-sync-in-settings";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=21",
-  "./script.js?v=21",
+  "./styles.css?v=22",
+  "./script.js?v=22",
   "./hero-plants.png",
   "./manifest.webmanifest",
   "./icon.svg"

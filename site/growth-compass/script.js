@@ -252,15 +252,21 @@ function setSyncState(state) {
 }
 
 function renderSyncBadge() {
-  const navTab = document.querySelector('.nav-tab[data-view="sync"]');
-  if (navTab) {
-    const icon = navTab.querySelector(".nav-icon");
-    if (icon) {
-      icon.textContent = "雲";
-      icon.className = "nav-icon";
-    }
-  }
+  const button = document.getElementById("syncStatusButton");
+  const label = document.getElementById("syncMiniText");
+  if (button) button.dataset.syncState = currentUser ? syncState : "offline";
+  if (label) label.textContent = getSyncMiniLabel();
   renderSidebarStatus();
+}
+
+function getSyncMiniLabel() {
+  const isZh = currentLang === "zh";
+  if (!currentUser) return isZh ? "需登入" : "Sign in";
+  if (syncState === "ok") return isZh ? "已同步" : "Synced";
+  if (syncState === "syncing" || syncState === "connecting") return isZh ? "同步中" : "Syncing";
+  if (syncState === "reconnect") return isZh ? "需重連" : "Reconnect";
+  if (syncState === "error") return isZh ? "同步錯誤" : "Sync issue";
+  return isZh ? "離線" : "Offline";
 }
 let currentUser = null;
 let currentLang = localStorage.getItem(languageKey) || "zh";
@@ -417,6 +423,7 @@ function init() {
   document.getElementById("signInGoogle").addEventListener("click", signInWithGoogle);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
+  document.getElementById("syncStatusButton").addEventListener("click", () => showView("settings"));
 
   document.querySelector(".theme-toggle").addEventListener("click", changeTheme);
   window.addEventListener("online", () => {
@@ -475,17 +482,20 @@ function renderLanguage() {
     }, { once: true });
   });
   renderSyncCta();
+  renderSyncBadge();
 }
 
 function renderTabs() {
   document.querySelectorAll(".nav-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".nav-tab").forEach((item) => item.classList.remove("active"));
-      document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-      tab.classList.add("active");
-      document.getElementById(tab.dataset.view).classList.add("active");
-    });
+    tab.addEventListener("click", () => showView(tab.dataset.view, tab));
   });
+}
+
+function showView(viewId, activeTab = null) {
+  document.querySelectorAll(".nav-tab").forEach((item) => item.classList.remove("active"));
+  document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+  if (activeTab) activeTab.classList.add("active");
+  document.getElementById(viewId)?.classList.add("active");
 }
 
 function renderPillarBar() {

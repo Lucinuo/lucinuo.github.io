@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=21">
+  <link rel="stylesheet" href="styles.css?v=22">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -41,9 +41,6 @@
         <button class="nav-tab" data-view="review" type="button">
           <span class="nav-icon">週</span>
         </button>
-        <button class="nav-tab" data-view="sync" type="button">
-          <span class="nav-icon">雲</span>
-        </button>
       </nav>
 
       <div class="sidebar-streak" id="sidebarStreak"></div>
@@ -52,6 +49,10 @@
     <main class="main">
       <section class="hero">
         <div class="date-chip" id="todayLabel"></div>
+        <button class="sync-status-button" id="syncStatusButton" type="button" aria-label="同步設定">
+          <span class="sync-mini-dot" aria-hidden="true"></span>
+          <span id="syncMiniText">需登入</span>
+        </button>
       </section>
 
       <section class="view active" id="today">
@@ -134,12 +135,12 @@
         </section>
       </section>
 
-      <section class="view" id="sync">
+      <section class="view" id="settings">
         <section class="panel sync-status-panel" id="syncStatusPanel">
           <div class="sync-status-copy">
             <div class="section-heading">
-              <p class="eyebrow">Cloud sync</p>
-              <h3>目前連結狀態</h3>
+              <p class="eyebrow">Settings</p>
+              <h3>同步與資料設定</h3>
             </div>
             <div class="sync-state-row">
               <span class="sync-state-dot" aria-hidden="true"></span>
@@ -183,10 +184,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=21"></script>
+  <script src="script.js?v=22"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=21").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=22").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;
