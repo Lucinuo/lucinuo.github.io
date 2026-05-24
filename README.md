@@ -11,10 +11,10 @@ Live site: [lucinuo.github.io](https://lucinuo.github.io)
 | Section | Content |
 |---------|---------|
 | Hero | Name, title, institution |
-| Research | Doctoral research description — fucoidan, platelet activation, burn wound healing |
+| Research | Doctoral research description — HCC tumor immunology, TAM metabolism, HIF-1α, mTOR signaling |
 | About | Academic biography, supervisor, institutional affiliation |
 | Education | PhD (in progress) · M.S. Pharmacology · NDMU |
-| Expertise | Molecular & cell biology, platelet assays, data analysis, scientific communication |
+| Expertise | Macrophage biology, co-culture models, metabolic profiling, flow cytometry, Western blot, data analysis |
 | CV | Available upon request |
 | Contact | Email, institutional address |
 
@@ -37,7 +37,7 @@ site/               ← deployed directory (GitHub Pages serves this)
   index.html
   images/
     lucille.jpg
-  growth-compass/   ← separate internal tool, not linked from main site
+  growth-compass/   ← separate internal tool deployed under /growth-compass/
 .github/
   workflows/
     deploy.yml      ← push to main → upload ./site → Pages
