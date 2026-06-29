@@ -255,6 +255,109 @@
       opacity: 0.6;
     }
 
+    .research-story {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+      margin-top: 4.5rem;
+      max-width: 100%;
+    }
+
+    .research-map {
+      position: sticky;
+      top: 6.5rem;
+      padding: 0.5rem 0;
+    }
+
+    .research-map svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    .research-node,
+    .research-arrow {
+      opacity: 0.25;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .research-node.is-active {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+
+    .research-node rect {
+      fill: var(--node-color);
+      stroke: rgba(31, 31, 31, 0.16);
+      stroke-width: 1;
+      rx: 3;
+    }
+
+    .research-node text {
+      fill: #fff;
+      font-family: var(--font);
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .research-arrow line,
+    .research-arrow path {
+      stroke: var(--muted);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .research-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .research-step {
+      min-height: 54vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 2.25rem 0;
+      opacity: 0.42;
+      scroll-margin-top: 35vh;
+      transition: opacity 0.18s ease;
+    }
+
+    .research-step.is-active {
+      opacity: 1;
+    }
+
+    .step-kicker {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.85rem;
+    }
+
+    .research-step h3 {
+      font-size: 1.35rem;
+      line-height: 1.35;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.85rem;
+      letter-spacing: 0;
+    }
+
+    .research-step p {
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: var(--muted);
+      max-width: 42ch;
+    }
+
     /* ── About ── */
     .about-grid {
       display: grid;
@@ -458,6 +561,26 @@
       opacity: 0.7;
     }
 
+    @media (max-width: 960px) {
+      .research-story {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+      .research-map {
+        position: sticky;
+        top: 4.5rem;
+        z-index: 1;
+        background: rgba(239, 239, 234, 0.92);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem 0;
+      }
+      .research-map svg {
+        max-height: 58vh;
+      }
+    }
+
     /* ── Mobile ── */
     @media (max-width: 720px) {
       .nav-links { display: none; }
@@ -502,6 +625,13 @@
       .edu-yr { padding-top: 0; }
 
       .research-focus { margin-top: 2.5rem; }
+      .research-step {
+        min-height: 58vh;
+        padding: 1.75rem 0;
+      }
+      .research-step h3 {
+        font-size: 1.15rem;
+      }
     }
   </style>
 </head>
@@ -581,6 +711,108 @@
       <span class="en-only">Hepatocellular Carcinoma &middot; Tumor-Associated Macrophages &middot; Metabolic Reprogramming &middot; HIF-1&alpha; &middot; mTOR Signaling &middot; Tumor Microenvironment &middot; Translational Oncology</span>
       <span class="zh-only">肝細胞癌 &middot; 腫瘤相關巨噬細胞 &middot; 代謝重編程 &middot; HIF-1&alpha; &middot; mTOR 訊號 &middot; 腫瘤微環境 &middot; 轉譯腫瘤學</span>
     </p>
+
+    <div class="research-story" aria-label="HCC TAM metabolic reprogramming scrollytelling">
+      <div class="research-map" aria-hidden="true">
+        <svg viewBox="0 0 680 502" role="img">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M1,1 L7,4 L1,7" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+            </marker>
+          </defs>
+          <g class="research-node is-active" data-node="n1" style="--node-color: #465468">
+            <rect x="210" y="44" width="260" height="48"></rect>
+            <text x="340" y="74" text-anchor="middle">
+              <tspan class="en-only">HCC tumor stroma</tspan>
+              <tspan class="zh-only">HCC 腫瘤微環境</tspan>
+            </text>
+          </g>
+          <g class="research-arrow"><line x1="340" y1="96" x2="340" y2="114" marker-end="url(#arrowhead)"></line></g>
+          <g class="research-node" data-node="n2" style="--node-color: #B57845">
+            <rect x="210" y="122" width="260" height="48"></rect>
+            <text x="340" y="152" text-anchor="middle">
+              <tspan class="en-only">Hypoxia to HIF-1&alpha;</tspan>
+              <tspan class="zh-only">缺氧 → HIF-1&alpha;</tspan>
+            </text>
+          </g>
+          <g class="research-arrow"><line x1="340" y1="174" x2="340" y2="192" marker-end="url(#arrowhead)"></line></g>
+          <g class="research-node" data-node="n3" style="--node-color: #B57845">
+            <rect x="210" y="200" width="260" height="48"></rect>
+            <text x="340" y="230" text-anchor="middle">
+              <tspan class="en-only">Glycolytic reprogramming</tspan>
+              <tspan class="zh-only">糖解重編程</tspan>
+            </text>
+          </g>
+          <g class="research-arrow"><line x1="340" y1="252" x2="340" y2="270" marker-end="url(#arrowhead)"></line></g>
+          <g class="research-node" data-node="n4" style="--node-color: #66507C">
+            <rect x="210" y="278" width="260" height="48"></rect>
+            <text x="340" y="308" text-anchor="middle">
+              <tspan class="en-only">mTOR signaling</tspan>
+              <tspan class="zh-only">mTOR 訊號</tspan>
+            </text>
+          </g>
+          <g class="research-arrow"><line x1="340" y1="330" x2="340" y2="348" marker-end="url(#arrowhead)"></line></g>
+          <g class="research-node" data-node="n5" style="--node-color: #A95B5F">
+            <rect x="210" y="356" width="260" height="48"></rect>
+            <text x="340" y="386" text-anchor="middle">
+              <tspan class="en-only">Immune suppression</tspan>
+              <tspan class="zh-only">免疫抑制 → 治療抗性</tspan>
+            </text>
+          </g>
+          <g class="research-arrow"><line x1="340" y1="408" x2="340" y2="426" marker-end="url(#arrowhead)"></line></g>
+          <g class="research-node" data-node="n6" style="--node-color: #558B6E">
+            <rect x="210" y="434" width="260" height="48"></rect>
+            <text x="340" y="464" text-anchor="middle">
+              <tspan class="en-only">Metabolic vulnerabilities</tspan>
+              <tspan class="zh-only">代謝弱點（標靶）</tspan>
+            </text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="research-steps">
+        <article id="research-step-1" class="research-step is-active" data-step="1" data-active-nodes="n1" aria-current="step">
+          <p class="step-kicker"><span class="en-only">Step 01</span><span class="zh-only">步驟 01</span></p>
+          <h3><span class="en-only">Macrophages in the HCC stroma</span><span class="zh-only">巨噬細胞在 HCC 基質裡</span></h3>
+          <p>
+            <span class="en-only">Tumor-associated macrophages (TAMs) reside within the HCC tumor stroma, where they help shape the local immune microenvironment.</span>
+            <span class="zh-only">腫瘤相關巨噬細胞（TAM）位於肝細胞癌的腫瘤基質中，是塑造免疫微環境的關鍵細胞。</span>
+          </p>
+        </article>
+        <article id="research-step-2" class="research-step" data-step="2" data-active-nodes="n2 n3">
+          <p class="step-kicker"><span class="en-only">Step 02</span><span class="zh-only">步驟 02</span></p>
+          <h3><span class="en-only">Hypoxia drives HIF-1&alpha; glycolytic reprogramming</span><span class="zh-only">缺氧驅動 HIF-1&alpha; 糖解重編程</span></h3>
+          <p>
+            <span class="en-only">Hypoxia induces HIF-1&alpha;-mediated glycolytic reprogramming in TAMs, shifting their functional state.</span>
+            <span class="zh-only">缺氧微環境誘導 HIF-1&alpha;，驅動 TAM 的糖解代謝重編程，改變其功能狀態。</span>
+          </p>
+        </article>
+        <article id="research-step-3" class="research-step" data-step="3" data-active-nodes="n4">
+          <p class="step-kicker"><span class="en-only">Step 03</span><span class="zh-only">步驟 03</span></p>
+          <h3><span class="en-only">mTOR sustains protumoral macrophage phenotypes</span><span class="zh-only">mTOR 協同維持促腫瘤表現型</span></h3>
+          <p>
+            <span class="en-only">mTOR signaling converges with glycolytic reprogramming to sustain protumoral macrophage phenotypes.</span>
+            <span class="zh-only">mTOR 訊號與糖解重編程協同，維持促腫瘤的巨噬細胞表現型。</span>
+          </p>
+        </article>
+        <article id="research-step-4" class="research-step" data-step="4" data-active-nodes="n5">
+          <p class="step-kicker"><span class="en-only">Step 04</span><span class="zh-only">步驟 04</span></p>
+          <h3><span class="en-only">Immune suppression leads to therapy resistance</span><span class="zh-only">免疫抑制微環境 → 治療抗性</span></h3>
+          <p>
+            <span class="en-only">Reprogrammed TAMs support cytokine networks, immune cell exclusion, tumor progression, and resistance to therapy.</span>
+            <span class="zh-only">重編程後的 TAM 形成免疫抑制微環境，助長腫瘤進展與對治療的抗性。</span>
+          </p>
+        </article>
+        <article id="research-step-5" class="research-step" data-step="5" data-active-nodes="n6">
+          <p class="step-kicker"><span class="en-only">Step 05</span><span class="zh-only">步驟 05</span></p>
+          <h3><span class="en-only">Target metabolic vulnerabilities to remodel the microenvironment</span><span class="zh-only">鎖定代謝弱點重塑微環境</span></h3>
+          <p>
+            <span class="en-only">The goal is to identify metabolic vulnerabilities that can be exploited to remodel the HCC immune microenvironment.</span>
+            <span class="zh-only">目標是識別這些代謝弱點，作為重塑 HCC 免疫微環境的介入點。</span>
+          </p>
+        </article>
+      </div>
+    </div>
 
     <div class="research-focus">
       <p class="focus-label">
@@ -791,6 +1023,8 @@
   </div>
 </footer>
 
+<script src="js_yen/jquery-1.9.1.min.js"></script>
+<script src="js_yen/jquery.appear.js"></script>
 <script>
   function setLang(lang) {
     localStorage.setItem('lang', lang);
@@ -808,6 +1042,64 @@
     a.addEventListener('click', function () { navLinks.classList.remove('open'); });
   });
 
+  function setResearchStep(step) {
+    var nodes = (step.getAttribute('data-active-nodes') || '').split(/\s+/);
+    document.querySelectorAll('.research-step').forEach(function (item) {
+      var active = item === step;
+      item.classList.toggle('is-active', active);
+      if (active) {
+        item.setAttribute('aria-current', 'step');
+      } else {
+        item.removeAttribute('aria-current');
+      }
+    });
+    document.querySelectorAll('.research-node').forEach(function (node) {
+      node.classList.toggle('is-active', nodes.indexOf(node.getAttribute('data-node')) !== -1);
+    });
+  }
+
+  function initResearchStory() {
+    var steps = Array.prototype.slice.call(document.querySelectorAll('.research-step'));
+    if (!steps.length) return;
+
+    function syncStepToViewport() {
+      var viewportCenter = window.innerHeight / 2;
+      var active = steps.reduce(function (best, step) {
+        var rect = step.getBoundingClientRect();
+        var stepCenter = rect.top + rect.height / 2;
+        var distance = Math.abs(stepCenter - viewportCenter);
+        return !best || distance < best.distance ? { step: step, distance: distance } : best;
+      }, null);
+      setResearchStep(active ? active.step : steps[0]);
+    }
+
+    function syncStepFromHash() {
+      if (!window.location.hash) return false;
+      var target = document.querySelector(window.location.hash);
+      if (!target || !target.classList.contains('research-step')) return false;
+      setResearchStep(target);
+      return true;
+    }
+
+    if (!syncStepFromHash()) syncStepToViewport();
+
+    if (window.jQuery && jQuery.fn && jQuery.fn.appear) {
+      jQuery('.research-step').appear(function () {
+        syncStepToViewport();
+      }, { one: false, accY: -Math.round(window.innerHeight * 0.28) });
+      jQuery(window).on('scroll resize', syncStepToViewport);
+      jQuery(window).on('hashchange', syncStepFromHash);
+      window.setTimeout(syncStepFromHash, 160);
+      return;
+    }
+
+    window.addEventListener('scroll', syncStepToViewport, { passive: true });
+    window.addEventListener('resize', syncStepToViewport);
+    window.addEventListener('hashchange', syncStepFromHash);
+    window.setTimeout(syncStepFromHash, 160);
+  }
+
+  initResearchStory();
   setLang(localStorage.getItem('lang') || 'en');
 </script>
 </body>
