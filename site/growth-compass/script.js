@@ -1184,7 +1184,12 @@ function requestGoogleAccessToken({ interactive = false } = {}) {
   setAuthStatus(interactive ? "正在開啟 Google 登入…" : getRememberedGoogleText());
   setCloudStatus(interactive ? "完成 Google 授權後，會自動同步一次。" : "正在恢復 Google Drive 連線…");
   if (interactive) startGoogleAuthWatch();
-  googleTokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
+  googleTokenClient.requestAccessToken({ prompt: getGooglePrompt(interactive) });
+}
+
+function getGooglePrompt(interactive) {
+  if (!interactive) return "";
+  return hasStoredGoogleConnection() ? "" : "consent";
 }
 
 function startGoogleAuthWatch() {
