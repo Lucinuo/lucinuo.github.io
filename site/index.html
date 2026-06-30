@@ -39,6 +39,15 @@
     a:hover { color: var(--accent-h); text-decoration: none; }
     em { font-style: italic; }
 
+    a:focus-visible,
+    button:focus-visible,
+    .contact-btn:focus-visible,
+    .cv-cta:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
     body:not(.lang-zh) .zh-only { display: none; }
     body.lang-zh .en-only { display: none; }
 
@@ -126,7 +135,6 @@
     section {
       padding: 7.5rem 2rem;
     }
-    section:nth-child(even) { background: var(--bg-alt); }
 
     .inner {
       max-width: var(--w);
@@ -279,7 +287,7 @@
 
     .research-node,
     .research-arrow {
-      opacity: 0.25;
+      opacity: 0.4;
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
@@ -293,6 +301,11 @@
       stroke: rgba(31, 31, 31, 0.16);
       stroke-width: 1;
       rx: 3;
+    }
+
+    .research-node.is-active rect {
+      stroke: var(--text);
+      stroke-width: 1.5;
     }
 
     .research-node text {
@@ -324,7 +337,7 @@
       flex-direction: column;
       justify-content: center;
       padding: 2.25rem 0;
-      opacity: 0.42;
+      opacity: 0.5;
       scroll-margin-top: 35vh;
       transition: opacity 0.18s ease;
     }
@@ -581,6 +594,13 @@
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .research-node,
+      .research-arrow,
+      .research-step { transition: none; }
+    }
+
     /* ── Mobile ── */
     @media (max-width: 720px) {
       .nav-links { display: none; }
@@ -654,8 +674,8 @@
           <span class="en-only">Contact</span><span class="zh-only">聯絡</span></a></li>
       <li>
         <div class="lang-toggle">
-          <button id="btnEn" class="active" onclick="setLang('en')">EN</button>
-          <button id="btnZh" onclick="setLang('zh')">中</button>
+          <button id="btnEn" class="active" aria-pressed="true" onclick="setLang('en')">EN</button>
+          <button id="btnZh" aria-pressed="false" onclick="setLang('zh')">中</button>
         </div>
       </li>
     </ul>
@@ -728,7 +748,7 @@
             </text>
           </g>
           <g class="research-arrow"><line x1="340" y1="96" x2="340" y2="114" marker-end="url(#arrowhead)"></line></g>
-          <g class="research-node" data-node="n2" style="--node-color: #B57845">
+          <g class="research-node" data-node="n2" style="--node-color: #5C5566">
             <rect x="210" y="122" width="260" height="48"></rect>
             <text x="340" y="152" text-anchor="middle">
               <tspan class="en-only">Hypoxia to HIF-1&alpha;</tspan>
@@ -736,7 +756,7 @@
             </text>
           </g>
           <g class="research-arrow"><line x1="340" y1="174" x2="340" y2="192" marker-end="url(#arrowhead)"></line></g>
-          <g class="research-node" data-node="n3" style="--node-color: #B57845">
+          <g class="research-node" data-node="n3" style="--node-color: #5C5566">
             <rect x="210" y="200" width="260" height="48"></rect>
             <text x="340" y="230" text-anchor="middle">
               <tspan class="en-only">Glycolytic reprogramming</tspan>
@@ -744,7 +764,7 @@
             </text>
           </g>
           <g class="research-arrow"><line x1="340" y1="252" x2="340" y2="270" marker-end="url(#arrowhead)"></line></g>
-          <g class="research-node" data-node="n4" style="--node-color: #66507C">
+          <g class="research-node" data-node="n4" style="--node-color: #4A5A5A">
             <rect x="210" y="278" width="260" height="48"></rect>
             <text x="340" y="308" text-anchor="middle">
               <tspan class="en-only">mTOR signaling</tspan>
@@ -752,7 +772,7 @@
             </text>
           </g>
           <g class="research-arrow"><line x1="340" y1="330" x2="340" y2="348" marker-end="url(#arrowhead)"></line></g>
-          <g class="research-node" data-node="n5" style="--node-color: #A95B5F">
+          <g class="research-node" data-node="n5" style="--node-color: #6B4F52">
             <rect x="210" y="356" width="260" height="48"></rect>
             <text x="340" y="386" text-anchor="middle">
               <tspan class="en-only">Immune suppression</tspan>
@@ -760,7 +780,7 @@
             </text>
           </g>
           <g class="research-arrow"><line x1="340" y1="408" x2="340" y2="426" marker-end="url(#arrowhead)"></line></g>
-          <g class="research-node" data-node="n6" style="--node-color: #558B6E">
+          <g class="research-node" data-node="n6" style="--node-color: #4A6356">
             <rect x="210" y="434" width="260" height="48"></rect>
             <text x="340" y="464" text-anchor="middle">
               <tspan class="en-only">Metabolic vulnerabilities</tspan>
@@ -1031,6 +1051,8 @@
     document.body.classList.toggle('lang-zh', lang === 'zh');
     document.getElementById('btnEn').classList.toggle('active', lang === 'en');
     document.getElementById('btnZh').classList.toggle('active', lang === 'zh');
+    document.getElementById('btnEn').setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
+    document.getElementById('btnZh').setAttribute('aria-pressed', lang === 'zh' ? 'true' : 'false');
   }
 
   var hamburger = document.getElementById('hamburger');
