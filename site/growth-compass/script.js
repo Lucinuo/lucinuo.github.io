@@ -24,7 +24,10 @@ const translations = {
     flowTitle: "三條主要資料流",
     weeklyReviewTitle: "用五個面向，回看這一週的自己。",
     recentTraces: "最近留下的痕跡",
+    weeklyHistoryTitle: "過去幾週的回顧",
     monthlyMemoryTitle: "這個月留下了什麼",
+    monthlyWriteLabel: "把這個月收斂成一句能帶走的：",
+    monthNotePlaceholder: "這個月我發現…，所以下個月我要…",
     exportMarkdown: "匯出 Markdown",
     exportJson: "備份 JSON",
     importJson: "匯入 JSON",
@@ -78,7 +81,10 @@ const translations = {
     flowTitle: "Three main flows",
     weeklyReviewTitle: "Weekly Review: look back at yourself through five dimensions.",
     recentTraces: "Recent traces",
+    weeklyHistoryTitle: "Past weeks' reviews",
     monthlyMemoryTitle: "What this month is keeping",
+    monthlyWriteLabel: "Distill this month into one line to carry forward:",
+    monthNotePlaceholder: "This month I noticed…, so next month I will…",
     exportMarkdown: "Export Markdown",
     exportJson: "Backup JSON",
     importJson: "Import JSON",
@@ -114,36 +120,36 @@ const pillars = [
     id: "knowledge",
     color: "#5577b9",
     name: { zh: "知識體系", en: "Knowledge" },
-    copy: { zh: "今天什麼東西想通了一點？", en: "What clicked a little more today?" },
-    prompt: { zh: "這週，有什麼東西突然變清楚了？", en: "What became clearer this week?" }
+    copy: { zh: "今天哪個東西改寫了你原本相信的？", en: "What did today rewrite in something you believed?" },
+    prompt: { zh: "這週，哪個新東西改寫了你原本相信的？改寫前後差在哪？", en: "What rewrote a belief this week — before vs after?" }
   },
   {
     id: "expression",
     color: "#c96f5b",
     name: { zh: "有力量的表達", en: "Expression" },
-    copy: { zh: "今天說出去的話裡，有沒有一句說完你覺得說對了？", en: "Did any words today feel exactly right?" },
-    prompt: { zh: "這週，有沒有說過什麼讓你說完覺得：對，就是這個意思。", en: "Did you say something this week and think: yes, that's exactly it." }
+    copy: { zh: "今天哪一次表達沒達到你要的效果？差在哪？", en: "Which attempt to express something fell short today — where?" },
+    prompt: { zh: "這週哪一次表達沒達到效果？差在內容、結構、還是語氣？", en: "Where did expression fall short this week — content, structure, or tone?" }
   },
   {
     id: "aesthetic",
     color: "#c49a45",
     name: { zh: "審美辨識", en: "Aesthetic" },
-    copy: { zh: "今天有沒有哪個畫面讓你停下來？", en: "Did anything catch your eye and make you pause?" },
-    prompt: { zh: "這週，有沒有哪個畫面讓你多看了一眼？", en: "What made you look twice this week?" }
+    copy: { zh: "今天讓你停下來的那個畫面，你說得出它為什麼好嗎？", en: "What made you pause today — can you say why it's good?" },
+    prompt: { zh: "這週你對什麼的評價變了？以前和現在差在哪？", en: "What did your taste shift on this week — before vs now?" }
   },
   {
     id: "solitude",
     color: "#4f8a73",
     name: { zh: "深度愛好", en: "Deep interest" },
-    copy: { zh: "今天有沒有一刻，是完全只屬於自己的？", en: "Was there a moment today that was entirely yours?" },
-    prompt: { zh: "這週，有沒有哪件事是純粹因為喜歡而做的？", en: "Did you do anything this week just because you wanted to?" }
+    copy: { zh: "今天那段只屬於自己的時間，是真投入還是消磨？", en: "Your time alone today — truly absorbed, or just passing time?" },
+    prompt: { zh: "這週的獨處，哪段是真投入、哪段只是消磨？差別是什麼？", en: "This week's solitude — absorbed vs passing time, and the difference?" }
   },
   {
     id: "emotion",
     color: "#7b6598",
     name: { zh: "情緒覺察", en: "Emotion" },
-    copy: { zh: "今天哪個情緒最大聲？", en: "Which emotion was loudest today?" },
-    prompt: { zh: "這週，哪個情緒來了最多次？它在說什麼？", en: "Which emotion kept returning this week? What was it saying?" }
+    copy: { zh: "今天最大聲的情緒，觸發它的是事件、還是你的解讀？", en: "Today's loudest emotion — the event, or your reading of it?" },
+    prompt: { zh: "這週有沒有重複出現的情緒？上次出現是什麼時候、情境像不像？", en: "Any emotion that kept returning this week — when before, and how similar?" }
   }
 ];
 
@@ -283,6 +289,7 @@ function createEmptyAppData() {
     dailyEntries: [],
     flowItems: [],
     weeklyReviews: [],
+    monthlyReviews: [],
     traceCards: []
   };
 }
@@ -312,8 +319,22 @@ function normalizeAppData(raw) {
     .sort((a, b) => b.date.localeCompare(a.date));
   data.flowItems = (raw?.flowItems || []).map(normalizeFlowItem).filter(Boolean);
   data.weeklyReviews = (raw?.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean);
+  data.monthlyReviews = (raw?.monthlyReviews || []).map(normalizeMonthlyReview).filter(Boolean);
   data.traceCards = (raw?.traceCards || []).map(normalizeTraceCard).filter(Boolean);
   return data;
+}
+
+function normalizeMonthlyReview(review) {
+  if (!review?.monthKey) return null;
+  const timestamp = review.updatedAt || review.createdAt || new Date().toISOString();
+  return {
+    id: review.id || `monthly-${review.monthKey}`,
+    type: "MonthlyReview",
+    monthKey: review.monthKey,
+    content: review.content || "",
+    createdAt: review.createdAt || timestamp,
+    updatedAt: timestamp
+  };
 }
 
 function normalizeTraceCard(card) {
@@ -389,8 +410,12 @@ function saveEntries() {
   saveAppData();
 }
 
+function localDateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateKey();
 }
 
 function formatDate() {
@@ -420,6 +445,7 @@ function init() {
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("importJson").addEventListener("change", importJson);
   document.getElementById("resetData").addEventListener("click", resetData);
+  document.getElementById("monthNote").addEventListener("input", (e) => saveMonthNote(e.target.value));
   document.getElementById("signInGoogle").addEventListener("click", signInWithGoogle);
   document.getElementById("signOut").addEventListener("click", signOut);
   document.getElementById("syncNow").addEventListener("click", syncNow);
@@ -477,6 +503,8 @@ function renderLanguage() {
   });
   const dailyNote = document.getElementById("dailyNote");
   if (dailyNote) dailyNote.placeholder = t("dailyPlaceholder");
+  const monthNote = document.getElementById("monthNote");
+  if (monthNote) monthNote.placeholder = t("monthNotePlaceholder");
   document.querySelectorAll(".lang-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.lang === currentLang);
     btn.addEventListener("click", () => {
@@ -516,6 +544,11 @@ function renderPillarBar() {
   const activePillar = pillars.find((p) => p.id === selectedPillar);
   const inputArea = document.querySelector(".main-input-area");
   if (inputArea && activePillar) inputArea.style.setProperty("--active-pillar", activePillar.color);
+  const promptEl = document.getElementById("dailyPrompt");
+  if (promptEl && activePillar) {
+    promptEl.textContent = localize(activePillar.copy);
+    promptEl.style.color = activePillar.color;
+  }
   pillars.forEach((pillar) => {
     const logged = entries.some((e) => e.pillar === pillar.id && e.date === today);
     const btn = document.createElement("button");
@@ -563,35 +596,12 @@ function initKeyboardShortcuts() {
 function renderSidebarStatus() {
   const streakEl = document.getElementById("sidebarStreak");
   if (streakEl) {
-    const streak = getStreakDays();
-    streakEl.innerHTML = streak > 0
-      ? `<span class="ss-streak-badge">🔥<strong>${streak}</strong></span>`
+    const days = getMonthLoggedDays();
+    const unit = currentLang === "zh" ? "本月" : "this mo.";
+    streakEl.innerHTML = days > 0
+      ? `<span class="ss-month-badge"><strong>${days}</strong><small>${unit}</small></span>`
       : "";
   }
-}
-
-function renderTodayFocus() {
-  const el = document.getElementById("todayFocus");
-  if (!el) return;
-  const pillar = pillars.find((item) => item.id === selectedPillar) || pillars[0];
-  const label = currentLang === "zh" ? "今日提示" : "Today's prompt";
-  const past = entries
-    .filter((e) => e.pillar === pillar.id)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const lastEntry = past[0];
-  const lastHtml = lastEntry
-    ? (() => {
-        const preview = (lastEntry.reusableTrace || lastEntry.note || "").slice(0, 72);
-        const ellipsis = (lastEntry.reusableTrace || lastEntry.note || "").length > 72 ? "…" : "";
-        const ago = currentLang === "zh" ? "上次你寫" : "Last trace";
-        return `<p class="focus-last">${ago} · ${lastEntry.date}<br><em>${preview}${ellipsis}</em></p>`;
-      })()
-    : "";
-  el.innerHTML = `
-    <p>${label}</p>
-    <strong>${localize(pillar.copy)}</strong>
-    ${lastHtml}
-  `;
 }
 
 function renderRouter() {
@@ -703,7 +713,7 @@ function existingDailyCreatedAt(date, pillar) {
 function getPillarStage(pillarId) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 6);
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const cutoffKey = localDateKey(cutoff);
   const count = entries.filter((e) => e.pillar === pillarId && e.date >= cutoffKey).length;
   return Math.min(count, 4);
 }
@@ -780,7 +790,7 @@ function getWeekStart(date) {
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
-  return d.toISOString().slice(0, 10);
+  return localDateKey(d);
 }
 
 function saveWeeklyReview(pillarId, content) {
@@ -800,24 +810,10 @@ function saveWeeklyReview(pillarId, content) {
   saveEntries();
 }
 
-function getStreakDays() {
-  if (entries.length === 0) return 0;
-  const dates = new Set(entries.map((e) => e.date));
-  const today = todayKey();
-  const cursor = new Date();
-  if (!dates.has(today)) {
-    cursor.setDate(cursor.getDate() - 1);
-    if (!dates.has(cursor.toISOString().slice(0, 10))) return 0;
-  }
-  let streak = 0;
-  const check = new Date();
-  if (!dates.has(today)) check.setDate(check.getDate() - 1);
-  while (true) {
-    const key = check.toISOString().slice(0, 10);
-    if (dates.has(key)) { streak++; check.setDate(check.getDate() - 1); }
-    else break;
-  }
-  return streak;
+function getMonthLoggedDays() {
+  const monthKey = todayKey().slice(0, 7);
+  const days = new Set(entries.filter((e) => e.date.startsWith(monthKey)).map((e) => e.date));
+  return days.size;
 }
 
 function renderGarden(justGrownPillar = null) {
@@ -840,7 +836,7 @@ function renderGarden(justGrownPillar = null) {
     const isJustGrew = pillar.id === justGrownPillar;
     const stepsToNext = stage < 4 ? (stage + 1) - (
       entries.filter((e) => e.pillar === pillar.id && e.date >= (() => {
-        const c = new Date(); c.setDate(c.getDate() - 6); return c.toISOString().slice(0, 10);
+        const c = new Date(); c.setDate(c.getDate() - 6); return localDateKey(c);
       })()).length
     ) : 0;
 
@@ -902,14 +898,14 @@ function renderGarden(justGrownPillar = null) {
 function renderWeekSummary(recent) {
   const completed = pillars.filter((p) => recent.some((e) => e.pillar === p.id)).length;
   const total = pillars.length;
-  const streak = getStreakDays();
+  const monthDays = getMonthLoggedDays();
   const message = entries.length === 0
     ? (currentLang === "zh" ? "選一個面向，留下今天的第一個痕跡。" : "Choose a dimension and leave your first trace.")
     : completed === total
     ? (currentLang === "zh" ? "這週，五個面向都有了痕跡。" : "All five dimensions have a trace this week.")
     : (currentLang === "zh" ? "這週有些面向被照到了光。" : "Some dimensions were tended to this week.");
-  const streakHtml = streak > 0
-    ? `<div class="streak-badge"><span class="streak-fire">🔥</span><strong>${streak}</strong><small>${currentLang === "zh" ? "天連勝" : "day streak"}</small></div>`
+  const monthHtml = monthDays > 0
+    ? `<div class="month-count-badge"><strong>${monthDays}</strong><small>${currentLang === "zh" ? "本月天數" : "days this mo."}</small></div>`
     : "";
   document.getElementById("weekSummary").innerHTML = `
     <div class="ws-left">
@@ -917,7 +913,7 @@ function renderWeekSummary(recent) {
       <span>${message}</span>
     </div>
     <div class="ws-right">
-      ${streakHtml}
+      ${monthHtml}
       <div class="summary-dots" aria-label="weekly pillar completion">
         ${pillars.map((p) => `<span class="${recent.some((e) => e.pillar === p.id) ? "filled" : ""}" style="--dot:${p.color}"></span>`).join("")}
       </div>
@@ -930,7 +926,7 @@ function renderBars() { renderGarden(); }
 function getRecentEntries(days) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days + 1);
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const cutoffKey = localDateKey(cutoff);
   return entries.filter((entry) => entry.date >= cutoffKey);
 }
 
@@ -946,7 +942,7 @@ function renderReview() {
     const saved = appData.weeklyReviews.find((r) => r.weekStartDate === weekStart && r.pillar === pillar.id);
     const lastWeek = appData.weeklyReviews.find((r) => r.weekStartDate === lastWeekStart && r.pillar === pillar.id);
     const lastHint = lastWeek?.content
-      ? `<p class="review-last">${currentLang === "zh" ? "上週" : "Last week"}: <em>${lastWeek.content.slice(0, 80)}${lastWeek.content.length > 80 ? "…" : ""}</em></p>`
+      ? `<p class="review-last">${currentLang === "zh" ? "上週" : "Last week"}: <em>${escapeHtml(lastWeek.content.slice(0, 80))}${lastWeek.content.length > 80 ? "…" : ""}</em></p>`
       : "";
     const placeholder = currentLang === "zh" ? "這週的回顧…" : "This week's reflection…";
     const card = document.createElement("div");
@@ -969,17 +965,15 @@ function renderReview() {
   entriesNode.innerHTML = "";
   if (entries.length === 0) {
     entriesNode.innerHTML = `<p class="helper">${t("noEntries")}</p>`;
-    renderMonthSummary();
-    return;
   }
 
-  entries.slice(0, 10).forEach((entry) => {
+  entries.slice(0, 30).forEach((entry) => {
     const pillar = pillars.find((item) => item.id === entry.pillar) || pillars[0];
     const card = document.createElement("div");
     card.className = "entry-card";
     card.style.setProperty("--ecolor", pillar.color);
     card.innerHTML = `
-      <p>${entry.reusableTrace || entry.note}</p>
+      <p>${escapeHtml(entry.reusableTrace || entry.note)}</p>
       <span class="entry-meta">
         <span class="em-dot" style="background:${pillar.color}"></span>
         ${localize(pillar.name)} · ${entry.date}
@@ -988,7 +982,70 @@ function renderReview() {
     entriesNode.appendChild(card);
   });
 
+  renderReviewHistory();
   renderMonthSummary();
+  renderMonthNote();
+}
+
+function renderReviewHistory() {
+  const node = document.getElementById("reviewHistory");
+  if (!node) return;
+  const thisWeek = getWeekStart();
+  // Group past weekly reviews (excluding current week) by week, newest first.
+  const past = appData.weeklyReviews
+    .filter((r) => r.weekStartDate !== thisWeek && (r.content || "").trim());
+  if (past.length === 0) {
+    node.innerHTML = `<p class="garden-empty-hint">${currentLang === "zh" ? "過去幾週的回顧會在這裡累積。" : "Past weeks' reviews will gather here."}</p>`;
+    return;
+  }
+  const byWeek = new Map();
+  past.forEach((r) => {
+    if (!byWeek.has(r.weekStartDate)) byWeek.set(r.weekStartDate, []);
+    byWeek.get(r.weekStartDate).push(r);
+  });
+  const weeks = [...byWeek.keys()].sort((a, b) => b.localeCompare(a));
+  node.innerHTML = weeks.map((week) => {
+    const items = byWeek.get(week)
+      .sort((a, b) => pillars.findIndex((p) => p.id === a.pillar) - pillars.findIndex((p) => p.id === b.pillar));
+    const rows = items.map((r) => {
+      const pillar = pillars.find((p) => p.id === r.pillar) || pillars[0];
+      return `<div class="history-row">
+        <span class="history-dot" style="background:${pillar.color}"></span>
+        <span class="history-pillar">${localize(pillar.name)}</span>
+        <span class="history-text">${escapeHtml(r.content)}</span>
+      </div>`;
+    }).join("");
+    const label = currentLang === "zh" ? `${week} 那週` : `Week of ${week}`;
+    return `<details class="history-week"><summary>${label}</summary>${rows}</details>`;
+  }).join("");
+}
+
+function monthNoteContent() {
+  const monthKey = todayKey().slice(0, 7);
+  return appData.monthlyReviews.find((r) => r.monthKey === monthKey)?.content || "";
+}
+
+function renderMonthNote() {
+  const ta = document.getElementById("monthNote");
+  if (!ta) return;
+  if (document.activeElement !== ta) ta.value = monthNoteContent();
+}
+
+function saveMonthNote(content) {
+  const monthKey = todayKey().slice(0, 7);
+  const id = `monthly-${monthKey}`;
+  const idx = appData.monthlyReviews.findIndex((r) => r.id === id);
+  const review = {
+    id,
+    type: "MonthlyReview",
+    monthKey,
+    content,
+    createdAt: idx >= 0 ? appData.monthlyReviews[idx].createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  if (idx >= 0) appData.monthlyReviews[idx] = review;
+  else appData.monthlyReviews.push(review);
+  saveAppData();
 }
 
 function renderMonthSummary() {
@@ -1048,6 +1105,29 @@ function exportMarkdown() {
     lines.push(`## ${entry.date} · ${localize(pillar.name)}`, "", entry.reusableTrace || entry.note, "");
   });
 
+  const weekly = [...appData.weeklyReviews].filter((r) => (r.content || "").trim())
+    .sort((a, b) => b.weekStartDate.localeCompare(a.weekStartDate));
+  if (weekly.length) {
+    lines.push(`# 每週回顧`, "");
+    let currentWeek = "";
+    weekly.forEach((r) => {
+      if (r.weekStartDate !== currentWeek) {
+        currentWeek = r.weekStartDate;
+        lines.push(`## ${r.weekStartDate} 那週`, "");
+      }
+      const pillar = pillars.find((p) => p.id === r.pillar) || pillars[0];
+      lines.push(`- **${localize(pillar.name)}**：${r.content}`);
+    });
+    lines.push("");
+  }
+
+  const monthly = [...appData.monthlyReviews].filter((r) => (r.content || "").trim())
+    .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  if (monthly.length) {
+    lines.push(`# 月度回顧`, "");
+    monthly.forEach((r) => lines.push(`## ${r.monthKey}`, "", r.content, ""));
+  }
+
   navigator.clipboard.writeText(lines.join("\n")).then(() => {
     alert("已複製 Markdown 到剪貼簿。");
   });
@@ -1061,7 +1141,8 @@ function exportJson() {
     entries,
     dailyEntries: entries,
     flowItems: appData.flowItems,
-    weeklyReviews: appData.weeklyReviews
+    weeklyReviews: appData.weeklyReviews,
+    monthlyReviews: appData.monthlyReviews
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -1098,6 +1179,7 @@ function importJson(event) {
       entries = Array.from(merged.values()).sort((a, b) => b.date.localeCompare(a.date));
       appData.flowItems = mergeById(appData.flowItems, (payload.flowItems || []).map(normalizeFlowItem).filter(Boolean));
       appData.weeklyReviews = mergeById(appData.weeklyReviews, (payload.weeklyReviews || []).map(normalizeWeeklyReview).filter(Boolean));
+      appData.monthlyReviews = mergeById(appData.monthlyReviews, (payload.monthlyReviews || []).map(normalizeMonthlyReview).filter(Boolean));
       saveEntries();
       renderGarden();
       renderReview();
@@ -1527,6 +1609,7 @@ function mergeAppData(incomingData) {
   mergeEntries(incoming.dailyEntries);
   appData.flowItems = mergeById(appData.flowItems, incoming.flowItems);
   appData.weeklyReviews = mergeById(appData.weeklyReviews, incoming.weeklyReviews);
+  appData.monthlyReviews = mergeById(appData.monthlyReviews, incoming.monthlyReviews);
   appData.traceCards = mergeById(appData.traceCards, incoming.traceCards);
   saveAppData();
 }

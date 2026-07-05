@@ -1,10 +1,11 @@
-const CACHE_NAME = "growth-compass-v23-growth-feedback";
+const CACHE_NAME = "growth-compass-v24-healthcheck";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=23",
-  "./script.js?v=23",
+  "./styles.css?v=24",
+  "./script.js?v=24",
   "./hero-plants.png",
+  "./apple-touch-icon.png",
   "./manifest.webmanifest",
   "./icon.svg"
 ];

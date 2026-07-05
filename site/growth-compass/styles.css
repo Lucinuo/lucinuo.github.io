@@ -1009,31 +1009,6 @@ input[type="file"] {
   flex: 0 0 auto;
 }
 
-.streak-badge {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  padding: 6px 11px;
-  border-radius: 999px;
-  background: color-mix(in srgb, #f59e0b 10%, var(--panel-solid));
-  border: 1px solid color-mix(in srgb, #f59e0b 28%, var(--line));
-}
-
-.streak-fire { font-size: 16px; line-height: 1; }
-
-.streak-badge strong {
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1;
-  color: #d97706;
-}
-
-.streak-badge small {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
 /* ── Trace cards ── */
 .trace-cards-section { margin-top: 18px; }
 
@@ -1331,7 +1306,7 @@ input[type="file"] {
 
 @media (max-width: 640px) {
   body {
-    padding-bottom: 74px;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
   }
 
   .top-visual {
@@ -1346,7 +1321,7 @@ input[type="file"] {
     position: fixed;
     left: 10px;
     right: 10px;
-    bottom: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 20;
     min-height: 58px;
     padding: 8px;
@@ -1513,19 +1488,6 @@ input[type="file"] {
   text-align: center;
   padding: 0 0 6px;
 }
-.ss-streak-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.7rem;
-  color: var(--muted);
-  font-weight: 700;
-}
-.ss-streak-badge strong {
-  color: var(--ink);
-  font-size: 0.75rem;
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -1632,6 +1594,93 @@ input[type="file"] {
   margin-top: 10px;
   padding: 0 2px;
 }
+
+/* ── Daily prompt (visible five-dimension question) ── */
+.daily-prompt {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+.daily-prompt:empty { display: none; }
+
+/* ── Month count (neutral, replaces streak) ── */
+.month-count-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--leaf) 8%, var(--panel-solid));
+  border: 1px solid color-mix(in srgb, var(--leaf) 22%, var(--line));
+}
+.month-count-badge strong { font-size: 18px; font-weight: 800; line-height: 1; color: var(--text); }
+.month-count-badge small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.ss-month-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+.ss-month-badge strong { color: var(--ink); font-size: 0.8rem; }
+
+/* ── Weekly review history ── */
+.review-history { display: grid; gap: 8px; }
+.history-week {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+  overflow: hidden;
+}
+.history-week > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  list-style: none;
+}
+.history-week > summary::-webkit-details-marker { display: none; }
+.history-week > summary::before { content: "▸ "; color: var(--muted); }
+.history-week[open] > summary::before { content: "▾ "; }
+.history-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+}
+.history-dot { width: 8px; height: 8px; border-radius: 50%; align-self: center; }
+.history-pillar { font-size: 0.75rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.history-text { font-size: 0.85rem; line-height: 1.55; color: var(--text); }
+
+/* ── Monthly write box ── */
+.month-write { margin-top: 6px; }
+.month-write-label {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+#monthNote {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 200ms;
+}
+#monthNote:focus { outline: none; border-color: var(--leaf); }
 
 .input-actions .helper {
   flex: 1;
