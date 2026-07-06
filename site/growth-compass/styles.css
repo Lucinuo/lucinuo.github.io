@@ -1935,3 +1935,380 @@ input[type="file"] {
     --text: #f6f1e5;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   V3 — LIVING WORLD
+   The app becomes a single place under a sky that reflects the real
+   hour and season. Panels float as frosted glass over that world; the
+   garden is the emotional centre. Everything here is additive and
+   decorative — the capture → route → review loop is untouched.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "Palatino",
+    "Songti TC", "Noto Serif TC", ui-serif, Georgia, serif;
+  --ground: #d3e3b6;
+  --glass: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+  --glass-soft: color-mix(in srgb, var(--panel-solid) 62%, transparent);
+  --glass-line: color-mix(in srgb, var(--line) 60%, transparent);
+  --glass-shadow: 0 28px 64px -34px rgba(18, 30, 24, 0.44);
+}
+
+/* Season tints the ground; day/night handled on the sky itself. */
+:root[data-season="spring"] { --ground: #cfe3b6; }
+:root[data-season="summer"] { --ground: #d8e1a4; }
+:root[data-season="autumn"] { --ground: #e7c79a; }
+:root[data-season="winter"] { --ground: #d6e0e3; }
+:root[data-theme="dark"] { --ground: #12463a; }
+
+/* ── The world layer ─────────────────────────────────────────────── */
+body { background: transparent; }
+
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+.sky, .sky * { pointer-events: none; }
+
+.sky-gradient {
+  position: absolute;
+  inset: 0;
+  transition: background 2.4s ease;
+}
+
+/* Light-theme sky shifts through the day. */
+:root:not([data-theme="dark"]) .sky-gradient {
+  background: linear-gradient(180deg, #d6e9ec 0%, #e7f0e6 44%, #eef1e7 76%, #f3f2ea 100%);
+}
+:root:not([data-theme="dark"])[data-daytime="dawn"] .sky-gradient {
+  background: linear-gradient(180deg, #fbe4c6 0%, #f6ccb6 34%, #ecd9c4 68%, #eef0e6 100%);
+}
+:root:not([data-theme="dark"])[data-daytime="dusk"] .sky-gradient {
+  background: linear-gradient(180deg, #f3d2a4 0%, #e8b39a 38%, #cdb0ac 70%, #e4ddd2 100%);
+}
+:root:not([data-theme="dark"])[data-daytime="night"] .sky-gradient {
+  background: linear-gradient(180deg, #c7cfdd 0%, #d2d5dd 44%, #dedde0 76%, #e9e6df 100%);
+}
+/* Dark theme is always a deep forest night. */
+[data-theme="dark"] .sky-gradient {
+  background: linear-gradient(180deg, #0a2233 0%, #0b2f28 46%, #08251f 78%, #061c18 100%);
+}
+
+/* Soft edge vignette for cinematic depth. */
+.sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(130% 90% at 50% 8%, transparent 52%, rgba(20, 30, 25, 0.12) 100%);
+}
+
+/* Ground glow where the garden lives, tinted by season. */
+.horizon {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 46vh;
+  background: radial-gradient(120% 100% at 50% 128%,
+    color-mix(in srgb, var(--ground) 82%, transparent) 0%,
+    color-mix(in srgb, var(--ground) 24%, transparent) 42%,
+    transparent 72%);
+  opacity: 0.85;
+  transition: background 2.4s ease;
+}
+
+/* The sun / moon, arcing across the sky by the real hour (set in JS). */
+.celestial {
+  position: absolute;
+  left: var(--cel-x, 80%);
+  top: var(--cel-y, 22%);
+  width: clamp(44px, 6.5vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 3s ease, top 3s ease, background 2.4s ease, box-shadow 2.4s ease;
+}
+:root:not([data-theme="dark"])[data-daytime="day"] .celestial {
+  background: radial-gradient(circle at 50% 50%, #fff7e4 0%, #ffe7b0 46%, #ffd67f 70%, transparent 72%);
+  box-shadow: 0 0 64px 22px color-mix(in srgb, #ffd98a 40%, transparent);
+}
+:root:not([data-theme="dark"])[data-daytime="dawn"] .celestial,
+:root:not([data-theme="dark"])[data-daytime="dusk"] .celestial {
+  background: radial-gradient(circle, #fff0d2 0%, #ffcf95 46%, #ff9f6b 72%, transparent 74%);
+  box-shadow: 0 0 74px 28px color-mix(in srgb, #ff9f6b 36%, transparent);
+}
+[data-theme="dark"] .celestial,
+:root:not([data-theme="dark"])[data-daytime="night"] .celestial {
+  background: radial-gradient(circle at 38% 38%, #fdfbf3 0%, #eae6d4 55%, #cfcbb8 76%, transparent 78%);
+  box-shadow: 0 0 44px 14px color-mix(in srgb, #f3eede 28%, transparent);
+}
+
+.sky.breath .sky-gradient { animation: skyBreath 1.7s ease; }
+@keyframes skyBreath {
+  0%, 100% { filter: brightness(1); }
+  42% { filter: brightness(1.06) saturate(1.05); }
+}
+
+/* ── Ambient motes: pollen by day, stars/fireflies by night ──────── */
+.motes { position: absolute; inset: 0; }
+.mote {
+  position: absolute;
+  left: var(--mx);
+  top: var(--my);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transform: scale(var(--ms));
+  background: color-mix(in srgb, var(--muted) 40%, #fff);
+  opacity: 0.28;
+  animation: moteDrift var(--md) ease-in-out infinite;
+  animation-delay: var(--mdelay);
+}
+[data-daytime="night"] .mote,
+[data-theme="dark"] .mote {
+  background: radial-gradient(circle, #fff7d6 0%, #f4d98a 60%, transparent 72%);
+  opacity: 0.5;
+  animation-name: moteTwinkle;
+}
+@keyframes moteDrift {
+  0%, 100% { transform: scale(var(--ms)) translate(0, 0); opacity: 0.14; }
+  50% { transform: scale(var(--ms)) translate(14px, -26px); opacity: 0.34; }
+}
+@keyframes moteTwinkle {
+  0%, 100% { opacity: 0.16; transform: scale(calc(var(--ms) * 0.7)); }
+  50% { opacity: 0.7; transform: scale(var(--ms)); }
+}
+
+/* ── The companion: a quiet firefly / seed-mote presence ─────────── */
+.companion {
+  --glow: #f5d98a;
+  position: fixed;
+  top: 14%;
+  left: 74%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow) 88%, #fff) 0%, var(--glow) 46%, transparent 72%);
+  box-shadow: 0 0 16px 5px color-mix(in srgb, var(--glow) 52%, transparent);
+  opacity: 0.7;
+  animation: companionFloat 17s ease-in-out infinite;
+  will-change: transform;
+}
+[data-daytime="night"] .companion,
+[data-theme="dark"] .companion { opacity: 0.92; }
+:root:not([data-theme="dark"])[data-daytime="day"] .companion { opacity: 0.48; }
+.companion::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow) 55%, transparent) 0%, transparent 70%);
+  opacity: 0;
+}
+.companion.delight::after { animation: companionHalo 1.2s ease; }
+@keyframes companionFloat {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-26px, 20px); }
+  50% { transform: translate(-48px, -8px); }
+  75% { transform: translate(-16px, 26px); }
+}
+@keyframes companionHalo {
+  0% { opacity: 0; transform: scale(0.6); }
+  40% { opacity: 0.9; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(2.1); }
+}
+
+/* ── Frosted-glass surfaces floating over the world ──────────────── */
+.panel {
+  border-radius: 18px;
+  border-color: var(--glass-line);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.08);
+  backdrop-filter: blur(22px) saturate(1.08);
+  box-shadow: var(--glass-shadow);
+}
+
+@media (min-width: 641px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    background: color-mix(in srgb, var(--panel-solid) 68%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.06);
+    backdrop-filter: blur(22px) saturate(1.06);
+    border-right-color: var(--glass-line);
+  }
+  /* Keep nav tabs at their natural height instead of stretching to fill
+     a tall page; the streak still sinks to the bottom via margin-top:auto. */
+  .nav-tabs { flex: 0 0 auto; align-content: start; }
+}
+
+.date-chip,
+.sync-status-button {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.date-chip {
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+}
+
+/* ── Hero: a quiet HUD with a time-of-day greeting ───────────────── */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0 24px;
+  min-height: unset;
+}
+.world-greeting {
+  margin: 0 auto 0 2px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.02rem, 1.7vw, 1.3rem);
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.world-greeting:empty { display: none; }
+
+/* ── Capture as a focused glass writing surface ──────────────────── */
+.main-input-area {
+  margin-bottom: 26px;
+  padding: clamp(16px, 2.4vw, 22px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-line);
+  border-top: 2.5px solid var(--active-pillar, var(--leaf));
+  background: var(--glass-soft);
+  -webkit-backdrop-filter: blur(20px) saturate(1.06);
+  backdrop-filter: blur(20px) saturate(1.06);
+  box-shadow: var(--glass-shadow);
+  transition: border-color 260ms ease;
+}
+.main-input-area #dailyNote {
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+  border-color: var(--glass-line);
+  border-radius: 14px;
+}
+.daily-prompt {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  letter-spacing: 0.006em;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+/* ── The garden as the heart: rooted, breathing, memory-holding ──── */
+.progress-panel {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 54%,
+      color-mix(in srgb, var(--ground) 24%, transparent) 100%),
+    var(--glass);
+}
+.garden { position: relative; padding-bottom: 16px; }
+.garden::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  bottom: 6px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--ground) 62%, var(--line)) 18%,
+    color-mix(in srgb, var(--ground) 62%, var(--line)) 82%, transparent);
+}
+
+@media (min-width: 641px) {
+  .plant-svg-wrap { width: 92px; height: 116px; }
+}
+
+/* Plants sway gently like grass; the SVG (not the wrap) carries the
+   sway so the grow animation on .just-grew never conflicts. */
+.plant-svg-wrap svg {
+  transform-origin: 50% 92%;
+  animation: plantSway 6s ease-in-out infinite;
+}
+.garden-plant:nth-child(2) .plant-svg-wrap svg { animation-duration: 7.2s; animation-delay: -1.5s; }
+.garden-plant:nth-child(3) .plant-svg-wrap svg { animation-duration: 6.6s; animation-delay: -0.8s; }
+.garden-plant:nth-child(4) .plant-svg-wrap svg { animation-duration: 7.8s; animation-delay: -2.2s; }
+.garden-plant:nth-child(5) .plant-svg-wrap svg { animation-duration: 6.9s; animation-delay: -3s; }
+@keyframes plantSway {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50% { transform: rotate(1.4deg); }
+}
+
+/* Today's tended plant glows with a soft aura instead of a hard ring. */
+.garden-plant.today .plant-svg-wrap::after {
+  inset: -12px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--plant-color) 28%, transparent) 0%, transparent 68%);
+  opacity: 0.9;
+}
+
+/* Bloom of light when a trace is saved. */
+.bloom-burst {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: radial-gradient(circle, color-mix(in srgb, var(--bloom) 85%, #fff) 0%, var(--bloom) 42%, transparent 70%);
+  animation: bloomBurst 1s ease-out forwards;
+}
+@keyframes bloomBurst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  28% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(6); }
+}
+
+/* ── Reflective serif moments (Journey / Ghibli warmth) ──────────── */
+.month-memory-lead strong { font-family: var(--font-serif); font-style: italic; }
+
+/* ── Meaningful view transitions ─────────────────────────────────── */
+.view.active { animation: viewRise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+@keyframes viewRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Mobile: greeting stacks above the date / sync row ───────────── */
+@media (max-width: 640px) {
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding-bottom: 16px;
+  }
+  .world-greeting {
+    flex-basis: 100%;
+    order: -1;
+    margin: 0;
+  }
+}
+
+/* ── Respect reduced-motion: keep the world, drop the movement ────── */
+@media (prefers-reduced-motion: reduce) {
+  .mote,
+  .companion,
+  .companion.delight::after,
+  .plant-svg-wrap svg,
+  .sky.breath .sky-gradient,
+  .view.active,
+  .bloom-burst,
+  .garden.fresh-load .garden-plant,
+  .garden-plant.just-grew .plant-svg-wrap,
+  .progress-panel.pulse {
+    animation: none !important;
+  }
+  .celestial, .sky-gradient, .horizon { transition: none !important; }
+}

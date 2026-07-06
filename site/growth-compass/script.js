@@ -430,6 +430,7 @@ function formatDate() {
 
 function init() {
   document.getElementById("todayLabel").textContent = formatDate();
+  initWorld();
   renderTheme();
   renderLanguage();
   renderTabs();
@@ -516,6 +517,7 @@ function renderLanguage() {
       renderGarden();
       renderSidebarStatus();
       renderReview();
+      renderGreeting();
     }, { once: true });
   });
   renderSyncCta();
@@ -570,8 +572,131 @@ function renderPillarBar() {
   });
 }
 
-/* ─── Ambient sound (brown noise via Web Audio API) ─── */
+/* ─── Living World: time of day, seasons, ambient life ─────────
+   The environment reflects the real hour and month so the app feels
+   inhabited before the user does anything. All of this is decorative
+   (aria-hidden) and never blocks the core capture → route → review loop. */
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const greetings = {
+  dawn: { zh: "天亮了", en: "First light" },
+  day: { zh: "白日正好", en: "The day is open" },
+  dusk: { zh: "暮色四合", en: "Dusk is settling" },
+  night: { zh: "夜深了", en: "The night is quiet" }
+};
+
+function getDaytime(date = new Date()) {
+  const h = date.getHours();
+  if (h >= 5 && h < 8) return "dawn";
+  if (h >= 8 && h < 17) return "day";
+  if (h >= 17 && h < 20) return "dusk";
+  return "night";
+}
+
+function getSeason(date = new Date()) {
+  const m = date.getMonth();
+  if (m <= 1 || m === 11) return "winter";
+  if (m <= 4) return "spring";
+  if (m <= 7) return "summer";
+  return "autumn";
+}
+
+function applyWorld() {
+  const root = document.documentElement;
+  const now = new Date();
+  root.dataset.daytime = getDaytime(now);
+  root.dataset.season = getSeason(now);
+  positionCelestial(now);
+  renderGreeting();
+}
+
+// Place the sun/moon along a gentle arc based on how far we are through
+// the daylight (05:00–20:00) or night window.
+function positionCelestial(now = new Date()) {
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const dayStart = 5 * 60;
+  const dayEnd = 20 * 60;
+  const isDay = mins >= dayStart && mins < dayEnd;
+  let frac;
+  if (isDay) {
+    frac = (mins - dayStart) / (dayEnd - dayStart);
+  } else {
+    const nightSpan = 24 * 60 - (dayEnd - dayStart);
+    const nm = mins < dayStart ? mins + (24 * 60 - dayEnd) : mins - dayEnd;
+    frac = nm / nightSpan;
+  }
+  const x = 8 + frac * 84;
+  const y = 82 - Math.sin(frac * Math.PI) * 64;
+  const root = document.documentElement;
+  root.style.setProperty("--cel-x", `${x.toFixed(2)}%`);
+  root.style.setProperty("--cel-y", `${y.toFixed(2)}%`);
+}
+
+function renderGreeting() {
+  const el = document.getElementById("worldGreeting");
+  if (!el) return;
+  const phase = getDaytime();
+  el.textContent = greetings[phase][currentLang] || greetings[phase].zh;
+}
+
+// A small, fixed set of drifting motes: pollen by day, stars/fireflies by night.
+function spawnMotes() {
+  const sky = document.getElementById("sky");
+  if (!sky || sky.querySelector(".motes")) return;
+  const layer = document.createElement("div");
+  layer.className = "motes";
+  const count = 20;
+  for (let i = 0; i < count; i++) {
+    const mote = document.createElement("span");
+    mote.className = "mote";
+    mote.style.setProperty("--mx", `${(Math.random() * 100).toFixed(2)}%`);
+    mote.style.setProperty("--my", `${(Math.random() * 100).toFixed(2)}%`);
+    mote.style.setProperty("--ms", (0.4 + Math.random() * 1.5).toFixed(2));
+    mote.style.setProperty("--md", `${(8 + Math.random() * 12).toFixed(2)}s`);
+    mote.style.setProperty("--mdelay", `${(-Math.random() * 14).toFixed(2)}s`);
+    layer.appendChild(mote);
+  }
+  sky.appendChild(layer);
+}
+
+function initWorld() {
+  applyWorld();
+  spawnMotes();
+  setInterval(applyWorld, 5 * 60 * 1000);
+}
+
+// Emotional feedback when a trace is saved: the tended plant blooms with
+// light, the companion brightens, and the sky takes one soft breath.
+function celebrateTrace(pillarId) {
+  const pillar = pillars.find((p) => p.id === pillarId) || pillars[0];
+  const companion = document.getElementById("companion");
+  if (companion) {
+    companion.style.setProperty("--glow", pillar.color);
+    if (!prefersReducedMotion) {
+      companion.classList.remove("delight");
+      void companion.offsetWidth;
+      companion.classList.add("delight");
+    }
+  }
+  if (prefersReducedMotion) return;
+  const sky = document.getElementById("sky");
+  if (sky) {
+    sky.classList.remove("breath");
+    void sky.offsetWidth;
+    sky.classList.add("breath");
+  }
+  // renderGarden() has already run synchronously, so the grown plant is
+  // in the DOM now — spawn the bloom directly, no rAF needed.
+  const plant = document.querySelector(".garden-plant.just-grew");
+  if (!plant) return;
+  const wrap = plant.querySelector(".plant-svg-wrap") || plant;
+  const burst = document.createElement("span");
+  burst.className = "bloom-burst";
+  burst.style.setProperty("--bloom", pillar.color);
+  wrap.appendChild(burst);
+  setTimeout(() => burst.remove(), 1100);
+}
 
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
@@ -694,6 +819,7 @@ function saveDaily() {
   }
   renderPillarBar();
   renderGarden(entry.pillar);
+  celebrateTrace(entry.pillar);
   renderSidebarStatus();
   renderReview();
   showSavedPulse();
