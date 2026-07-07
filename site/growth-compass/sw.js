@@ -1,9 +1,9 @@
-const CACHE_NAME = "growth-compass-v25-living-world";
+const CACHE_NAME = "growth-compass-v26-memory-meadow";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=25",
-  "./script.js?v=25",
+  "./styles.css?v=26",
+  "./script.js?v=26",
   "./hero-plants.png",
   "./apple-touch-icon.png",
   "./manifest.webmanifest",

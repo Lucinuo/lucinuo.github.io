@@ -1110,6 +1110,7 @@ function renderReview() {
 
   renderReviewHistory();
   renderMonthSummary();
+  renderMemoryMeadow();
   renderMonthNote();
 }
 
@@ -1210,6 +1211,73 @@ function renderMonthSummary() {
         </div>
       `).join("")}
     </div>
+  `;
+}
+
+// A small standalone flower — one bloom per trace kept this month.
+function memoryBloomSVG(color) {
+  const petals = [0, 60, 120, 180, 240, 300]
+    .map((a) => `<ellipse cx="12" cy="7.4" rx="3" ry="5" fill="${color}" opacity="0.5" transform="rotate(${a} 12 12)"/>`)
+    .join("");
+  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${petals}<circle cx="12" cy="12" r="3.1" fill="${color}"/><circle cx="12" cy="12" r="1.5" fill="#fff" opacity="0.6"/></svg>`;
+}
+
+// Memory Meadow: this month's traces, rendered as a field of blooms you can
+// tap to revisit. Turns "23 traces this month" into a place you can wander.
+function renderMemoryMeadow() {
+  const node = document.getElementById("memoryMeadow");
+  const reveal = document.getElementById("memoryReveal");
+  if (!node) return;
+  const monthKey = todayKey().slice(0, 7);
+  const monthEntries = entries
+    .filter((e) => e.date.startsWith(monthKey))
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date) || a.pillar.localeCompare(b.pillar));
+
+  if (monthEntries.length === 0) {
+    node.hidden = true;
+    node.innerHTML = "";
+    if (reveal) { reveal.hidden = true; reveal.innerHTML = ""; }
+    return;
+  }
+
+  node.hidden = false;
+  const hint = currentLang === "zh"
+    ? "這個月留下的每一個片刻，都在這裡開了一朵。點一朵，回到那天的自己。"
+    : "Every moment you kept this month has bloomed here. Tap one to revisit that day.";
+  const blooms = monthEntries.map((e, i) => {
+    const pillar = pillars.find((p) => p.id === e.pillar) || pillars[0];
+    const jitter = Math.round(Math.sin(i * 1.7) * 7);
+    const rot = ((i * 37) % 15) - 7;
+    return `<button type="button" class="memory-bloom" data-id="${escapeHtml(e.id)}"
+      style="--bloom:${pillar.color};--j:${jitter}px;--rot:${rot}deg"
+      aria-label="${escapeHtml(localize(pillar.name))} · ${e.date}">${memoryBloomSVG(pillar.color)}</button>`;
+  }).join("");
+  node.innerHTML = `<p class="meadow-hint">${hint}</p><div class="meadow-field">${blooms}</div>`;
+
+  node.querySelectorAll(".memory-bloom").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const entry = monthEntries.find((e) => e.id === btn.dataset.id);
+      node.querySelectorAll(".memory-bloom.active").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderMemoryReveal(entry);
+    });
+  });
+}
+
+function renderMemoryReveal(entry) {
+  const reveal = document.getElementById("memoryReveal");
+  if (!reveal || !entry) return;
+  const pillar = pillars.find((p) => p.id === entry.pillar) || pillars[0];
+  const text = entry.reusableTrace || entry.note || "";
+  reveal.hidden = false;
+  reveal.style.setProperty("--bloom", pillar.color);
+  reveal.classList.remove("show");
+  void reveal.offsetWidth;
+  reveal.classList.add("show");
+  reveal.innerHTML = `
+    <span class="reveal-meta"><span class="reveal-dot" style="background:${pillar.color}"></span>${escapeHtml(localize(pillar.name))} · ${entry.date}</span>
+    <p class="reveal-text">${escapeHtml(text)}</p>
   `;
 }
 

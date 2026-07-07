@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -146,6 +146,8 @@
             <h3 data-i18n="monthlyMemoryTitle">這個月留下了什麼</h3>
           </div>
           <div class="month-summary" id="monthSummary"></div>
+          <div class="memory-meadow" id="memoryMeadow" aria-label="這個月的記憶原野" hidden></div>
+          <div class="memory-reveal" id="memoryReveal" hidden></div>
           <div class="month-write">
             <p class="month-write-label" data-i18n="monthlyWriteLabel">把這個月收斂成一句能帶走的：</p>
             <textarea id="monthNote" rows="3" placeholder="這個月我發現…，所以下個月我要…"></textarea>
@@ -202,10 +204,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=25"></script>
+  <script src="script.js?v=26"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=25").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=26").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

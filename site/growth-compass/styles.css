@@ -2312,3 +2312,95 @@ body { background: transparent; }
   }
   .celestial, .sky-gradient, .horizon { transition: none !important; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   V4 — MEMORY MEADOW
+   This month's traces become a field of blooms you can tap to revisit.
+   Memories becoming visual: the count turns into a place.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.memory-meadow { margin-top: 4px; }
+.memory-meadow[hidden] { display: none; }
+
+.meadow-hint {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.meadow-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 1px;
+  padding: 10px 0 6px;
+}
+
+.memory-bloom {
+  width: 30px;
+  height: 30px;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  line-height: 0;
+  cursor: pointer;
+  filter: saturate(0.9);
+  transform: translateY(var(--j, 0)) rotate(var(--rot, 0deg));
+  transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1), filter 200ms ease;
+}
+.memory-bloom svg { width: 100%; height: 100%; overflow: visible; }
+
+.memory-bloom:hover,
+.memory-bloom:focus-visible {
+  outline: none;
+  filter: saturate(1.1) drop-shadow(0 3px 6px color-mix(in srgb, var(--bloom) 42%, transparent));
+  transform: translateY(calc(var(--j, 0) - 3px)) rotate(var(--rot, 0deg)) scale(1.2);
+}
+.memory-bloom.active {
+  filter: saturate(1.18) drop-shadow(0 0 9px color-mix(in srgb, var(--bloom) 55%, transparent));
+  transform: translateY(calc(var(--j, 0) - 2px)) rotate(0deg) scale(1.24);
+}
+
+.memory-reveal {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-line);
+  border-left: 3px solid var(--bloom, var(--leaf));
+  background: color-mix(in srgb, var(--bloom, var(--leaf)) 8%, var(--glass));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.memory-reveal[hidden] { display: none; }
+.memory-reveal.show { animation: revealRise 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes revealRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.reveal-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.reveal-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.reveal-text {
+  margin: 9px 0 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memory-bloom { transition: none !important; }
+  .memory-reveal.show { animation: none !important; }
+}
