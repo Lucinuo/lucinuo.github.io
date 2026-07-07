@@ -925,69 +925,97 @@ function getPillarStage(pillarId) {
   return Math.min(count, 4);
 }
 
+function mixHex(a, b, t) {
+  const pa = a.replace("#", "");
+  const pb = b.replace("#", "");
+  const ch = (s, i) => parseInt(s.substr(i, 2), 16);
+  const out = [0, 2, 4].map((i) => {
+    const v = Math.round(ch(pa, i) + (ch(pb, i) - ch(pa, i)) * t);
+    return Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0");
+  });
+  return `#${out.join("")}`;
+}
+
+// Illustrated plants in a flat, storybook style: full rounded petals, broad
+// veined leaves, a small soil mound, and sparkles at full bloom. Five stages
+// grow from a tender drooping seedling to an open flower. Each pillar's colour
+// carries the whole plant, with leaves nudged toward foliage green.
 function plantSVG(stage, color) {
-  const c = color;
+  const petal = color;
+  const leaf = mixHex(color, "#3f6b39", 0.26);
+  const stem = mixHex(color, "#3f6b39", 0.36);
+  const vein = mixHex(leaf, "#1f3418", 0.4);
+  const soil = mixHex(color, "#8a6a52", 0.6);
+  const centerFill = "#fff6e2";
+  const centerDot = mixHex(color, "#6f521c", 0.45);
+
+  const soilBase = (y) =>
+    `<ellipse cx="40" cy="${y + 3}" rx="20" ry="3.4" fill="#000" opacity="0.06"/>` +
+    `<path d="M22 ${y} Q40 ${y - 5} 58 ${y} Q40 ${y + 3.4} 22 ${y} Z" fill="${soil}" opacity="0.9"/>`;
+
+  const leafAt = (x, y, rot, sc, left) =>
+    `<g transform="translate(${x} ${y}) scale(${left ? -1 : 1} 1) rotate(${rot}) scale(${sc})">` +
+    `<path d="M0 0 C6 -7 17 -8.5 24 -3 C17 3.5 6 4 0 0 Z" fill="${leaf}"/>` +
+    `<path d="M3 -1 C10 -3.4 17 -4.4 21 -3.2" stroke="${vein}" stroke-width="0.9" fill="none" stroke-linecap="round" opacity="0.55"/></g>`;
+
+  const stemPath = (d) =>
+    `<path d="${d}" stroke="${stem}" stroke-width="3.1" fill="none" stroke-linecap="round"/>`;
+
+  const bud = (cx, cy, sz) =>
+    `<path d="M${cx} ${cy - sz} C${cx - 0.62 * sz} ${cy - 0.35 * sz} ${cx - 0.5 * sz} ${cy + 0.28 * sz} ${cx} ${cy + 0.34 * sz} C${cx + 0.5 * sz} ${cy + 0.28 * sz} ${cx + 0.62 * sz} ${cy - 0.35 * sz} ${cx} ${cy - sz} Z" fill="${petal}"/>` +
+    `<path d="M${cx} ${cy + 0.34 * sz} C${cx - 0.4 * sz} ${cy + 0.1 * sz} ${cx - 0.4 * sz} ${cy - 0.2 * sz} ${cx} ${cy - 0.2 * sz}" fill="none" stroke="${leaf}" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>`;
+
+  const flower = (cx, cy, r) => {
+    const petals = [0, 72, 144, 216, 288].map((a) =>
+      `<path d="M0 0 C${-0.3 * r} ${-0.3 * r} ${-0.3 * r} ${-0.82 * r} 0 ${-r} C${0.3 * r} ${-0.82 * r} ${0.3 * r} ${-0.3 * r} 0 0 Z" fill="${petal}" transform="translate(${cx} ${cy}) rotate(${a})"/>`
+    ).join("");
+    let stamens = "";
+    for (let i = 0; i < 8; i++) {
+      const a = (i * 45) * Math.PI / 180;
+      const x2 = (cx + Math.cos(a) * 0.3 * r).toFixed(1);
+      const y2 = (cy + Math.sin(a) * 0.3 * r).toFixed(1);
+      stamens += `<line x1="${(cx + Math.cos(a) * 0.14 * r).toFixed(1)}" y1="${(cy + Math.sin(a) * 0.14 * r).toFixed(1)}" x2="${x2}" y2="${y2}" stroke="${centerDot}" stroke-width="${(0.05 * r).toFixed(2)}" stroke-linecap="round" opacity="0.75"/>`;
+      stamens += `<circle cx="${x2}" cy="${y2}" r="${(0.05 * r).toFixed(2)}" fill="${centerDot}"/>`;
+    }
+    return `${petals}<circle cx="${cx}" cy="${cy}" r="${0.32 * r}" fill="${centerFill}"/>${stamens}<circle cx="${cx}" cy="${cy}" r="${0.1 * r}" fill="${centerDot}" opacity="0.6"/>`;
+  };
+
+  const sparkle = (x, y, sp) =>
+    `<path class="sparkle" d="M${x} ${y - sp} C${x} ${y - 0.3 * sp} ${x + 0.3 * sp} ${y} ${x + sp} ${y} C${x + 0.3 * sp} ${y} ${x} ${y + 0.3 * sp} ${x} ${y + sp} C${x} ${y + 0.3 * sp} ${x - 0.3 * sp} ${y} ${x - sp} ${y} C${x - 0.3 * sp} ${y} ${x} ${y - 0.3 * sp} ${x} ${y - sp} Z" fill="${petal}" opacity="0.7"/>`;
+  const dot = (x, y, r) => `<circle class="sparkle" cx="${x}" cy="${y}" r="${r}" fill="${petal}" opacity="0.55"/>`;
+
   const s = [
-    // 0: seed
-    `<ellipse cx="40" cy="87" rx="24" ry="7" fill="${c}" opacity="0.14"/>
-     <ellipse cx="40" cy="82" rx="6" ry="4.5" fill="${c}" opacity="0.42"/>
-     <ellipse cx="40" cy="79" rx="3" ry="2" fill="${c}" opacity="0.6"/>`,
+    // 0: tender seedling with a drooping tip
+    soilBase(90) +
+      stemPath("M40 90 C39 83 40 79 41 76 C42 73.5 44 73 46 74") +
+      `<path d="M46 72.5 C43.6 73 43 75.4 44 77.2 C45.4 78.2 47.4 77.4 48 75.6 C48.3 74.2 47.5 72.6 46 72.5 Z" fill="${petal}"/>` +
+      leafAt(40, 85, -8, 0.5, true) + leafAt(40, 85, -8, 0.5, false),
     // 1: sprout
-    `<ellipse cx="40" cy="90" rx="24" ry="6" fill="${c}" opacity="0.12"/>
-     <path d="M40 90 C40 80 40 72 40 66" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-     <path d="M40 77 C36 73 30 73 27 71" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="24" cy="70" rx="7" ry="4" fill="${c}" opacity="0.6" transform="rotate(-20 24 70)"/>
-     <path d="M40 75 C44 71 50 71 53 69" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="56" cy="68" rx="7" ry="4" fill="${c}" opacity="0.6" transform="rotate(20 56 68)"/>`,
-    // 2: small plant
-    `<ellipse cx="40" cy="91" rx="24" ry="6" fill="${c}" opacity="0.12"/>
-     <path d="M40 91 C39 78 40 65 40 52" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-     <path d="M40 84 C35 79 26 79 23 77" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="20" cy="76" rx="9" ry="5" fill="${c}" opacity="0.52" transform="rotate(-25 20 76)"/>
-     <path d="M40 82 C45 77 54 77 57 75" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="60" cy="74" rx="9" ry="5" fill="${c}" opacity="0.52" transform="rotate(25 60 74)"/>
-     <path d="M40 69 C35 64 27 64 24 62" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="21" cy="61" rx="9" ry="4.5" fill="${c}" opacity="0.64" transform="rotate(-20 21 61)"/>
-     <path d="M40 67 C45 62 53 62 56 60" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="59" cy="59" rx="9" ry="4.5" fill="${c}" opacity="0.64" transform="rotate(20 59 59)"/>`,
-    // 3: growing
-    `<ellipse cx="40" cy="92" rx="24" ry="5.5" fill="${c}" opacity="0.11"/>
-     <path d="M40 92 C38 74 40 54 40 36" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-     <path d="M40 86 C33 80 23 80 19 78" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="16" cy="77" rx="11" ry="5.5" fill="${c}" opacity="0.46" transform="rotate(-30 16 77)"/>
-     <path d="M40 84 C47 78 57 78 61 76" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="64" cy="75" rx="11" ry="5.5" fill="${c}" opacity="0.46" transform="rotate(30 64 75)"/>
-     <path d="M40 73 C33 67 23 67 19 65" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="16" cy="64" rx="10" ry="5" fill="${c}" opacity="0.57" transform="rotate(-25 16 64)"/>
-     <path d="M40 71 C47 65 57 65 61 63" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="64" cy="62" rx="10" ry="5" fill="${c}" opacity="0.57" transform="rotate(25 64 62)"/>
-     <path d="M40 58 C34 52 26 52 22 50" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="19" cy="49" rx="9" ry="4.5" fill="${c}" opacity="0.68" transform="rotate(-20 19 49)"/>
-     <path d="M40 56 C46 50 54 50 58 48" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="61" cy="47" rx="9" ry="4.5" fill="${c}" opacity="0.68" transform="rotate(20 61 47)"/>`,
+    soilBase(90) +
+      stemPath("M40 90 C40 81 40 74 40 67") +
+      leafAt(40, 82, -6, 0.66, true) + leafAt(40, 82, -6, 0.66, false) +
+      leafAt(40, 71, -2, 0.5, true) + leafAt(40, 71, -2, 0.5, false),
+    // 2: growing, closed bud
+    soilBase(90) +
+      stemPath("M40 90 C39 76 40 64 40 55") +
+      leafAt(40, 84, -8, 0.74, true) + leafAt(40, 84, -8, 0.74, false) +
+      leafAt(40, 70, -5, 0.62, true) + leafAt(40, 70, -5, 0.62, false) +
+      bud(40, 50, 8),
+    // 3: thriving, small open flower
+    soilBase(90) +
+      stemPath("M40 90 C38 74 40 58 40 46") +
+      leafAt(40, 84, -9, 0.82, true) + leafAt(40, 84, -9, 0.82, false) +
+      leafAt(40, 70, -6, 0.72, true) + leafAt(40, 70, -6, 0.72, false) +
+      leafAt(40, 57, -3, 0.58, true) + leafAt(40, 57, -3, 0.58, false) +
+      flower(40, 40, 15),
     // 4: full bloom
-    `<ellipse cx="40" cy="93" rx="24" ry="5" fill="${c}" opacity="0.11"/>
-     <path d="M40 93 C38 72 40 50 40 28" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-     <path d="M40 86 C32 79 21 79 17 77" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="13" cy="76" rx="12" ry="5.5" fill="${c}" opacity="0.42" transform="rotate(-32 13 76)"/>
-     <path d="M40 84 C48 77 59 77 63 75" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="67" cy="74" rx="12" ry="5.5" fill="${c}" opacity="0.42" transform="rotate(32 67 74)"/>
-     <path d="M40 73 C32 66 21 66 17 64" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="13" cy="63" rx="11" ry="5" fill="${c}" opacity="0.53" transform="rotate(-27 13 63)"/>
-     <path d="M40 71 C48 64 59 64 63 62" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="67" cy="61" rx="11" ry="5" fill="${c}" opacity="0.53" transform="rotate(27 67 61)"/>
-     <path d="M40 60 C33 53 23 53 19 51" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="16" cy="50" rx="10" ry="4.5" fill="${c}" opacity="0.63" transform="rotate(-22 16 50)"/>
-     <path d="M40 58 C47 51 57 51 61 49" stroke="${c}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-     <ellipse cx="64" cy="48" rx="10" ry="4.5" fill="${c}" opacity="0.63" transform="rotate(22 64 48)"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(60 40 27)"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(120 40 27)"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(180 40 27)"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(240 40 27)"/>
-     <ellipse cx="40" cy="17" rx="5" ry="9" fill="${c}" opacity="0.5" transform="rotate(300 40 27)"/>
-     <circle cx="40" cy="27" r="8" fill="${c}"/>
-     <circle cx="40" cy="27" r="4.5" fill="white" opacity="0.52"/>`
+    soilBase(90) +
+      stemPath("M40 91 C38 72 40 54 40 42") +
+      leafAt(40, 85, -10, 0.9, true) + leafAt(40, 85, -10, 0.9, false) +
+      leafAt(40, 71, -7, 0.8, true) + leafAt(40, 71, -7, 0.8, false) +
+      leafAt(40, 57, -4, 0.66, true) + leafAt(40, 57, -4, 0.66, false) +
+      flower(40, 28, 22) +
+      sparkle(15, 26, 3) + sparkle(64, 22, 2.4) + dot(20, 40, 1.4) + dot(61, 42, 1.6) + dot(58, 14, 1.2)
   ];
   return `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${s[Math.min(stage, 4)]}</svg>`;
 }

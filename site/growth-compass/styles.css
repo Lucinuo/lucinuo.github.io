@@ -2545,3 +2545,18 @@ body { background: transparent; }
   .year-plot { transition: none !important; }
   .year-reveal.show { animation: none !important; }
 }
+
+/* Bloom sparkles gently twinkle. */
+.plant-svg-wrap svg .sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sparkleTwinkle 3.4s ease-in-out infinite;
+}
+.plant-svg-wrap svg .sparkle:nth-of-type(even) { animation-delay: -1.7s; }
+@keyframes sparkleTwinkle {
+  0%, 100% { opacity: 0.28; transform: scale(0.82); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plant-svg-wrap svg .sparkle { animation: none !important; }
+}
