@@ -26,6 +26,7 @@ const translations = {
     recentTraces: "最近留下的痕跡",
     weeklyHistoryTitle: "過去幾週的回顧",
     monthlyMemoryTitle: "這個月留下了什麼",
+    yearGardenTitle: "今年的花園",
     monthlyWriteLabel: "把這個月收斂成一句能帶走的：",
     monthNotePlaceholder: "這個月我發現…，所以下個月我要…",
     exportMarkdown: "匯出 Markdown",
@@ -83,6 +84,7 @@ const translations = {
     recentTraces: "Recent traces",
     weeklyHistoryTitle: "Past weeks' reviews",
     monthlyMemoryTitle: "What this month is keeping",
+    yearGardenTitle: "This year in bloom",
     monthlyWriteLabel: "Distill this month into one line to carry forward:",
     monthNotePlaceholder: "This month I noticed…, so next month I will…",
     exportMarkdown: "Export Markdown",
@@ -602,11 +604,46 @@ function getSeason(date = new Date()) {
   return "autumn";
 }
 
+// The 24 solar terms (節氣) with approximate Gregorian start dates and a coarse
+// flora "mood" that drives the ground and the horizon tint. Dates drift ±1 day
+// year to year — fine for a decorative ground. Ordered by calendar date.
+const solarTerms = [
+  [1, 6, "小寒", "frost"], [1, 20, "大寒", "frost"],
+  [2, 4, "立春", "budding"], [2, 19, "雨水", "budding"], [3, 6, "驚蟄", "budding"],
+  [3, 21, "春分", "blossom"], [4, 5, "清明", "blossom"], [4, 20, "穀雨", "blossom"],
+  [5, 6, "立夏", "lush"], [5, 21, "小滿", "lush"], [6, 6, "芒種", "lush"],
+  [6, 21, "夏至", "ripe"], [7, 7, "小暑", "ripe"], [7, 23, "大暑", "ripe"],
+  [8, 8, "立秋", "amber"], [8, 23, "處暑", "amber"], [9, 8, "白露", "amber"],
+  [9, 23, "秋分", "amber"], [10, 8, "寒露", "amber"], [10, 24, "霜降", "amber"],
+  [11, 8, "立冬", "frost"], [11, 22, "小雪", "frost"], [12, 7, "大雪", "frost"], [12, 22, "冬至", "frost"]
+];
+
+function getSolarTerm(date = new Date()) {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  // Default to 冬至 — it also covers Jan 1–5 (carried over from the prior year).
+  let current = solarTerms[solarTerms.length - 1];
+  for (const term of solarTerms) {
+    if (m > term[0] || (m === term[0] && d >= term[1])) current = term;
+  }
+  return { zh: current[2], group: current[3] };
+}
+
+const groundMoodColors = {
+  budding: "#cfe3b6",
+  blossom: "#d9e4c0",
+  lush: "#c9e0a8",
+  ripe: "#d8e1a4",
+  amber: "#e7c79a",
+  frost: "#d6e0e3"
+};
+
 function applyWorld() {
   const root = document.documentElement;
   const now = new Date();
   root.dataset.daytime = getDaytime(now);
   root.dataset.season = getSeason(now);
+  root.dataset.groundMood = getSolarTerm(now).group;
   positionCelestial(now);
   renderGreeting();
 }
@@ -637,7 +674,9 @@ function renderGreeting() {
   const el = document.getElementById("worldGreeting");
   if (!el) return;
   const phase = getDaytime();
-  el.textContent = greetings[phase][currentLang] || greetings[phase].zh;
+  const base = greetings[phase][currentLang] || greetings[phase].zh;
+  // Ground the world in the real solar term (節氣) — kept in Chinese as a proper term.
+  el.textContent = `${base} · ${getSolarTerm().zh}`;
 }
 
 // A small, fixed set of drifting motes: pollen by day, stars/fireflies by night.
@@ -1155,6 +1194,7 @@ function renderReview() {
   renderMonthSummary();
   renderMemoryMeadow();
   renderMonthNote();
+  renderYearGarden();
 }
 
 function renderReviewHistory() {
@@ -1261,11 +1301,13 @@ function renderMonthSummary() {
 // the soil beneath the garden — a place that visibly shows it has been lived
 // in. Layout is deterministic (seeded by index) so it only grows, never
 // reshuffles, and it re-dresses itself with each season's palette.
-const seasonGround = {
-  spring: { types: ["tuft", "tuft", "petal"], colors: ["#6ea862", "#8bc34a", "#e6b3c6"] },
-  summer: { types: ["tuft", "tuft", "tuft", "petal"], colors: ["#5f9f45", "#7bab4e", "#c4a445"] },
-  autumn: { types: ["petal", "petal", "tuft"], colors: ["#d99a2a", "#cc6b25", "#a8894e"] },
-  winter: { types: ["pebble", "pebble", "tuft"], colors: ["#9aa7ab", "#b7c0c2", "#6f8a7e"] }
+const solarGround = {
+  budding: { types: ["tuft", "petal", "tuft"], colors: ["#8fbf6a", "#cfe3b6", "#6ea862"] },
+  blossom: { types: ["petal", "petal", "tuft"], colors: ["#e6b3c6", "#f2ede4", "#7bab4e"] },
+  lush: { types: ["tuft", "tuft", "tuft"], colors: ["#5f9f45", "#7bab4e", "#6ea862"] },
+  ripe: { types: ["tuft", "tuft", "petal"], colors: ["#5f9f45", "#c4a445", "#8bc34a"] },
+  amber: { types: ["petal", "petal", "tuft"], colors: ["#d99a2a", "#cc6b25", "#a8894e"] },
+  frost: { types: ["pebble", "pebble", "tuft"], colors: ["#9aa7ab", "#e8eef0", "#6f8a7e"] }
 };
 
 function groundMarkSVG(type, color) {
@@ -1293,7 +1335,7 @@ function renderGardenGround() {
     node.innerHTML = "";
     return;
   }
-  const recipe = seasonGround[getSeason()] || seasonGround.spring;
+  const recipe = solarGround[getSolarTerm().group] || solarGround.lush;
   let html = "";
   for (let i = 0; i < count; i++) {
     const type = recipe.types[i % recipe.types.length];
@@ -1370,6 +1412,97 @@ function renderMemoryReveal(entry) {
   reveal.innerHTML = `
     <span class="reveal-meta"><span class="reveal-dot" style="background:${pillar.color}"></span>${escapeHtml(localize(pillar.name))} · ${entry.date}</span>
     <p class="reveal-text">${escapeHtml(text)}</p>
+  `;
+}
+
+// The year as a column of monthly garden plots. Each month grows blooms sized
+// by how much each pillar was tended, tinted by that month's solar-term mood;
+// tapping a month reveals its distilled note (or a summary). The year fills in
+// as it is lived — progression at the largest scale.
+function renderYearGarden() {
+  const panel = document.getElementById("yearPanel");
+  const garden = document.getElementById("yearGarden");
+  const reveal = document.getElementById("yearReveal");
+  if (!panel || !garden) return;
+  const year = todayKey().slice(0, 4);
+  const yearEntries = entries.filter((e) => e.date.startsWith(year));
+  if (yearEntries.length === 0) {
+    panel.hidden = true;
+    garden.innerHTML = "";
+    if (reveal) { reveal.hidden = true; reveal.innerHTML = ""; }
+    return;
+  }
+  panel.hidden = false;
+
+  const months = [...new Set(yearEntries.map((e) => e.date.slice(0, 7)))].sort();
+  const startMonth = parseInt(months[0].slice(5), 10);
+  const currentMonth = parseInt(todayKey().slice(5, 7), 10);
+  const rows = [];
+  for (let m = startMonth; m <= currentMonth; m++) {
+    const mk = `${year}-${String(m).padStart(2, "0")}`;
+    const monthEntries = yearEntries.filter((e) => e.date.startsWith(mk));
+    const moodColor = groundMoodColors[getSolarTerm(new Date(Number(year), m - 1, 15)).group] || "#d8e1a4";
+    const total = monthEntries.length;
+    const monthLabel = currentLang === "zh"
+      ? `${m}月`
+      : new Date(2020, m - 1, 1).toLocaleString("en-US", { month: "short" });
+    if (total === 0) {
+      rows.push(`<div class="year-plot dormant"><span class="plot-month">${monthLabel}</span><span class="plot-blooms"></span><span class="plot-count">·</span></div>`);
+      continue;
+    }
+    const blooms = pillars.map((p) => {
+      const c = monthEntries.filter((e) => e.pillar === p.id).length;
+      if (c === 0) return "";
+      const scale = (0.6 + Math.min(c, 8) / 8 * 0.7).toFixed(2);
+      return `<span class="plot-bloom" style="--pb:${scale}">${memoryBloomSVG(p.color)}</span>`;
+    }).join("");
+    rows.push(`<button type="button" class="year-plot" data-month="${mk}" style="--mood:${moodColor}" aria-label="${monthLabel} · ${total}">
+      <span class="plot-month">${monthLabel}</span>
+      <span class="plot-blooms">${blooms}</span>
+      <span class="plot-count">${total}</span>
+    </button>`);
+  }
+  garden.innerHTML = rows.join("");
+
+  garden.querySelectorAll(".year-plot[data-month]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      garden.querySelectorAll(".year-plot.active").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderYearReveal(btn.dataset.month);
+    });
+  });
+}
+
+function renderYearReveal(monthKey) {
+  const reveal = document.getElementById("yearReveal");
+  if (!reveal) return;
+  const monthEntries = entries.filter((e) => e.date.startsWith(monthKey));
+  const note = appData.monthlyReviews.find((r) => r.monthKey === monthKey)?.content?.trim();
+  const ranked = pillars
+    .map((p) => ({ p, c: monthEntries.filter((e) => e.pillar === p.id).length }))
+    .filter((x) => x.c > 0)
+    .sort((a, b) => b.c - a.c);
+  const lead = ranked[0];
+  const leadColor = lead ? lead.p.color : "var(--leaf)";
+  const days = new Set(monthEntries.map((e) => e.date)).size;
+  const [y, m] = monthKey.split("-");
+  const label = currentLang === "zh"
+    ? `${y} 年 ${parseInt(m, 10)} 月`
+    : `${new Date(2020, parseInt(m, 10) - 1, 1).toLocaleString("en-US", { month: "long" })} ${y}`;
+  const body = note
+    ? escapeHtml(note)
+    : (currentLang === "zh"
+      ? `這個月留下 ${days} 天、${monthEntries.length} 個片刻${lead ? `，最常回到「${localize(lead.p.name)}」` : ""}。`
+      : `${days} days and ${monthEntries.length} traces${lead ? `, most often ${localize(lead.p.name)}` : ""}.`);
+  reveal.hidden = false;
+  reveal.style.setProperty("--bloom", leadColor);
+  reveal.classList.remove("show");
+  void reveal.offsetWidth;
+  reveal.classList.add("show");
+  const tag = note ? (currentLang === "zh" ? " · 收斂" : " · note") : "";
+  reveal.innerHTML = `
+    <span class="reveal-meta"><span class="reveal-dot" style="background:${leadColor}"></span>${label}${tag}</span>
+    <p class="reveal-text">${body}</p>
   `;
 }
 
