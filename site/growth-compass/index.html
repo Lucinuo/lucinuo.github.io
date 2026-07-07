@@ -10,7 +10,7 @@
   <title>每日痕跡</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -78,6 +78,7 @@
           </div>
           <div class="week-summary" id="weekSummary"></div>
           <div class="garden" id="garden"></div>
+          <div class="garden-ground" id="gardenGround" aria-hidden="true"></div>
         </section>
       </section>
 
@@ -204,10 +205,10 @@
     </main>
   </div>
 
-  <script src="script.js?v=26"></script>
+  <script src="script.js?v=27"></script>
   <script>
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=26").then((registration) => {
+      navigator.serviceWorker.register("sw.js?v=27").then((registration) => {
         if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
         registration.addEventListener("updatefound", () => {
           const nextWorker = registration.installing;

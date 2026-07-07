@@ -664,6 +664,45 @@ function initWorld() {
   applyWorld();
   spawnMotes();
   setInterval(applyWorld, 5 * 60 * 1000);
+  scheduleSkyMagic();
+}
+
+// Hidden surprise: on a night when all five pillars have been tended this
+// week, the sky occasionally sends a shooting star. No badge, no popup — the
+// world just quietly rewards a balanced, complete week.
+function isNightish() {
+  const phase = getDaytime();
+  return phase === "night" || phase === "dusk";
+}
+
+function allFiveTended() {
+  const recent = getRecentEntries(7);
+  return pillars.every((p) => recent.some((e) => e.pillar === p.id));
+}
+
+function skyMagicReady() {
+  return !prefersReducedMotion && isNightish() && allFiveTended();
+}
+
+function spawnShootingStar() {
+  const sky = document.getElementById("sky");
+  if (!sky || prefersReducedMotion) return;
+  const star = document.createElement("span");
+  star.className = "shooting-star";
+  star.style.setProperty("--sx", `${(6 + Math.random() * 42).toFixed(1)}%`);
+  star.style.setProperty("--sy", `${(5 + Math.random() * 26).toFixed(1)}%`);
+  sky.appendChild(star);
+  setTimeout(() => star.remove(), 1700);
+}
+
+let skyMagicTimer = null;
+function scheduleSkyMagic() {
+  if (skyMagicTimer || prefersReducedMotion) return;
+  const tick = () => {
+    if (skyMagicReady() && !document.hidden && Math.random() < 0.55) spawnShootingStar();
+    skyMagicTimer = window.setTimeout(tick, 24000 + Math.random() * 34000);
+  };
+  skyMagicTimer = window.setTimeout(tick, 9000 + Math.random() * 12000);
 }
 
 // Emotional feedback when a trace is saved: the tended plant blooms with
@@ -686,6 +725,9 @@ function celebrateTrace(pillarId) {
     void sky.offsetWidth;
     sky.classList.add("breath");
   }
+  // If this trace just completed a full, balanced week at night, the sky
+  // marks the moment with a shooting star right away.
+  if (skyMagicReady()) spawnShootingStar();
   // renderGarden() has already run synchronously, so the grown plant is
   // in the DOM now — spawn the bloom directly, no rAF needed.
   const plant = document.querySelector(".garden-plant.just-grew");
@@ -955,6 +997,7 @@ function renderGarden(justGrownPillar = null) {
   const stageLabels = { zh: ["種子", "嫩芽", "成長", "茂盛", "盛開"], en: ["Seed", "Sprout", "Growing", "Thriving", "Blooming"] };
 
   renderWeekSummary(recent);
+  renderGardenGround();
 
   pillars.forEach((pillar) => {
     const stage = getPillarStage(pillar.id);
@@ -1212,6 +1255,55 @@ function renderMonthSummary() {
       `).join("")}
     </div>
   `;
+}
+
+// Seasonal ground: as the month fills with traces, small flora accumulates on
+// the soil beneath the garden — a place that visibly shows it has been lived
+// in. Layout is deterministic (seeded by index) so it only grows, never
+// reshuffles, and it re-dresses itself with each season's palette.
+const seasonGround = {
+  spring: { types: ["tuft", "tuft", "petal"], colors: ["#6ea862", "#8bc34a", "#e6b3c6"] },
+  summer: { types: ["tuft", "tuft", "tuft", "petal"], colors: ["#5f9f45", "#7bab4e", "#c4a445"] },
+  autumn: { types: ["petal", "petal", "tuft"], colors: ["#d99a2a", "#cc6b25", "#a8894e"] },
+  winter: { types: ["pebble", "pebble", "tuft"], colors: ["#9aa7ab", "#b7c0c2", "#6f8a7e"] }
+};
+
+function groundMarkSVG(type, color) {
+  if (type === "tuft") {
+    return `<svg viewBox="0 0 18 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M9 16 C8.4 10 8.2 7 9 3" stroke="${color}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path d="M9 15 C6 11 4 10 3 8.5" stroke="${color}" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M9 15 C12 11 14 10 15 8.5" stroke="${color}" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "petal") {
+    return `<svg viewBox="0 0 16 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="8" cy="6" rx="6.5" ry="3.1" fill="${color}" opacity="0.72" transform="rotate(-12 8 6)"/></svg>`;
+  }
+  return `<svg viewBox="0 0 16 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="8" cy="6.5" rx="6" ry="3.3" fill="${color}" opacity="0.6"/>
+    <ellipse cx="6" cy="5.4" rx="2.4" ry="1.2" fill="#fff" opacity="0.28"/></svg>`;
+}
+
+function renderGardenGround() {
+  const node = document.getElementById("gardenGround");
+  if (!node) return;
+  const monthKey = todayKey().slice(0, 7);
+  const count = Math.min(18, entries.filter((e) => e.date.startsWith(monthKey)).length);
+  if (count === 0) {
+    node.innerHTML = "";
+    return;
+  }
+  const recipe = seasonGround[getSeason()] || seasonGround.spring;
+  let html = "";
+  for (let i = 0; i < count; i++) {
+    const type = recipe.types[i % recipe.types.length];
+    const color = recipe.colors[i % recipe.colors.length];
+    const x = ((i + 0.5) / count) * 100 + Math.sin(i * 2.3) * 3;
+    const y = Math.round(Math.abs(Math.sin(i * 1.7)) * 9);
+    const scale = (0.7 + Math.abs(Math.sin(i * 3.1)) * 0.5).toFixed(2);
+    html += `<span class="ground-mark" style="left:${x.toFixed(2)}%;bottom:${y}px;--gsc:${scale}">${groundMarkSVG(type, color)}</span>`;
+  }
+  node.innerHTML = html;
 }
 
 // A small standalone flower — one bloom per trace kept this month.
