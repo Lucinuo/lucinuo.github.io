@@ -2,12 +2,21 @@
   "name": "Bearing",
   "short_name": "Bearing",
   "description": "A personal system for reflection, direction, and action.",
-  "start_url": "./",
-  "scope": "./",
+  "id": "/bearing/",
+  "start_url": "/bearing/",
+  "scope": "/bearing/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#F7F7F3",
-  "theme_color": "#315C4D",
+  "theme_color": "#F7F7F3",
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",

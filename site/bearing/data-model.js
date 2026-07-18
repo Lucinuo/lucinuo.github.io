@@ -4,6 +4,7 @@
   if (root) root.BearingData = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   const VERSION = 3;
+  const DATA_FORMAT = "lucinuo.bearing.data";
   const STORAGE_KEY = "bearing-v3";
   const LEGACY_V2_KEY = "growth-compass-v2";
   const LEGACY_V1_KEY = "growth-compass-v1";
@@ -115,6 +116,19 @@
       monthlyReviews: normalizeLegacyArray(payload.monthlyReviews),
       traceCards: normalizeLegacyArray(payload.traceCards)
     };
+  }
+
+  function isCompatibleBackup(raw) {
+    if (Array.isArray(raw)) return true;
+    if (!raw || typeof raw !== "object") return false;
+
+    const version = Number(raw.version);
+    if (version === VERSION) return Boolean(normalizeData(raw));
+    if (version === 1 || version === 2) return true;
+    if (version) return false;
+
+    return ["dailyEntries", "entries", "flowItems", "weeklyReviews", "monthlyReviews", "traceCards"]
+      .some((key) => Array.isArray(raw[key]));
   }
 
   function migrateLegacy(raw, sourceVersion) {
@@ -244,11 +258,13 @@
 
   return {
     VERSION,
+    DATA_FORMAT,
     STORAGE_KEY,
     LEGACY_V2_KEY,
     LEGACY_V1_KEY,
     createEmptyData,
     safeParse,
+    isCompatibleBackup,
     normalizeData,
     migrateLegacy,
     readStoredData,

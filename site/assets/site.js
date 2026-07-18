@@ -69,28 +69,42 @@
 
   const menuButton = document.querySelector("[data-menu-button]");
   if (menuButton) {
-    menuButton.addEventListener("click", () => {
-      const isOpen = document.body.classList.toggle("is-menu-open");
-      menuButton.setAttribute("aria-expanded", String(isOpen));
-      menuButton.textContent = isOpen
+    const compactNavigation = window.matchMedia("(max-width: 1080px)");
+
+    const updateMenuButton = () => {
+      const isOpen = document.body.classList.contains("is-menu-open");
+      const label = isOpen
         ? document.documentElement.dataset.lang === "zh" ? "關閉" : "Close"
         : document.documentElement.dataset.lang === "zh" ? "選單" : "Menu";
+      menuButton.textContent = label;
+      menuButton.setAttribute("aria-label", label);
+      menuButton.setAttribute("aria-expanded", String(isOpen));
+    };
+
+    const closeMenu = ({ restoreFocus = false } = {}) => {
+      document.body.classList.remove("is-menu-open");
+      updateMenuButton();
+      if (restoreFocus) menuButton.focus();
+    };
+
+    menuButton.addEventListener("click", () => {
+      document.body.classList.toggle("is-menu-open");
+      updateMenuButton();
     });
 
-    document.addEventListener("lucinuo:language", () => {
-      const isOpen = document.body.classList.contains("is-menu-open");
-      menuButton.textContent = isOpen
-        ? document.documentElement.dataset.lang === "zh" ? "關閉" : "Close"
-        : document.documentElement.dataset.lang === "zh" ? "選單" : "Menu";
+    document.addEventListener("lucinuo:language", updateMenuButton);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.classList.contains("is-menu-open")) closeMenu({ restoreFocus: true });
+    });
+    compactNavigation.addEventListener("change", (event) => {
+      if (!event.matches) closeMenu();
+    });
+    updateMenuButton();
+
+    document.querySelectorAll(".site-nav a").forEach((link) => {
+      link.addEventListener("click", () => closeMenu());
     });
   }
-
-  document.querySelectorAll(".site-nav a").forEach((link) => {
-    link.addEventListener("click", () => {
-      document.body.classList.remove("is-menu-open");
-      if (menuButton) menuButton.setAttribute("aria-expanded", "false");
-    });
-  });
 
   document.querySelectorAll("[data-current-year]").forEach((node) => {
     node.textContent = String(new Date().getFullYear());

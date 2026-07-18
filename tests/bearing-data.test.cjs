@@ -67,13 +67,38 @@ function testLegacyImportStaysLegacy() {
   assert.equal(merged.legacyImport.raw.dailyEntries[0].pillar, "knowledge");
 }
 
+function testBackupCompatibilityGuard() {
+  assert.equal(BearingData.DATA_FORMAT, "lucinuo.bearing.data");
+  assert.equal(BearingData.isCompatibleBackup({ format: BearingData.DATA_FORMAT, ...BearingData.createEmptyData() }), true);
+  assert.equal(BearingData.isCompatibleBackup({ version: 99, observations: [] }), false);
+  assert.equal(BearingData.isCompatibleBackup({ unrelated: [] }), false);
+  assert.equal(BearingData.isCompatibleBackup("not an object"), false);
+}
+
+function testRepeatedImportIsIdempotent() {
+  const incoming = BearingData.createEmptyData();
+  incoming.observations.push({ id: "o-repeat", date: "2026-07-06", content: "Keep one copy", createdAt: "2026-07-06T00:00:00.000Z", updatedAt: "2026-07-06T00:00:00.000Z" });
+  const once = BearingData.mergeData(BearingData.createEmptyData(), incoming);
+  const twice = BearingData.mergeData(once, incoming);
+  assert.equal(twice.observations.length, 1);
+  assert.equal(twice.observations[0].content, "Keep one copy");
+}
+
+function testLegacyShapeWithoutVersionRemainsImportable() {
+  assert.equal(BearingData.isCompatibleBackup({ dailyEntries: [] }), true);
+  assert.equal(BearingData.isCompatibleBackup([{ date: "2026-07-07", note: "Legacy array" }]), true);
+}
+
 [
   testV1Migration,
   testV2Migration,
   testV3WinsOverLegacy,
   testCorruptV3FallsBack,
   testMergeUsesNewestVersion,
-  testLegacyImportStaysLegacy
+  testLegacyImportStaysLegacy,
+  testBackupCompatibilityGuard,
+  testRepeatedImportIsIdempotent,
+  testLegacyShapeWithoutVersionRemainsImportable
 ].forEach((test) => test());
 
-console.log("Bearing data migration tests passed (6/6).");
+console.log("Bearing data migration tests passed (9/9).");

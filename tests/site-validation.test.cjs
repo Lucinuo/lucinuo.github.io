@@ -34,6 +34,7 @@ for (const [route, relativeFile] of pages) {
   check(/property="og:description"/.test(html), `${route} is missing og:description`);
   check(html.includes('property="og:image" content="https://lucinuo.github.io/og.png"'), `${route} is missing the shared social image`);
   check(/<h1(?:\s|>)/.test(html), `${route} is missing an h1`);
+  check(html.includes("viewport-fit=cover"), `${route} does not account for Apple safe areas`);
 
   const links = [...html.matchAll(/(?:href|src)="([^"]+)"/g)].map((match) => match[1]);
   for (const link of links) {
@@ -64,12 +65,29 @@ const bearing = fs.readFileSync(path.join(root, "bearing/index.html"), "utf8");
 check(!bearing.includes('class="about-bearing"'), "Bearing still contains the duplicated About Bearing feature list");
 const bearingScript = fs.readFileSync(path.join(root, "bearing/script.js"), "utf8");
 check(!bearingScript.includes("saved records"), "Bearing still exposes an unnecessary saved-record count");
+check(bearingScript.includes("Data.DATA_FORMAT"), "Bearing exports do not identify the shared data format");
+check(bearingScript.includes("Data.isCompatibleBackup"), "Bearing import does not reject unrelated JSON files");
 const bearingServiceWorker = fs.readFileSync(path.join(root, "bearing/sw.js"), "utf8");
-check(bearingServiceWorker.includes('bearing-shell-v4'), "Bearing service worker cache was not advanced for the new interface");
+check(bearingServiceWorker.includes('bearing-shell-v5'), "Bearing service worker cache was not advanced for the Apple-device update");
+check(bearingServiceWorker.includes('icon-192.png'), "Bearing service worker does not cache the 192px install icon");
 
-for (const manifest of ["bearing/manifest.webmanifest"]) {
-  JSON.parse(fs.readFileSync(path.join(root, manifest), "utf8"));
-}
+const siteCss = fs.readFileSync(path.join(root, "assets/site.css"), "utf8");
+check(siteCss.includes("@media (max-width: 1080px)"), "iPad-width navigation does not collapse before clipping");
+check(siteCss.includes("safe-area-inset-top"), "site header does not account for Apple safe areas");
+const siteScript = fs.readFileSync(path.join(root, "assets/site.js"), "utf8");
+check(siteScript.includes('matchMedia("(max-width: 1080px)")'), "navigation rotation state does not match the iPad breakpoint");
+check(siteScript.includes('event.key === "Escape"'), "compact navigation cannot be dismissed with Escape");
+
+const manifest = JSON.parse(fs.readFileSync(path.join(root, "bearing/manifest.webmanifest"), "utf8"));
+check(manifest.id === "/bearing/", "Bearing manifest has an unstable app id");
+check(manifest.start_url === "/bearing/" && manifest.scope === "/bearing/", "Bearing manifest has the wrong launch scope");
+check(manifest.display === "standalone", "Bearing manifest is not configured for standalone use");
+check(manifest.icons.some((icon) => icon.sizes === "192x192" && icon.src === "/icon-192.png"), "Bearing manifest is missing the 192px install icon");
+check(manifest.icons.some((icon) => icon.sizes === "512x512" && icon.src === "/icon-512.png"), "Bearing manifest is missing the 512px install icon");
+check(fs.existsSync(path.join(root, "icon-192.png")), "192px install icon file is missing");
+
+const dataSchema = JSON.parse(fs.readFileSync(path.join(root, "bearing/data-schema.json"), "utf8"));
+check(dataSchema.$id === "https://lucinuo.github.io/bearing/data-schema.json", "Bearing data schema has the wrong id");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

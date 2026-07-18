@@ -318,7 +318,7 @@
   }
 
   function exportJson() {
-    const payload = { app: "Bearing", version: Data.VERSION, exportedAt: new Date().toISOString(), ...appData };
+    const payload = { app: "Bearing", format: Data.DATA_FORMAT, version: Data.VERSION, exportedAt: new Date().toISOString(), ...appData };
     downloadText(`bearing-${localDateKey()}.json`, JSON.stringify(payload, null, 2), "application/json");
   }
 
@@ -351,6 +351,7 @@
     reader.onload = () => {
       try {
         pendingImport = JSON.parse(String(reader.result));
+        if (!Data.isCompatibleBackup(pendingImport)) throw new Error("Unsupported Bearing backup.");
         const preview = Data.mergeData(Data.createEmptyData(), pendingImport);
         const count = Data.recordCount(preview);
         $("#importSummary").textContent = t(`This backup contains ${count} compatible records. Your current records will be merged, not replaced.`, `這份備份包含 ${count} 筆相容紀錄；目前資料會合併，不會被整批覆蓋。`);

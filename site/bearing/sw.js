@@ -1,5 +1,5 @@
-const CACHE_NAME = "bearing-shell-v4";
-const ASSETS = ["./", "./index.html", "./styles.css", "./data-model.js", "./script.js", "../assets/site.css", "../assets/site.js", "../favicon.png", "../apple-touch-icon.png", "../icon-512.png", "./manifest.webmanifest"];
+const CACHE_NAME = "bearing-shell-v5";
+const ASSETS = ["./", "./index.html", "./styles.css", "./data-model.js", "./script.js", "../assets/site.css", "../assets/site.js", "../favicon.png", "../apple-touch-icon.png", "../icon-192.png", "../icon-512.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
@@ -12,8 +12,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+  if (request.method !== "GET") return;
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).then((response) => {
+      if (!response.ok) throw new Error("Navigation response was not successful.");
       const copy = response.clone();
       caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
       return response;
