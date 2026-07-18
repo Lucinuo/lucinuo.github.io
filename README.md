@@ -2,6 +2,8 @@
 
 Source for [lucinuo.github.io](https://lucinuo.github.io).
 
+**Status:** active redesign on a review branch. The current public site remains unchanged until the redesign is approved and merged.
+
 **Lucinuo** is the personal brand and website of Lucille Huang, bringing together biomedical research, useful digital tools, research visualization, and systems for clearer thinking.
 
 > Research. Build. Grow.
@@ -41,14 +43,52 @@ Existing browser records, JSON backups, and Google Drive app data remain readabl
 - Bilingual English / Traditional Chinese interface.
 - Device-local storage with optional Google Drive `appDataFolder` sync.
 
+## Content responsibilities
+
+- **Lucinuo website:** brand narrative, project selection, context, case studies, and live experiences.
+- **Bearing:** the focused product experience for reflection, direction, and action.
+- **GitHub:** public source, technical documentation, change history, issues, and reproducibility.
+
+Not every case study has a public repository. Private research records and source collections stay private; the Projects page states the available destination for each project.
+
+## Local preview
+
+From the repository root:
+
+```bash
+python3 -m http.server 4181 --directory site
+```
+
+Then open `http://127.0.0.1:4181/`. The same preview includes `/projects/` and `/bearing/`.
+
+## Data and privacy
+
+- Bearing stores new records on the current device unless optional Google Drive sync is connected.
+- Legacy Growth Compass data is read as a migration input and is not deleted automatically.
+- JSON import validates compatible Bearing or legacy backups before confirmation.
+- No private research source files are included in this repository.
+
+## Accessibility and device support
+
+- Keyboard-visible controls, skip links, readable contrast, and text labels for essential actions.
+- Reduced-motion support and no scroll hijacking.
+- Responsive layouts tested for Mac, iPad, and iPhone widths, including Apple safe areas.
+
 ## Verification
 
 ```bash
+node tests/site-validation.test.cjs
 node tests/bearing-data.test.cjs
 ```
 
-The migration test covers v1, v2, v3 precedence, corrupted current data fallback, updated-record merging, and preservation of legacy meaning.
+The site test checks routes, metadata, internal links, the legacy redirect, GitHub destinations, Apple-device rules, and install metadata. The migration test covers v1, v2, v3 precedence, corrupted current data fallback, updated-record merging, and preservation of legacy meaning.
 
 ## Deployment
 
 Push to `main` → GitHub Actions uploads `./site` → GitHub Pages publishes the site.
+
+Merging is therefore also the publication decision. Review branches and pull requests do not change the live website.
+
+## License
+
+Copyright remains with Lucille Huang. A separate code or content license has not yet been selected; reuse permission should not be assumed.

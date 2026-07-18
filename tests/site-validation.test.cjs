@@ -35,6 +35,7 @@ for (const [route, relativeFile] of pages) {
   check(html.includes('property="og:image" content="https://lucinuo.github.io/og.png"'), `${route} is missing the shared social image`);
   check(/<h1(?:\s|>)/.test(html), `${route} is missing an h1`);
   check(html.includes("viewport-fit=cover"), `${route} does not account for Apple safe areas`);
+  check(html.includes('href="https://github.com/Lucinuo"'), `${route} does not link to the Lucinuo GitHub profile`);
 
   const links = [...html.matchAll(/(?:href|src)="([^"]+)"/g)].map((match) => match[1]);
   for (const link of links) {
@@ -56,10 +57,26 @@ check(redirect.includes('rel="canonical" href="https://lucinuo.github.io/bearing
 const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 check(home.includes('class="bearing-interface"'), "home is missing the real Bearing interface preview");
 check(!home.includes('class="bearing-preview"'), "home still contains the old illustrative Bearing preview");
+check(home.includes("Lucinuo Website System"), "home does not include the public website system in Selected Work");
+
+const projects = fs.readFileSync(path.join(root, "projects/index.html"), "utf8");
+for (const status of ["Featured · Active", "Active", "Experimental", "Completed case study"]) {
+  check(projects.includes(status), `projects is missing the ${status} status`);
+}
+check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "projects does not link to the public source repository");
+check(projects.includes("Lucinuo Website System"), "projects does not explain the public website repository");
+const sjfSection = projects.slice(projects.indexOf('id="sjf-knowledge-system"'), projects.indexOf('id="information-router"'));
+const routerSection = projects.slice(projects.indexOf('id="information-router"'), projects.indexOf('id="mechanism-story"'));
+check(!sjfSection.includes("github.com"), "SJF case study incorrectly claims a public source repository");
+check(!routerSection.includes("github.com"), "Research Information Router incorrectly claims a public source repository");
+
+const research = fs.readFileSync(path.join(root, "research/index.html"), "utf8");
+check(research.includes("View the implementation source"), "research storytelling does not identify its shared source repository");
 
 const about = fs.readFileSync(path.join(root, "about/index.html"), "utf8");
 check(about.includes("Lucinuo is the independent practice"), "about no longer defines Lucinuo as an independent practice");
 check(about.indexOf("PhD candidate") > about.indexOf("The practice"), "academic status appears before the Lucinuo practice is explained");
+check(about.includes("Source, technical notes, and development history"), "about does not explain GitHub's role");
 
 const bearing = fs.readFileSync(path.join(root, "bearing/index.html"), "utf8");
 check(!bearing.includes('class="about-bearing"'), "Bearing still contains the duplicated About Bearing feature list");
