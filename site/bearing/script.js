@@ -194,9 +194,10 @@
   }
 
   function renderStorageState() {
-    const count = Data.recordCount(appData);
     const lastSync = safeGet(keys.lastSync);
-    const parts = [count ? t(`${count} saved records`, `已保存 ${count} 筆紀錄`) : t("Saved on this device", "保存在此裝置")];
+    const parts = [Data.hasMeaningfulData(appData)
+      ? t("Records saved on this device", "紀錄保存在此裝置")
+      : t("Saved on this device", "保存在此裝置")];
     if (lastSync) parts.push(t(`Last synced ${lastSync}`, `上次同步 ${lastSync}`));
     $("#storageState").textContent = parts.join(" · ");
   }

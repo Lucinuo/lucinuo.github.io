@@ -52,6 +52,21 @@ const redirect = fs.readFileSync(path.join(root, "growth-compass/index.html"), "
 check(redirect.includes('location.replace("/bearing/")'), "legacy page does not redirect to /bearing/");
 check(redirect.includes('rel="canonical" href="https://lucinuo.github.io/bearing/"'), "legacy page canonical URL is not /bearing/");
 
+const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
+check(home.includes('class="bearing-interface"'), "home is missing the real Bearing interface preview");
+check(!home.includes('class="bearing-preview"'), "home still contains the old illustrative Bearing preview");
+
+const about = fs.readFileSync(path.join(root, "about/index.html"), "utf8");
+check(about.includes("Lucinuo is the independent practice"), "about no longer defines Lucinuo as an independent practice");
+check(about.indexOf("PhD candidate") > about.indexOf("The practice"), "academic status appears before the Lucinuo practice is explained");
+
+const bearing = fs.readFileSync(path.join(root, "bearing/index.html"), "utf8");
+check(!bearing.includes('class="about-bearing"'), "Bearing still contains the duplicated About Bearing feature list");
+const bearingScript = fs.readFileSync(path.join(root, "bearing/script.js"), "utf8");
+check(!bearingScript.includes("saved records"), "Bearing still exposes an unnecessary saved-record count");
+const bearingServiceWorker = fs.readFileSync(path.join(root, "bearing/sw.js"), "utf8");
+check(bearingServiceWorker.includes('bearing-shell-v4'), "Bearing service worker cache was not advanced for the new interface");
+
 for (const manifest of ["bearing/manifest.webmanifest"]) {
   JSON.parse(fs.readFileSync(path.join(root, manifest), "utf8"));
 }
