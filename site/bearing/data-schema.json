@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lucinuo.github.io/bearing/data-schema.json",
+  "title": "Bearing Data v3",
+  "description": "The portable data contract shared by Bearing web exports and future native clients.",
+  "type": "object",
+  "required": ["version", "updatedAt", "observations", "priorities", "directionNotes", "nextMoves"],
+  "properties": {
+    "app": { "const": "Bearing" },
+    "format": { "const": "lucinuo.bearing.data" },
+    "version": { "const": 3 },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "observations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/observation" }
+    },
+    "priorities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/priority" }
+    },
+    "directionNotes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/directionNote" }
+    },
+    "nextMoves": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nextMove" }
+    },
+    "legacyImport": {
+      "type": ["object", "null"]
+    }
+  },
+  "$defs": {
+    "recordBase": {
+      "type": "object",
+      "required": ["id", "content", "createdAt", "updatedAt"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "minLength": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "observation": {
+      "allOf": [
+        { "$ref": "#/$defs/recordBase" },
+        {
+          "type": "object",
+          "required": ["date"],
+          "properties": { "date": { "type": "string", "format": "date" } }
+        }
+      ]
+    },
+    "priority": {
+      "allOf": [
+        { "$ref": "#/$defs/recordBase" },
+        {
+          "type": "object",
+          "required": ["observationId"],
+          "properties": { "observationId": { "type": "string" } }
+        }
+      ]
+    },
+    "directionNote": {
+      "allOf": [
+        { "$ref": "#/$defs/recordBase" },
+        {
+          "type": "object",
+          "required": ["periodStart"],
+          "properties": { "periodStart": { "type": "string", "format": "date" } }
+        }
+      ]
+    },
+    "nextMove": {
+      "allOf": [
+        { "$ref": "#/$defs/recordBase" },
+        {
+          "type": "object",
+          "required": ["priorityId", "status"],
+          "properties": {
+            "priorityId": { "type": "string" },
+            "status": { "enum": ["open", "done"] }
+          }
+        }
+      ]
+    }
+  }
+}

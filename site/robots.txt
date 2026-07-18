@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /growth-compass/
+
+Sitemap: https://lucinuo.github.io/sitemap.xml
