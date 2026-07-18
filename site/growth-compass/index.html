@@ -1,241 +1,44 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b493b">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="每日痕跡">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>每日痕跡</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=29">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bearing has moved — Lucinuo</title>
+  <meta name="robots" content="noindex,follow">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="canonical" href="https://lucinuo.github.io/bearing/">
+  <noscript><meta http-equiv="refresh" content="0; url=/bearing/"></noscript>
+  <style>
+    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+    body { min-height: 100vh; display: grid; place-items: center; margin: 0; background: #f7f7f3; color: #111311; }
+    main { width: min(620px, calc(100% - 40px)); }
+    p { color: #62665f; font-size: 18px; line-height: 1.65; }
+    a { color: #315c4d; font-weight: 600; }
+    @media (prefers-color-scheme: dark) { body { background: #111411; color: #eff1ec; } p { color: #aab0a9; } a { color: #8cb7a7; } }
+  </style>
+  <script>
+    (async function () {
+      try {
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.filter((registration) => registration.scope.includes("/growth-compass/")).map((registration) => registration.unregister()));
+        }
+        if ("caches" in window) {
+          const names = await caches.keys();
+          await Promise.all(names.filter((name) => name.startsWith("growth-compass-")).map((name) => caches.delete(name)));
+        }
+      } finally {
+        location.replace("/bearing/");
+      }
+    })();
+  </script>
 </head>
 <body>
-  <div id="sky" class="sky" aria-hidden="true">
-    <div class="sky-gradient"></div>
-    <div class="celestial"></div>
-    <div class="horizon"></div>
-    <span id="companion" class="companion"></span>
-  </div>
-
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="主導覽">
-      <div class="control-row">
-        <div class="theme-toggle" aria-label="Theme switcher">
-          <button class="theme-btn active" data-theme-choice="light" type="button" aria-label="Light mode" title="Light mode">☀</button>
-          <button class="theme-btn" data-theme-choice="dark" type="button" aria-label="Dark mode" title="Dark mode">☾</button>
-        </div>
-        <div class="lang-toggle" aria-label="Language">
-          <button class="lang-btn active" data-lang="zh" type="button">中</button>
-          <button class="lang-btn" data-lang="en" type="button">EN</button>
-        </div>
-      </div>
-
-      <nav class="nav-tabs" aria-label="功能分頁">
-        <button class="nav-tab active" data-view="today" type="button">
-          <span class="nav-icon">今</span>
-        </button>
-        <button class="nav-tab" data-view="route" type="button">
-          <span class="nav-icon">流</span>
-        </button>
-        <button class="nav-tab" data-view="review" type="button">
-          <span class="nav-icon">週</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-streak" id="sidebarStreak"></div>
-    </aside>
-
-    <main class="main">
-      <section class="hero">
-        <p class="world-greeting" id="worldGreeting"></p>
-        <div class="date-chip" id="todayLabel"></div>
-        <button class="sync-status-button" id="syncStatusButton" type="button" aria-label="同步設定">
-          <span class="sync-mini-dot" aria-hidden="true"></span>
-          <span id="syncMiniText">需登入</span>
-        </button>
-      </section>
-
-      <section class="view active" id="today">
-        <div class="pillar-bar" id="pillarBar" aria-label="選擇成長面向"></div>
-
-        <div class="main-input-area">
-          <p class="daily-prompt" id="dailyPrompt"></p>
-          <textarea id="dailyNote" rows="6" placeholder="今天最值得留下來的是什麼？"></textarea>
-          <div class="input-actions">
-            <p class="save-feedback" id="dailyStatus">今天還沒留下痕跡。</p>
-            <button class="save-btn" id="saveDaily" type="button">留下</button>
-          </div>
-        </div>
-
-        <section class="panel progress-panel">
-          <div class="section-heading">
-            <p class="eyebrow">This week</p>
-            <h3>這週的五個面向</h3>
-          </div>
-          <div class="week-summary" id="weekSummary"></div>
-          <div class="garden" id="garden"></div>
-          <div class="garden-ground" id="gardenGround" aria-hidden="true"></div>
-        </section>
-      </section>
-
-      <section class="view" id="route">
-        <div class="grid two-col">
-          <section class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Daily Router</p>
-              <h3 data-i18n="routerTitle">這則資訊現在是什麼狀態？</h3>
-            </div>
-            <div class="router-options" id="routerOptions"></div>
-          </section>
-
-          <section class="panel result-panel">
-            <div class="section-heading">
-              <p class="eyebrow">Destination</p>
-              <h3 id="routeTitle">先選一種資訊狀態</h3>
-            </div>
-            <p class="route-line" id="routeSummary">我會告訴你它該放哪裡、不要混進什麼、下一步做什麼。</p>
-            <div class="route-box">
-              <p class="box-label" data-i18n="routePlaceLabel">放這裡</p>
-              <p id="routePlace">尚未選擇</p>
-            </div>
-            <div class="route-box">
-              <p class="box-label" data-i18n="routeAvoidLabel">不要放</p>
-              <p id="routeAvoid">尚未選擇</p>
-            </div>
-            <div class="route-box">
-              <p class="box-label" data-i18n="routeNextLabel">下一步</p>
-              <p id="routeNext">尚未選擇</p>
-            </div>
-          </section>
-        </div>
-      </section>
-
-      <section class="view" id="review">
-        <div class="grid two-col">
-          <section class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Weekly Review</p>
-              <h3 data-i18n="weeklyReviewTitle">用五個面向，回看這一週的自己。</h3>
-            </div>
-            <div class="review-prompts" id="reviewPrompts"></div>
-          </section>
-
-          <section class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Recent traces</p>
-              <h3>最近留下的痕跡</h3>
-            </div>
-            <div class="entries" id="entries"></div>
-          </section>
-        </div>
-
-        <section class="panel">
-          <div class="section-heading">
-            <p class="eyebrow">Past weeks</p>
-            <h3 data-i18n="weeklyHistoryTitle">過去幾週的回顧</h3>
-          </div>
-          <div class="review-history" id="reviewHistory"></div>
-        </section>
-
-        <section class="panel progress-panel">
-          <div class="section-heading">
-            <p class="eyebrow">Monthly memory</p>
-            <h3 data-i18n="monthlyMemoryTitle">這個月留下了什麼</h3>
-          </div>
-          <div class="month-summary" id="monthSummary"></div>
-          <div class="memory-meadow" id="memoryMeadow" aria-label="這個月的記憶原野" hidden></div>
-          <div class="memory-reveal" id="memoryReveal" hidden></div>
-          <div class="month-write">
-            <p class="month-write-label" data-i18n="monthlyWriteLabel">把這個月收斂成一句能帶走的：</p>
-            <textarea id="monthNote" rows="3" placeholder="這個月我發現…，所以下個月我要…"></textarea>
-          </div>
-        </section>
-
-        <section class="panel progress-panel year-panel" id="yearPanel" hidden>
-          <div class="section-heading">
-            <p class="eyebrow">Year in bloom</p>
-            <h3 data-i18n="yearGardenTitle">今年的花園</h3>
-          </div>
-          <div class="year-garden" id="yearGarden"></div>
-          <div class="year-reveal" id="yearReveal" hidden></div>
-        </section>
-      </section>
-
-      <section class="view" id="settings">
-        <section class="panel sync-status-panel" id="syncStatusPanel">
-          <div class="sync-status-copy">
-            <div class="section-heading">
-              <p class="eyebrow">Settings</p>
-              <h3>同步與資料設定</h3>
-            </div>
-            <div class="sync-state-row">
-              <span class="sync-state-dot" aria-hidden="true"></span>
-              <p class="sync-config-line" id="syncConfigStatus">連線中…</p>
-            </div>
-            <p class="sync-auth-line" id="authStatus">尚未登入。</p>
-            <p class="helper sync-message" id="cloudStatus">登入後，資料會存到 Google Drive 的 app 專用空間。</p>
-            <div class="sync-path" aria-label="同步路徑">
-              <span>本機</span>
-              <span>Google Drive</span>
-              <span>其他裝置</span>
-            </div>
-          </div>
-          <div class="sync-actions">
-            <div class="connected-account" id="connectedAccount" hidden>
-              <span class="connected-mark">✓</span>
-              <span id="connectedEmail">Google 已連結</span>
-            </div>
-            <button class="google-signin-btn" id="signInGoogle" type="button">
-              <span data-i18n="signInGoogle">連結 Google Drive</span>
-            </button>
-            <div class="form-row">
-              <button class="primary" id="syncNow" type="button" data-i18n="syncNow">立即同步</button>
-              <button class="secondary" id="signOut" type="button" data-i18n="signOut">登出</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="sync-toolstrip" aria-label="資料工具">
-          <span class="toolstrip-label">資料工具</span>
-          <div class="toolstrip-actions">
-            <button class="secondary" id="exportMarkdown" type="button">匯出 Markdown</button>
-            <button class="secondary" id="exportJson" type="button">備份 JSON</button>
-            <label class="import-button" for="importJson">匯入 JSON</label>
-            <input id="importJson" type="file" accept="application/json,.json">
-            <button class="danger" id="resetData" type="button">清除本機紀錄</button>
-          </div>
-          <p class="helper">JSON 備份保留作為手動保險。</p>
-        </section>
-      </section>
-    </main>
-  </div>
-
-  <script src="script.js?v=29"></script>
-  <script>
-    if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("sw.js?v=29").then((registration) => {
-        if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
-        registration.addEventListener("updatefound", () => {
-          const nextWorker = registration.installing;
-          if (!nextWorker) return;
-          nextWorker.addEventListener("statechange", () => {
-            if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
-              nextWorker.postMessage({ type: "SKIP_WAITING" });
-            }
-          });
-        });
-      });
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (!sessionStorage.getItem("growth-compass-sw-refresh")) {
-          sessionStorage.setItem("growth-compass-sw-refresh", "1");
-          location.reload();
-        }
-      });
-    }
-  </script>
+  <main>
+    <p>Lucinuo / Bearing</p>
+    <h1>Bearing has moved.</h1>
+    <p>Your records are not being deleted. You are being redirected to the new Bearing page.</p>
+    <p><a href="/bearing/">Continue to Bearing →</a></p>
+  </main>
 </body>
 </html>

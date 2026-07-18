@@ -1,0 +1,18 @@
+{
+  "name": "Bearing",
+  "short_name": "Bearing",
+  "description": "A personal system for reflection, direction, and action.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F7F3",
+  "theme_color": "#315C4D",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
