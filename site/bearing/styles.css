@@ -6,6 +6,12 @@
   margin-top: var(--space-8);
 }
 
+.bearing-secondary-note {
+  max-width: var(--reading);
+  margin: var(--space-7) 0 0;
+  color: var(--color-muted);
+}
+
 .bearing-workspace {
   padding-block: 72px var(--space-9);
 }
@@ -67,7 +73,8 @@
   font-size: 15px;
 }
 
-.flow-step {
+.flow-step,
+.overview-step {
   min-height: 460px;
   display: grid;
   align-content: center;
@@ -82,6 +89,7 @@
 }
 
 .flow-step label,
+.overview-step label,
 .reflect-form label {
   display: block;
   margin-bottom: var(--space-5);
@@ -92,6 +100,7 @@
 }
 
 .flow-step textarea,
+.overview-step textarea,
 .reflect-form textarea {
   width: 100%;
   min-height: 150px;
@@ -106,6 +115,7 @@
 }
 
 .flow-step textarea::placeholder,
+.overview-step textarea::placeholder,
 .reflect-form textarea::placeholder {
   color: color-mix(in srgb, var(--color-muted) 72%, transparent);
 }
@@ -157,6 +167,56 @@
 
 .reflect-form {
   margin-block: var(--space-7);
+}
+
+.life-overview {
+  margin-top: var(--space-8);
+  padding-block: var(--space-7);
+  border-block: 1px solid var(--color-line);
+}
+
+.life-overview-intro {
+  max-width: var(--reading);
+}
+
+.life-overview-intro h3 {
+  margin-bottom: var(--space-4);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.life-overview-intro p:not(.eyebrow),
+.life-overview-heading p:not(.eyebrow) {
+  color: var(--color-muted);
+}
+
+.life-overview-flow {
+  padding-top: var(--space-2);
+}
+
+.life-overview-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.text-button {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font: inherit;
+}
+
+.text-button:hover,
+.text-button:focus-visible {
+  color: var(--color-ink);
 }
 
 .direction-list,
@@ -263,17 +323,20 @@
     text-align: left;
   }
 
-  .flow-step {
+  .flow-step,
+  .overview-step {
     min-height: 500px;
     align-content: start;
   }
 
   .flow-step label,
+  .overview-step label,
   .reflect-form label {
     font-size: 32px;
   }
 
   .flow-step textarea,
+  .overview-step textarea,
   .reflect-form textarea {
     min-height: 190px;
     font-size: 18px;
@@ -305,5 +368,9 @@
 
   .data-actions .button {
     width: 100%;
+  }
+
+  .life-overview-heading {
+    align-items: start;
   }
 }

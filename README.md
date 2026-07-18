@@ -2,7 +2,7 @@
 
 Source for [lucinuo.github.io](https://lucinuo.github.io).
 
-**Status:** active redesign on a review branch. The current public site remains unchanged until the redesign is approved and merged.
+**Status:** public beta. The integrated Lucinuo and Bearing site is live; follow-up features continue through review branches.
 
 **Lucinuo** is the personal brand and website of Lucille Huang, bringing together biomedical research, useful digital tools, research visualization, and systems for clearer thinking.
 
@@ -25,14 +25,16 @@ Source for [lucinuo.github.io](https://lucinuo.github.io).
 **Bearing by Lucinuo**
 **See clearly. Move deliberately.**
 
-Bearing replaces the previous five-pillar tracker with a quieter loop:
+Bearing centers a quieter loop:
 
 1. Notice — Where am I?
 2. Choose — What matters now?
 3. Reorient — What is changing?
 4. Move — What should I do next?
 
-Existing browser records, JSON backups, and Google Drive app data remain readable through an explicit legacy compatibility layer. Legacy storage keys are read-only migration inputs; all new records use the Bearing v3 model.
+The original five perspectives remain available as an optional **Life overview** inside Reflect: Knowledge, Expression, Aesthetic, Deep interest, and Emotion. They are lenses rather than scores; people may skip any perspective and save an overview after naming one useful observation and one current focus.
+
+Existing browser records, JSON backups, and Google Drive app data remain readable through an explicit compatibility layer. Legacy storage keys are read-only migration inputs; all new records use the Bearing v4 model. Bearing v3 records migrate forward without losing observations, priorities, direction notes, or next moves.
 
 ## Architecture
 
@@ -81,7 +83,7 @@ node tests/site-validation.test.cjs
 node tests/bearing-data.test.cjs
 ```
 
-The site test checks routes, metadata, internal links, the legacy redirect, GitHub destinations, Apple-device rules, and install metadata. The migration test covers v1, v2, v3 precedence, corrupted current data fallback, updated-record merging, and preservation of legacy meaning.
+The site test checks routes, metadata, internal links, the legacy redirect, GitHub destinations, Life overview, Apple-device rules, and install metadata. The migration test covers v1–v4 precedence, corrupted current data fallback, updated-record merging, Life overview records, and preservation of legacy meaning.
 
 ## Deployment
 

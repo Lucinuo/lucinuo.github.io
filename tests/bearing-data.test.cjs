@@ -28,26 +28,46 @@ function testV2Migration() {
   assert.equal(result.data.legacyImport.raw.weeklyReviews.length, 1);
 }
 
-function testV3WinsOverLegacy() {
-  const v3 = BearingData.createEmptyData();
-  v3.observations.push({ id: "o1", date: "2026-07-03", content: "Current", createdAt: "2026-07-03T00:00:00.000Z", updatedAt: "2026-07-03T00:00:00.000Z" });
+function testV4WinsOverLegacy() {
+  const v4 = BearingData.createEmptyData();
+  v4.observations.push({ id: "o1", date: "2026-07-03", content: "Current", createdAt: "2026-07-03T00:00:00.000Z", updatedAt: "2026-07-03T00:00:00.000Z" });
   const storage = new MemoryStorage({
-    "bearing-v3": JSON.stringify(v3),
+    "bearing-v4": JSON.stringify(v4),
+    "bearing-v3": JSON.stringify({ version: 3, observations: [{ id: "old", date: "2026-07-02", content: "Older", createdAt: "2026-07-02T00:00:00.000Z", updatedAt: "2026-07-02T00:00:00.000Z" }] }),
     "growth-compass-v2": JSON.stringify({ version: 2, dailyEntries: [{ date: "2026-07-02", note: "Legacy" }] })
   });
   const result = BearingData.readStoredData(storage);
-  assert.equal(result.sourceKey, "bearing-v3");
+  assert.equal(result.sourceKey, "bearing-v4");
   assert.equal(result.data.observations.length, 1);
   assert.equal(result.migrated, false);
 }
 
-function testCorruptV3FallsBack() {
+function testV3MigrationPreservesRecords() {
+  const v3 = {
+    version: 3,
+    updatedAt: "2026-07-03T00:00:00.000Z",
+    observations: [{ id: "o-v3", date: "2026-07-03", content: "Keep v3", createdAt: "2026-07-03T00:00:00.000Z", updatedAt: "2026-07-03T00:00:00.000Z" }],
+    priorities: [],
+    directionNotes: [],
+    nextMoves: [],
+    legacyImport: null
+  };
+  const result = BearingData.readStoredData(new MemoryStorage({ "bearing-v3": JSON.stringify(v3) }));
+  assert.equal(result.sourceKey, "bearing-v3");
+  assert.equal(result.migrated, true);
+  assert.equal(result.data.version, 4);
+  assert.equal(result.data.observations[0].content, "Keep v3");
+  assert.deepEqual(result.data.lifeOverviews, []);
+}
+
+function testCorruptV4FallsBackToV3() {
   const storage = new MemoryStorage({
-    "bearing-v3": "{not valid",
-    "growth-compass-v2": JSON.stringify({ version: 2, dailyEntries: [{ date: "2026-07-02", note: "Legacy" }] })
+    "bearing-v4": "{not valid",
+    "bearing-v3": JSON.stringify({ version: 3, observations: [], priorities: [], directionNotes: [], nextMoves: [] })
   });
   const result = BearingData.readStoredData(storage);
-  assert.equal(result.sourceKey, "growth-compass-v2");
+  assert.equal(result.sourceKey, "bearing-v3");
+  assert.equal(result.data.version, 4);
 }
 
 function testMergeUsesNewestVersion() {
@@ -70,9 +90,36 @@ function testLegacyImportStaysLegacy() {
 function testBackupCompatibilityGuard() {
   assert.equal(BearingData.DATA_FORMAT, "lucinuo.bearing.data");
   assert.equal(BearingData.isCompatibleBackup({ format: BearingData.DATA_FORMAT, ...BearingData.createEmptyData() }), true);
+  assert.equal(BearingData.isCompatibleBackup({ version: 3, observations: [], priorities: [], directionNotes: [], nextMoves: [] }), true);
   assert.equal(BearingData.isCompatibleBackup({ version: 99, observations: [] }), false);
   assert.equal(BearingData.isCompatibleBackup({ unrelated: [] }), false);
   assert.equal(BearingData.isCompatibleBackup("not an object"), false);
+}
+
+function testLifeOverviewKeepsOnlyKnownPerspectives() {
+  const data = BearingData.createEmptyData();
+  data.lifeOverviews.push({
+    id: "overview-1",
+    date: "2026-07-19",
+    perspectives: { knowledge: "A changed belief", emotion: "A repeated feeling", unknown: "Remove this" },
+    focus: "Make room to think",
+    createdAt: "2026-07-19T00:00:00.000Z",
+    updatedAt: "2026-07-19T00:00:00.000Z"
+  });
+  const normalized = BearingData.normalizeData(data);
+  assert.equal(normalized.lifeOverviews.length, 1);
+  assert.deepEqual(normalized.lifeOverviews[0].perspectives, { knowledge: "A changed belief", emotion: "A repeated feeling" });
+  assert.equal(BearingData.recordCount(normalized), 1);
+}
+
+function testLifeOverviewMergeUsesNewestVersion() {
+  const current = BearingData.createEmptyData();
+  const incoming = BearingData.createEmptyData();
+  current.lifeOverviews.push({ id: "overview-shared", date: "2026-07-19", perspectives: { knowledge: "Old" }, focus: "Old focus", createdAt: "2026-07-19T00:00:00.000Z", updatedAt: "2026-07-19T00:00:00.000Z" });
+  incoming.lifeOverviews.push({ id: "overview-shared", date: "2026-07-19", perspectives: { knowledge: "New" }, focus: "New focus", createdAt: "2026-07-19T00:00:00.000Z", updatedAt: "2026-07-19T01:00:00.000Z" });
+  const merged = BearingData.mergeData(current, incoming);
+  assert.equal(merged.lifeOverviews.length, 1);
+  assert.equal(merged.lifeOverviews[0].focus, "New focus");
 }
 
 function testRepeatedImportIsIdempotent() {
@@ -92,13 +139,16 @@ function testLegacyShapeWithoutVersionRemainsImportable() {
 [
   testV1Migration,
   testV2Migration,
-  testV3WinsOverLegacy,
-  testCorruptV3FallsBack,
+  testV4WinsOverLegacy,
+  testV3MigrationPreservesRecords,
+  testCorruptV4FallsBackToV3,
   testMergeUsesNewestVersion,
   testLegacyImportStaysLegacy,
   testBackupCompatibilityGuard,
+  testLifeOverviewKeepsOnlyKnownPerspectives,
+  testLifeOverviewMergeUsesNewestVersion,
   testRepeatedImportIsIdempotent,
   testLegacyShapeWithoutVersionRemainsImportable
 ].forEach((test) => test());
 
-console.log("Bearing data migration tests passed (9/9).");
+console.log("Bearing data migration tests passed (12/12).");

@@ -3,11 +3,13 @@
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.BearingData = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const VERSION = 3;
+  const VERSION = 4;
   const DATA_FORMAT = "lucinuo.bearing.data";
-  const STORAGE_KEY = "bearing-v3";
+  const STORAGE_KEY = "bearing-v4";
+  const LEGACY_V3_KEY = "bearing-v3";
   const LEGACY_V2_KEY = "growth-compass-v2";
   const LEGACY_V1_KEY = "growth-compass-v1";
+  const PERSPECTIVE_IDS = ["knowledge", "expression", "aesthetic", "solitude", "emotion"];
 
   function nowIso() {
     return new Date().toISOString();
@@ -21,6 +23,7 @@
       priorities: [],
       directionNotes: [],
       nextMoves: [],
+      lifeOverviews: [],
       legacyImport: null
     };
   }
@@ -103,6 +106,31 @@
     };
   }
 
+  function normalizePerspectives(raw) {
+    const perspectives = {};
+    PERSPECTIVE_IDS.forEach((id) => {
+      const content = cleanText(raw?.[id]);
+      if (content) perspectives[id] = content;
+    });
+    return perspectives;
+  }
+
+  function normalizeLifeOverview(item) {
+    const date = normalizeDate(item?.date);
+    const focus = cleanText(item?.focus);
+    const perspectives = normalizePerspectives(item?.perspectives);
+    if (!date || !focus || !Object.keys(perspectives).length) return null;
+    const createdAt = normalizeTimestamp(item.createdAt);
+    return {
+      id: cleanText(item.id) || `overview-${date}-${createdAt}`,
+      date,
+      perspectives,
+      focus,
+      createdAt,
+      updatedAt: normalizeTimestamp(item.updatedAt, createdAt)
+    };
+  }
+
   function normalizeLegacyArray(value) {
     return Array.isArray(value) ? JSON.parse(JSON.stringify(value)) : [];
   }
@@ -124,6 +152,7 @@
 
     const version = Number(raw.version);
     if (version === VERSION) return Boolean(normalizeData(raw));
+    if (version === 3) return Boolean(migrateV3(raw));
     if (version === 1 || version === 2) return true;
     if (version) return false;
 
@@ -141,14 +170,15 @@
     return data;
   }
 
-  function normalizeData(raw) {
-    if (!raw || Number(raw.version) !== VERSION) return null;
+  function normalizeBearingData(raw, sourceVersion) {
+    if (!raw || Number(raw.version) !== sourceVersion) return null;
     const data = createEmptyData();
     data.updatedAt = normalizeTimestamp(raw.updatedAt);
     data.observations = (raw.observations || []).map(normalizeObservation).filter(Boolean);
     data.priorities = (raw.priorities || []).map(normalizePriority).filter(Boolean);
     data.directionNotes = (raw.directionNotes || []).map(normalizeDirectionNote).filter(Boolean);
     data.nextMoves = (raw.nextMoves || []).map(normalizeNextMove).filter(Boolean);
+    data.lifeOverviews = sourceVersion >= 4 ? (raw.lifeOverviews || []).map(normalizeLifeOverview).filter(Boolean) : [];
     if (raw.legacyImport?.raw) {
       data.legacyImport = {
         sourceVersion: Number(raw.legacyImport.sourceVersion) || 1,
@@ -159,10 +189,26 @@
     return data;
   }
 
+  function normalizeData(raw) {
+    return normalizeBearingData(raw, VERSION);
+  }
+
+  function migrateV3(raw) {
+    return normalizeBearingData(raw, 3);
+  }
+
+  function normalizeCompatibleBearing(raw) {
+    return normalizeData(raw) || migrateV3(raw);
+  }
+
   function readStoredData(storage) {
     const current = safeParse(storage.getItem(STORAGE_KEY));
     const normalizedCurrent = normalizeData(current);
     if (normalizedCurrent) return { data: normalizedCurrent, sourceKey: STORAGE_KEY, migrated: false };
+
+    const legacyV3 = safeParse(storage.getItem(LEGACY_V3_KEY));
+    const migratedV3 = migrateV3(legacyV3);
+    if (migratedV3) return { data: migratedV3, sourceKey: LEGACY_V3_KEY, migrated: true };
 
     const legacyV2 = safeParse(storage.getItem(LEGACY_V2_KEY));
     if (legacyV2) return { data: migrateLegacy(legacyV2, 2), sourceKey: LEGACY_V2_KEY, migrated: true };
@@ -228,12 +274,13 @@
   }
 
   function mergeData(currentRaw, incomingRaw) {
-    const current = normalizeData(currentRaw) || createEmptyData();
-    let incoming = normalizeData(incomingRaw);
+    const current = normalizeCompatibleBearing(currentRaw) || createEmptyData();
+    let incoming = normalizeCompatibleBearing(incomingRaw);
     if (!incoming) {
       const sourceVersion = Number(incomingRaw?.version) || 1;
-      incoming = migrateLegacy(incomingRaw, sourceVersion);
+      if (sourceVersion === 1 || sourceVersion === 2 || Array.isArray(incomingRaw)) incoming = migrateLegacy(incomingRaw, sourceVersion);
     }
+    if (!incoming) return current;
     return {
       version: VERSION,
       updatedAt: nowIso(),
@@ -241,14 +288,15 @@
       priorities: mergeById(current.priorities, incoming.priorities, normalizePriority),
       directionNotes: mergeById(current.directionNotes, incoming.directionNotes, normalizeDirectionNote),
       nextMoves: mergeById(current.nextMoves, incoming.nextMoves, normalizeNextMove),
+      lifeOverviews: mergeById(current.lifeOverviews, incoming.lifeOverviews, normalizeLifeOverview),
       legacyImport: mergeLegacy(current.legacyImport, incoming.legacyImport)
     };
   }
 
   function recordCount(data) {
-    const normalized = normalizeData(data) || createEmptyData();
+    const normalized = normalizeCompatibleBearing(data) || createEmptyData();
     const legacy = normalized.legacyImport?.raw || {};
-    return normalized.observations.length + normalized.priorities.length + normalized.directionNotes.length + normalized.nextMoves.length +
+    return normalized.observations.length + normalized.priorities.length + normalized.directionNotes.length + normalized.nextMoves.length + normalized.lifeOverviews.length +
       (legacy.dailyEntries || []).length + (legacy.weeklyReviews || []).length + (legacy.monthlyReviews || []).length;
   }
 
@@ -260,12 +308,15 @@
     VERSION,
     DATA_FORMAT,
     STORAGE_KEY,
+    LEGACY_V3_KEY,
     LEGACY_V2_KEY,
     LEGACY_V1_KEY,
+    PERSPECTIVE_IDS,
     createEmptyData,
     safeParse,
     isCompatibleBackup,
     normalizeData,
+    migrateV3,
     migrateLegacy,
     readStoredData,
     writeData,

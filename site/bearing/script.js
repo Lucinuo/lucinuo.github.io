@@ -35,6 +35,13 @@
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
   const currentLanguage = () => document.documentElement.dataset.lang === "zh" ? "zh" : "en";
   const t = (en, zh) => currentLanguage() === "zh" ? zh : en;
+  const lifePerspectives = [
+    { id: "knowledge", field: "#overviewKnowledge", en: "Knowledge", zh: "知識體系" },
+    { id: "expression", field: "#overviewExpression", en: "Expression", zh: "有力量的表達" },
+    { id: "aesthetic", field: "#overviewAesthetic", en: "Aesthetic", zh: "審美辨識" },
+    { id: "solitude", field: "#overviewSolitude", en: "Deep interest", zh: "深度愛好" },
+    { id: "emotion", field: "#overviewEmotion", en: "Emotion", zh: "情緒覺察" }
+  ];
 
   function safeGet(key) {
     try { return localStorage.getItem(key); } catch { return null; }
@@ -222,6 +229,76 @@
     if (googleAccessToken) syncNow();
   }
 
+  function setLifeOverviewStep(step) {
+    $$(".overview-step").forEach((panel) => { panel.hidden = Number(panel.dataset.overviewStep) !== step; });
+    const target = $(`.overview-step[data-overview-step="${step}"] textarea`);
+    if (target) target.focus();
+  }
+
+  function openLifeOverview() {
+    $("#lifeOverviewIntro").hidden = true;
+    $("#lifeOverviewForm").hidden = false;
+    $("#lifeOverviewFeedback").textContent = "";
+    setLifeOverviewStep(0);
+  }
+
+  function closeLifeOverview() {
+    $("#lifeOverviewForm").hidden = true;
+    $("#lifeOverviewIntro").hidden = false;
+    $("#lifeOverviewFeedback").textContent = t("Overview closed. Unsaved answers remain until this page is reloaded.", "生活全景已關閉；重新載入頁面前，未保存的回答仍會保留。" );
+  }
+
+  function validateOverviewPerspective(step) {
+    const field = $(`.overview-step[data-overview-step="${step}"] textarea`);
+    if (!field || field.value.trim()) return true;
+    field.setCustomValidity(t("Write one sentence, or choose Skip.", "先留下一句話，或選擇「略過」。"));
+    field.reportValidity();
+    field.addEventListener("input", () => field.setCustomValidity(""), { once: true });
+    return false;
+  }
+
+  function lifeOverviewValues() {
+    const perspectives = {};
+    lifePerspectives.forEach(({ id, field }) => {
+      const content = $(field).value.trim();
+      if (content) perspectives[id] = content;
+    });
+    return perspectives;
+  }
+
+  function resetLifeOverview() {
+    $("#lifeOverviewForm").reset();
+    $("#lifeOverviewForm").hidden = true;
+    $("#lifeOverviewIntro").hidden = false;
+    setLifeOverviewStep(0);
+  }
+
+  function saveLifeOverview(event) {
+    event.preventDefault();
+    const perspectives = lifeOverviewValues();
+    const focusField = $("#overviewFocus");
+    const focus = focusField.value.trim();
+    if (!Object.keys(perspectives).length) {
+      $("#lifeOverviewFeedback").textContent = t("Add one useful perspective before saving. You do not need to complete all five.", "保存前至少留下一個有幫助的面向；不需要完成全部五個。" );
+      setLifeOverviewStep(0);
+      return;
+    }
+    if (!focus) {
+      focusField.setCustomValidity(t("Name the one thing that matters now.", "寫下現在真正重要的一件事。"));
+      focusField.reportValidity();
+      focusField.addEventListener("input", () => focusField.setCustomValidity(""), { once: true });
+      return;
+    }
+    const timestamp = new Date().toISOString();
+    appData.lifeOverviews.unshift({ id: createId("overview"), date: localDateKey(), perspectives, focus, createdAt: timestamp, updatedAt: timestamp });
+    if (!writeAppData()) return;
+    resetLifeOverview();
+    $("#lifeOverviewFeedback").textContent = t("Life overview saved. Carry the focus forward only if it is useful.", "生活全景已保存；只有在有幫助時，才把這個重點帶到下一步。" );
+    renderArchive();
+    renderStorageState();
+    if (googleAccessToken) syncNow();
+  }
+
   function createArchiveItem(date, primary, secondary) {
     const article = document.createElement("article");
     article.className = "archive-item";
@@ -264,6 +341,11 @@
       items.push({ date: observation.date, primary: observation.content, secondary });
     });
 
+    [...appData.lifeOverviews].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).forEach((overview) => {
+      const used = lifePerspectives.filter(({ id }) => overview.perspectives[id]).map(({ en, zh }) => t(en, zh));
+      items.push({ date: overview.date, primary: overview.focus, secondary: `${t("Life overview", "生活全景")} · ${used.join(t(", ", "、"))}` });
+    });
+
     const legacy = appData.legacyImport?.raw || {};
     (legacy.dailyEntries || []).forEach((entry) => {
       const text = String(entry.reusableTrace || entry.note || "").trim();
@@ -303,6 +385,12 @@
     $("#priority").placeholder = t("Choose one thing.", "只選一件事。" );
     $("#nextMove").placeholder = t("Make it small enough to begin.", "讓它小到可以開始。" );
     $("#directionNote").placeholder = t("Name the change, then the direction it suggests.", "先寫下改變，再寫它指向的方向。" );
+    $("#overviewKnowledge").placeholder = t("One change in understanding.", "一個理解上的改變。" );
+    $("#overviewExpression").placeholder = t("A thought, boundary, or message.", "一個想法、界線或需要說清楚的訊息。" );
+    $("#overviewAesthetic").placeholder = t("A detail, work, or judgment that stayed with you.", "一個留在心裡的細節、作品或判斷。" );
+    $("#overviewSolitude").placeholder = t("A moment of genuine absorption.", "一段真正投入其中的時刻。" );
+    $("#overviewEmotion").placeholder = t("A feeling and the signal beneath it.", "一個感受，以及它底下可能存在的訊號。" );
+    $("#overviewFocus").placeholder = t("Carry one thing forward.", "只帶走一件重要的事。" );
   }
 
   function downloadText(filename, text, type) {
@@ -335,6 +423,16 @@
     if (appData.directionNotes.length) {
       lines.push(`# ${t("Direction notes", "方向筆記")}`, "");
       appData.directionNotes.forEach((note) => lines.push(`## ${note.periodStart}`, "", note.content, ""));
+    }
+    if (appData.lifeOverviews.length) {
+      lines.push(`# ${t("Life overviews", "生活全景")}`, "");
+      appData.lifeOverviews.forEach((overview) => {
+        lines.push(`## ${overview.date}`, "", `${t("What matters now", "現在真正重要的事")}：${overview.focus}`);
+        lifePerspectives.forEach(({ id, en, zh }) => {
+          if (overview.perspectives[id]) lines.push(`${t(en, zh)}：${overview.perspectives[id]}`);
+        });
+        lines.push("");
+      });
     }
     const legacy = appData.legacyImport?.raw;
     if (legacy?.dailyEntries?.length) {
@@ -560,6 +658,9 @@
   $("#bearingFlow").addEventListener("submit", saveBearing);
   $("#updateBearing").addEventListener("click", resetFlow);
   $("#reflectForm").addEventListener("submit", saveDirection);
+  $("#openLifeOverview").addEventListener("click", openLifeOverview);
+  $("#closeLifeOverview").addEventListener("click", closeLifeOverview);
+  $("#lifeOverviewForm").addEventListener("submit", saveLifeOverview);
   $("#exportJson").addEventListener("click", exportJson);
   $("#exportMarkdown").addEventListener("click", exportMarkdown);
   $("#importFile").addEventListener("change", previewImport);
@@ -571,6 +672,9 @@
   $$(".app-tab").forEach((tab) => tab.addEventListener("click", () => setActiveView(tab.dataset.view)));
   $$('[data-next-step]').forEach((button) => button.addEventListener("click", () => { const current = Number(button.closest(".flow-step").dataset.step); if (validateStep(current)) setFlowStep(Number(button.dataset.nextStep)); }));
   $$('[data-previous-step]').forEach((button) => button.addEventListener("click", () => setFlowStep(Number(button.dataset.previousStep))));
+  $$('[data-overview-next]').forEach((button) => button.addEventListener("click", () => { const current = Number(button.closest(".overview-step").dataset.overviewStep); if (validateOverviewPerspective(current)) setLifeOverviewStep(Number(button.dataset.overviewNext)); }));
+  $$('[data-overview-skip]').forEach((button) => button.addEventListener("click", () => setLifeOverviewStep(Number(button.dataset.overviewSkip))));
+  $$('[data-overview-previous]').forEach((button) => button.addEventListener("click", () => setLifeOverviewStep(Number(button.dataset.overviewPrevious))));
 
   document.addEventListener("lucinuo:language", () => renderAll());
 

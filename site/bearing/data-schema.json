@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lucinuo.github.io/bearing/data-schema.json",
-  "title": "Bearing Data v3",
+  "title": "Bearing Data v4",
   "description": "The portable data contract shared by Bearing web exports and future native clients.",
   "type": "object",
-  "required": ["version", "updatedAt", "observations", "priorities", "directionNotes", "nextMoves"],
+  "required": ["version", "updatedAt", "observations", "priorities", "directionNotes", "nextMoves", "lifeOverviews"],
   "properties": {
     "app": { "const": "Bearing" },
     "format": { "const": "lucinuo.bearing.data" },
-    "version": { "const": 3 },
+    "version": { "const": 4 },
     "exportedAt": { "type": "string", "format": "date-time" },
     "updatedAt": { "type": "string", "format": "date-time" },
     "observations": {
@@ -26,6 +26,10 @@
     "nextMoves": {
       "type": "array",
       "items": { "$ref": "#/$defs/nextMove" }
+    },
+    "lifeOverviews": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/lifeOverview" }
     },
     "legacyImport": {
       "type": ["object", "null"]
@@ -84,6 +88,29 @@
           }
         }
       ]
+    },
+    "lifeOverview": {
+      "type": "object",
+      "required": ["id", "date", "perspectives", "focus", "createdAt", "updatedAt"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date" },
+        "perspectives": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "knowledge": { "type": "string", "minLength": 1 },
+            "expression": { "type": "string", "minLength": 1 },
+            "aesthetic": { "type": "string", "minLength": 1 },
+            "solitude": { "type": "string", "minLength": 1 },
+            "emotion": { "type": "string", "minLength": 1 }
+          }
+        },
+        "focus": { "type": "string", "minLength": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   }
 }

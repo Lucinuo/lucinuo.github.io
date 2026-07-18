@@ -80,12 +80,17 @@ check(about.includes("Source, technical notes, and development history"), "about
 
 const bearing = fs.readFileSync(path.join(root, "bearing/index.html"), "utf8");
 check(!bearing.includes('class="about-bearing"'), "Bearing still contains the duplicated About Bearing feature list");
+check(bearing.includes("Life overview"), "Bearing does not offer the optional Life overview");
+check(bearing.includes("No score. No need to complete every perspective."), "Life overview does not explain its non-scoring, optional behavior");
+for (const perspective of ["Knowledge", "Expression", "Aesthetic", "Deep interest", "Emotion"]) {
+  check(bearing.includes(perspective), `Life overview is missing the ${perspective} perspective`);
+}
 const bearingScript = fs.readFileSync(path.join(root, "bearing/script.js"), "utf8");
 check(!bearingScript.includes("saved records"), "Bearing still exposes an unnecessary saved-record count");
 check(bearingScript.includes("Data.DATA_FORMAT"), "Bearing exports do not identify the shared data format");
 check(bearingScript.includes("Data.isCompatibleBackup"), "Bearing import does not reject unrelated JSON files");
 const bearingServiceWorker = fs.readFileSync(path.join(root, "bearing/sw.js"), "utf8");
-check(bearingServiceWorker.includes('bearing-shell-v5'), "Bearing service worker cache was not advanced for the Apple-device update");
+check(bearingServiceWorker.includes('bearing-shell-v6'), "Bearing service worker cache was not advanced for Life overview");
 check(bearingServiceWorker.includes('icon-192.png'), "Bearing service worker does not cache the 192px install icon");
 
 const siteCss = fs.readFileSync(path.join(root, "assets/site.css"), "utf8");
@@ -105,6 +110,8 @@ check(fs.existsSync(path.join(root, "icon-192.png")), "192px install icon file i
 
 const dataSchema = JSON.parse(fs.readFileSync(path.join(root, "bearing/data-schema.json"), "utf8"));
 check(dataSchema.$id === "https://lucinuo.github.io/bearing/data-schema.json", "Bearing data schema has the wrong id");
+check(dataSchema.properties.version.const === 4, "Bearing data schema was not advanced to v4");
+check(dataSchema.required.includes("lifeOverviews"), "Bearing data schema does not require lifeOverviews");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

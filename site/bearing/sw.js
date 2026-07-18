@@ -1,4 +1,4 @@
-const CACHE_NAME = "bearing-shell-v5";
+const CACHE_NAME = "bearing-shell-v6";
 const ASSETS = ["./", "./index.html", "./styles.css", "./data-model.js", "./script.js", "../assets/site.css", "../assets/site.js", "../favicon.png", "../apple-touch-icon.png", "../icon-192.png", "../icon-512.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
