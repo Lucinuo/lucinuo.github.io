@@ -2,92 +2,76 @@
 
 Source for [lucinuo.github.io](https://lucinuo.github.io).
 
-**Status:** active redesign on a review branch. The current public site remains unchanged until the redesign is approved and merged.
+**Status:** public-studio and private-workspace boundary redesign on a review branch. The current public site remains unchanged until the redesign is approved and merged.
 
-**Lucinuo** is the personal brand and website of Lucille Huang, bringing together biomedical research, useful digital tools, research visualization, and systems for clearer thinking.
+Lucinuo is Lucille Huang's public digital studio. It brings research context, formally published work, selected projects, and public implementation records into one understandable system.
 
-> Research. Build. Grow.
-
-## Main routes
+## Public routes
 
 | Route | Purpose |
 |:--|:--|
-| `/` | Lucinuo home and brand overview |
-| `/research/` | Biomedical research, evidence practice, and research visualization |
-| `/projects/` | Digital tools and research workflows |
-| `/bearing/` | Bearing — a personal system for reflection, direction, and action |
-| `/notes/` | Short notes across Research, Build, and Grow |
-| `/about/` | Lucille Huang's background, capabilities, and contact |
-| `/growth-compass/` | Compatibility bridge to `/bearing/`; excluded from navigation and sitemap |
+| `/` | Public studio overview and selected work |
+| `/research/` | Research directions, questions, scientific context, and evidence practice |
+| `/publications/` | Verified formal publications with complete citation records |
+| `/projects/` | Selected digital tools, research workflows, visual systems, and open implementations |
+| `/about/` | Direct introduction, current work, academic context, and contact |
+| `/notes/` | Compatibility redirect to `/publications/` |
+| `/workspace/` | Non-indexed public boundary page; it does not expose the private application |
+| `/bearing/` | Compatibility redirect to the private workspace boundary |
+| `/growth-compass/` | Legacy compatibility redirect; old browser data is not deleted |
 
-## Bearing
+GitHub is not a replacement for the website. Lucinuo explains why a project matters and selects what should be seen; GitHub holds public source, technical documentation, and development history.
 
-**Bearing by Lucinuo**
-**See clearly. Move deliberately.**
+## Public and private boundary
 
-Bearing replaces the previous five-pillar tracker with a quieter loop:
+The private workspace is a personal system, not a public product. It must use real identity authentication and private storage on a separate deployment origin. GitHub Pages, hidden URLs, front-end passwords, and obfuscated scripts are not acceptable protection.
 
-1. Notice — Where am I?
-2. Choose — What matters now?
-3. Reorient — What is changing?
-4. Move — What should I do next?
-
-Existing browser records, JSON backups, and Google Drive app data remain readable through an explicit legacy compatibility layer. Legacy storage keys are read-only migration inputs; all new records use the Bearing v3 model.
+The release and migration requirements are documented in [`docs/private-workspace-architecture.md`](docs/private-workspace-architecture.md). The public `/bearing/` route must not be withdrawn on `main` until authenticated access, compatible import, verified transfer, and recovery export are complete.
 
 ## Architecture
 
-- Static HTML, CSS, and JavaScript; no framework and no build step.
-- Shared design system and navigation in `site/assets/`.
-- Bearing data migration logic in `site/bearing/data-model.js`.
+- Static HTML, CSS, and JavaScript; no framework or build step.
+- Shared public design system and navigation in `site/assets/`.
+- English and Traditional Chinese content.
+- Theme follows the operating-system preference until the visitor chooses light or dark; the last explicit choice is remembered.
 - GitHub Actions deploys the `site/` directory to GitHub Pages.
-- Bilingual English / Traditional Chinese interface.
-- Device-local storage with optional Google Drive `appDataFolder` sync.
+- Private workspace code, credentials, records, and sync state belong outside this public deployment.
 
-## Content responsibilities
+## Content rules
 
-- **Lucinuo website:** brand narrative, project selection, context, case studies, and live experiences.
-- **Bearing:** the focused product experience for reflection, direction, and action.
-- **GitHub:** public source, technical documentation, change history, issues, and reproducibility.
-
-Not every case study has a public repository. Private research records and source collections stay private; the Projects page states the available destination for each project.
+- Publication records are added only after formal publication and bibliographic verification.
+- The public site selects representative projects; it does not mirror every repository.
+- Private research records, source collections, personal reflections, and credentials are not committed here.
+- A future About photograph must be an authentic work or daily-life image supplied by Lucille. The site does not synthesize a false laboratory or work scene.
 
 ## Local preview
-
-From the repository root:
 
 ```bash
 python3 -m http.server 4181 --directory site
 ```
 
-Then open `http://127.0.0.1:4181/`. The same preview includes `/projects/` and `/bearing/`.
-
-## Data and privacy
-
-- Bearing stores new records on the current device unless optional Google Drive sync is connected.
-- Legacy Growth Compass data is read as a migration input and is not deleted automatically.
-- JSON import validates compatible Bearing or legacy backups before confirmation.
-- No private research source files are included in this repository.
+Open `http://127.0.0.1:4181/`.
 
 ## Accessibility and device support
 
-- Keyboard-visible controls, skip links, readable contrast, and text labels for essential actions.
+- Keyboard-visible controls, skip links, readable contrast, and text alternatives for icon controls.
+- System-aware light and dark themes.
 - Reduced-motion support and no scroll hijacking.
-- Responsive layouts tested for Mac, iPad, and iPhone widths, including Apple safe areas.
+- Responsive layouts for Mac, iPad, and iPhone, including Apple safe areas.
 
 ## Verification
 
 ```bash
 node tests/site-validation.test.cjs
-node tests/bearing-data.test.cjs
 ```
 
-The site test checks routes, metadata, internal links, the legacy redirect, GitHub destinations, Apple-device rules, and install metadata. The migration test covers v1, v2, v3 precedence, corrupted current data fallback, updated-record merging, and preservation of legacy meaning.
+The test checks public routes, metadata, internal links, Publications migration, private boundary rules, sitemap scope, GitHub destinations, theme behavior, and Apple-device layout safeguards.
 
 ## Deployment
 
 Push to `main` → GitHub Actions uploads `./site` → GitHub Pages publishes the site.
 
-Merging is therefore also the publication decision. Review branches and pull requests do not change the live website.
+Merging is the publication decision. Review branches do not change the live website.
 
 ## License
 

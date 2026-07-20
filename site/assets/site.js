@@ -20,13 +20,27 @@
     }
   };
 
-  function applyTheme(theme) {
+  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+  function updateThemeControls(theme) {
+    const language = document.documentElement.dataset.lang === "zh" ? "zh" : "en";
+    const nextLabel = theme === "dark"
+      ? language === "zh" ? "切換至淺色模式" : "Switch to light mode"
+      : language === "zh" ? "切換至深色模式" : "Switch to dark mode";
+    document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+      button.setAttribute("aria-label", nextLabel);
+      button.setAttribute("title", nextLabel);
+    });
+  }
+
+  function applyTheme(theme, { persist = true } = {}) {
     const nextTheme = theme === "dark" ? "dark" : "light";
     document.documentElement.dataset.theme = nextTheme;
-    document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.dataset.themeChoice === nextTheme));
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+      meta.setAttribute("content", nextTheme === "dark" ? "#111411" : "#FBFBFA");
     });
-    setStored(themeKey, nextTheme);
+    updateThemeControls(nextTheme);
+    if (persist) setStored(themeKey, nextTheme);
     document.dispatchEvent(new CustomEvent("lucinuo:theme", { detail: nextTheme }));
   }
 
@@ -51,20 +65,28 @@
     });
 
     setStored(languageKey, nextLanguage);
+    updateThemeControls(document.documentElement.dataset.theme || "light");
     document.dispatchEvent(new CustomEvent("lucinuo:language", { detail: nextLanguage }));
   }
 
   const initialLanguage = getStored(languageKey) || getStored(legacyLanguageKey) || "en";
-  const initialTheme = getStored(themeKey) || getStored(legacyThemeKey) || "light";
+  const storedTheme = getStored(themeKey) || getStored(legacyThemeKey);
+  const initialTheme = storedTheme || (systemTheme.matches ? "dark" : "light");
   applyLanguage(initialLanguage);
-  applyTheme(initialTheme);
+  applyTheme(initialTheme, { persist: Boolean(storedTheme) });
 
   document.querySelectorAll("[data-language]").forEach((button) => {
     button.addEventListener("click", () => applyLanguage(button.dataset.language));
   });
 
-  document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-    button.addEventListener("click", () => applyTheme(button.dataset.themeChoice));
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    });
+  });
+
+  systemTheme.addEventListener("change", (event) => {
+    if (!getStored(themeKey) && !getStored(legacyThemeKey)) applyTheme(event.matches ? "dark" : "light", { persist: false });
   });
 
   const menuButton = document.querySelector("[data-menu-button]");
