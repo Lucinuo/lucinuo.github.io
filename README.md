@@ -14,6 +14,9 @@ Lucinuo is Lucille Huang's public digital studio. It brings research context, fo
 | `/research/` | Research directions, questions, scientific context, and evidence practice |
 | `/publications/` | Verified formal publications with complete citation records |
 | `/projects/` | Selected digital tools, research workflows, visual systems, and open implementations |
+| `/projects/bearing/` | Public case study for the private Bearing application; no app access or personal data |
+| `/projects/lighthouse/` | Public case study for the Lighthouse presence concept |
+| `/lighthouse/` | Self-contained public interaction demonstration for Lighthouse |
 | `/about/` | Direct introduction, current work, academic context, and contact |
 | `/notes/` | Compatibility redirect to `/publications/` |
 | `/workspace/` | Non-indexed public boundary page; it does not expose the private application |
@@ -24,7 +27,7 @@ GitHub is not a replacement for the website. Lucinuo explains why a project matt
 
 ## Public and private boundary
 
-The private workspace is a personal system, not a public product. It must use real identity authentication and private storage on a separate deployment origin. GitHub Pages, hidden URLs, front-end passwords, and obfuscated scripts are not acceptable protection.
+The private workspace is a personal system, not a public product. Its design concept may be documented at `/projects/bearing/`, but the working application, authentication, records, and data remain private. It must use real identity authentication and private storage on a separate deployment origin. GitHub Pages, hidden URLs, front-end passwords, and obfuscated scripts are not acceptable protection.
 
 The release and migration requirements are documented in [`docs/private-workspace-architecture.md`](docs/private-workspace-architecture.md). The public `/bearing/` route must not be withdrawn on `main` until authenticated access, compatible import, verified transfer, and recovery export are complete.
 

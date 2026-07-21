@@ -7,6 +7,8 @@ const publicPages = [
   ["/research/", "research/index.html"],
   ["/publications/", "publications/index.html"],
   ["/projects/", "projects/index.html"],
+  ["/projects/bearing/", "projects/bearing/index.html"],
+  ["/projects/lighthouse/", "projects/lighthouse/index.html"],
   ["/about/", "about/index.html"],
 ];
 
@@ -31,7 +33,7 @@ for (const [route, relativeFile] of publicPages) {
   check(html.includes(`rel="canonical" href="https://lucinuo.github.io${route}"`), `${route} has the wrong canonical URL`);
   check(/property="og:title"/.test(html), `${route} is missing og:title`);
   check(/property="og:description"/.test(html), `${route} is missing og:description`);
-  check(html.includes('property="og:image" content="https://lucinuo.github.io/og.png"'), `${route} is missing the shared social image`);
+  check(/property="og:image" content="https:\/\/lucinuo\.github\.io\/[^"]+"/.test(html), `${route} is missing a local social image`);
   check(/<h1(?:\s|>)/.test(html), `${route} is missing an h1`);
   check(html.includes("viewport-fit=cover"), `${route} does not account for Apple safe areas`);
   check(html.includes('href="https://github.com/Lucinuo"'), `${route} does not link to the Lucinuo GitHub profile`);
@@ -97,13 +99,37 @@ check(publications.includes("No public publication records yet"), "Publications 
 check(!publications.includes("record-structure"), "Publications still exposes an internal record specification");
 
 const projects = fs.readFileSync(path.join(root, "projects/index.html"), "utf8");
-check(!projects.includes('id="bearing-project"'), "Projects still presents the private workspace as a public project");
+check(projects.includes('id="bearing-project"'), "Projects is missing the public Bearing concept");
+check(projects.includes("No public app, login, or interactive demo"), "Projects does not state the Bearing access boundary");
+check(projects.includes('href="/projects/bearing/"'), "Projects does not link to the Bearing concept case study");
+check(projects.includes('id="lighthouse-project"'), "Projects is missing Lighthouse");
+check(projects.includes('href="/projects/lighthouse/"') && projects.includes('href="/lighthouse/"'), "Projects is missing Lighthouse case-study or concept links");
 check(projects.includes("Lucinuo Website System"), "Projects does not explain the public website repository");
 check(projects.includes("lucinuo-website-preview.png"), "Projects is missing visual evidence of the website implementation");
 check(projects.includes("Semantic HTML, shared CSS and JavaScript"), "Projects does not name the website implementation stack");
 check(projects.includes("Literature Knowledge System"), "Projects is missing the privacy-safe literature-system case study");
 check(projects.includes("It is not a statement of Lucille Huang's own research"), "Projects does not label HCC/TAM as a demonstration");
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
+
+const bearingCase = fs.readFileSync(path.join(root, "projects/bearing/index.html"), "utf8");
+check(bearingCase.includes("Concept is public. The application and its data are private."), "Bearing case study does not state the public/private boundary");
+check(bearingCase.includes("Static concept preview") || bearingCase.includes("Static, fictional specimen"), "Bearing case study does not label its interface as static or fictional");
+check(!bearingCase.includes('href="/workspace/"') && !bearingCase.includes('href="/bearing/"'), "Bearing case study exposes a private application route");
+check(!bearingCase.includes("<form"), "Bearing case study contains an interactive app form");
+
+const lighthouseCase = fs.readFileSync(path.join(root, "projects/lighthouse/index.html"), "utf8");
+check(lighthouseCase.includes("Presence without pressure"), "Lighthouse case study is missing its core design principle");
+check(lighthouseCase.includes('href="/lighthouse/"'), "Lighthouse case study does not link to the public concept");
+check(lighthouseCase.includes("not a production communication service"), "Lighthouse case study overstates the prototype");
+
+const lighthouse = fs.readFileSync(path.join(root, "lighthouse/index.html"), "utf8");
+check(lighthouse.includes('rel="canonical" href="https://lucinuo.github.io/lighthouse/"'), "Lighthouse concept has the wrong canonical URL");
+check(lighthouse.includes("data:image/webp;base64,"), "Lighthouse concept does not embed its scene images");
+check(!lighthouse.includes("__LIT_IMAGE__") && !lighthouse.includes("__UNLIT_IMAGE__"), "Lighthouse concept still contains image placeholders");
+check(!lighthouse.includes('<script src=') && !lighthouse.includes('rel="stylesheet"'), "Lighthouse concept is not self-contained");
+check(lighthouse.includes("data-lamp-toggle") && lighthouse.includes("aria-pressed"), "Lighthouse lamp is not an accessible control");
+check(lighthouse.includes("prefers-reduced-motion"), "Lighthouse concept does not respect reduced motion");
+check(lighthouse.includes('href="/projects/lighthouse/"'), "Lighthouse concept has no way back to its case study");
 
 const research = fs.readFileSync(path.join(root, "research/index.html"), "utf8");
 check(!research.includes("HCC") && !research.includes("TAM"), "Research still centers the separate HCC/TAM demonstration");
