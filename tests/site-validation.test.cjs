@@ -100,7 +100,7 @@ check(!publications.includes("record-structure"), "Publications still exposes an
 
 const projects = fs.readFileSync(path.join(root, "projects/index.html"), "utf8");
 check(projects.includes('id="bearing-project"'), "Projects is missing the public Bearing concept");
-check(projects.includes("No public app, login, or interactive demo"), "Projects does not state the Bearing access boundary");
+check(projects.includes("Private login planned; no public app or interactive demo"), "Projects does not state the Bearing access boundary");
 check(projects.includes('href="/projects/bearing/"'), "Projects does not link to the Bearing concept case study");
 check(projects.includes('id="lighthouse-project"'), "Projects is missing Lighthouse");
 check(projects.includes('href="/projects/lighthouse/"') && projects.includes('href="/lighthouse/"'), "Projects is missing Lighthouse case-study or concept links");
@@ -112,7 +112,7 @@ check(projects.includes("It is not a statement of Lucille Huang's own research")
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
 
 const bearingCase = fs.readFileSync(path.join(root, "projects/bearing/index.html"), "utf8");
-check(bearingCase.includes("Concept is public. The application and its data are private."), "Bearing case study does not state the public/private boundary");
+check(bearingCase.includes("Concept is public. Private login is planned; the application and its data are private."), "Bearing case study does not state the public/private boundary");
 check(bearingCase.includes("Static concept preview") || bearingCase.includes("Static, fictional specimen"), "Bearing case study does not label its interface as static or fictional");
 check(!bearingCase.includes('href="/workspace/"') && !bearingCase.includes('href="/bearing/"'), "Bearing case study exposes a private application route");
 check(!bearingCase.includes("<form"), "Bearing case study contains an interactive app form");
@@ -138,7 +138,8 @@ const about = fs.readFileSync(path.join(root, "about/index.html"), "utf8");
 check(about.includes("I’m Lucille Huang"), "About does not begin with a direct introduction");
 check(about.includes('class="about-portrait"') && about.includes("lucille.jpg"), "About does not use the original portrait in the editorial layout");
 check(about.includes("我是 Lucille Huang"), "About does not use Lucille Huang in Chinese mode");
-check(about.includes("Graduate Institute of Life Sciences, National Defense Medical University"), "About contact context is missing the institutional affiliation");
+check(about.includes("PhD Candidate, Graduate Institute of Life Sciences, National Defense Medical University"), "About contact context is missing the institutional affiliation");
+check(about.includes("國防醫學院生命科學研究所博士候選人"), "About page is missing Chinese PhD candidate status");
 check(about.indexOf("Biological research") < about.indexOf("Academic context"), "About leads with academic status instead of current work");
 
 const siteCss = fs.readFileSync(path.join(root, "assets/site.css"), "utf8");

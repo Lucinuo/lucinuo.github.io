@@ -14,8 +14,8 @@ Lucinuo is Lucille Huang's public digital studio. It brings research context, fo
 | `/research/` | Research directions, questions, scientific context, and evidence practice |
 | `/publications/` | Verified formal publications with complete citation records |
 | `/projects/` | Selected digital tools, research workflows, visual systems, and open implementations |
-| `/projects/bearing/` | Public case study for the private Bearing application; no app access or personal data |
-| `/projects/lighthouse/` | Public case study for the Lighthouse presence concept |
+| `/projects/bearing/` | Public case study for the private Bearing application; private login is planned outside the public site, with no app access or personal data exposed here |
+| `/projects/lighthouse/` | Public case study for the Lighthouse companionship application concept prototype |
 | `/lighthouse/` | Self-contained public interaction demonstration for Lighthouse |
 | `/about/` | Direct introduction, current work, academic context, and contact |
 | `/notes/` | Compatibility redirect to `/publications/` |
