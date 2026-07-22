@@ -429,8 +429,7 @@ h3 {
 }
 
 .section {
-  padding-block: clamp(72px, 7vw, 84px);
-  border-top: 1px solid var(--color-line);
+  padding-block: clamp(80px, 9vw, 112px);
 }
 
 .section-heading {
@@ -486,6 +485,65 @@ h3 {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.project-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(32px, 4vw, 56px) clamp(24px, 3vw, 40px);
+  margin-top: var(--space-7);
+}
+
+.project-card {
+  min-width: 0;
+}
+
+.project-card-media {
+  display: block;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #07101a;
+}
+
+.project-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 360ms ease;
+}
+
+.project-card-media-site img {
+  object-position: center 18%;
+}
+
+.project-card:hover .project-card-media img {
+  transform: scale(1.018);
+}
+
+.project-card-copy {
+  padding-top: var(--space-5);
+}
+
+.project-card-meta {
+  margin: 0 0 var(--space-2);
+  color: var(--color-muted);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.project-card h3 {
+  margin: 0;
+  font-size: clamp(24px, 2.2vw, 30px);
+}
+
+.project-card h3 a {
+  text-decoration: none;
+}
+
+.project-card-copy > p:not(.project-card-meta) {
+  margin: var(--space-3) 0 var(--space-4);
+  color: var(--color-muted);
 }
 
 .empty-publications {
@@ -759,6 +817,10 @@ h3 {
   line-height: 1.6;
 }
 
+.bearing-concept img {
+  aspect-ratio: 3 / 2;
+}
+
 .privacy-statement {
   display: flex;
   align-items: center;
@@ -954,6 +1016,10 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .project-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .method-list {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -993,7 +1059,7 @@ h3 {
   }
 
   .section {
-    padding-block: 56px;
+    padding-block: 64px;
   }
 
   .page-hero {
@@ -1010,6 +1076,11 @@ h3 {
 
   .project-table-head {
     display: none;
+  }
+
+  .project-gallery {
+    grid-template-columns: 1fr;
+    gap: var(--space-7);
   }
 
   .about-hero {
@@ -1053,6 +1124,11 @@ h3 {
     object-position: 34% center;
   }
 
+  .bearing-concept img {
+    min-height: 0;
+    object-position: center;
+  }
+
   .bearing-preview-body {
     min-height: 440px;
     padding: 48px 24px;
@@ -1090,5 +1166,9 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .project-card-media img {
+    transition: none;
   }
 }
