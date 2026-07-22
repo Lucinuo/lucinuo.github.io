@@ -41,6 +41,7 @@ for (const [route, relativeFile] of publicPages) {
   check(html.includes("data-theme-toggle"), `${route} is missing the shared theme toggle`);
   check(html.includes("theme-icon-sun") && html.includes("theme-icon-moon"), `${route} does not use sun and moon icons`);
   check(html.includes('href="/publications/"'), `${route} does not expose Publications`);
+  check(!html.includes('class="button"') && !html.includes('class="button secondary"'), `${route} still contains a filled CTA link`);
   check(!html.includes('href="/bearing/"'), `${route} still promotes the former public workspace`);
   check(!html.includes(">Notes<"), `${route} still exposes Notes as a public section`);
   check(!html.includes("黃詩婷"), `${route} still uses the former public name`);
@@ -106,7 +107,7 @@ check(projects.includes('href="/projects/bearing/"'), "Projects does not link to
 check(projects.includes('id="lighthouse-project"'), "Projects is missing Lighthouse");
 check(projects.includes('href="/projects/lighthouse/"') && projects.includes('href="/lighthouse/"'), "Projects is missing Lighthouse case-study or concept links");
 check(projects.includes("Lucinuo Website System"), "Projects does not explain the public website repository");
-check(projects.includes("lucinuo-website-preview.png"), "Projects is missing visual evidence of the website implementation");
+check(projects.includes("lucinuo-homepage-preview.png"), "Projects is missing the current homepage visual evidence");
 check(projects.includes("Plain HTML, CSS, and JavaScript") && projects.includes("No framework"), "Projects does not name the website implementation stack");
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
 
