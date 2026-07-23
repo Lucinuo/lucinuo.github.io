@@ -511,7 +511,8 @@ h3 {
 }
 
 .project-card-media-site img {
-  object-position: center 18%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .project-card:hover .project-card-media img {
