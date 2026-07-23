@@ -7,7 +7,7 @@ const publicPages = [
   ["/research/", "research/index.html"],
   ["/publications/", "publications/index.html"],
   ["/projects/", "projects/index.html"],
-  ["/projects/bearing/", "projects/bearing/index.html"],
+  ["/projects/phase-shift/", "projects/phase-shift/index.html"],
   ["/projects/lighthouse/", "projects/lighthouse/index.html"],
   ["/about/", "about/index.html"],
 ];
@@ -64,6 +64,7 @@ const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 for (const [route] of publicPages) {
   check(sitemap.includes(`<loc>https://lucinuo.github.io${route}</loc>`), `sitemap is missing ${route}`);
 }
+check(sitemap.includes("<loc>https://lucinuo.github.io/phase-shift/</loc>"), "sitemap is missing the playable Phase Shift game");
 for (const privateOrLegacy of ["/workspace/", "/bearing/", "/growth-compass/", "/notes/"]) {
   check(!sitemap.includes(`<loc>https://lucinuo.github.io${privateOrLegacy}</loc>`), `sitemap exposes ${privateOrLegacy}`);
 }
@@ -91,7 +92,7 @@ check(home.includes("public digital studio"), "home does not define the public s
 check(home.includes("Research, tools, and work in progress"), "home lacks the direct public-studio introduction");
 check(home.includes("Saccharina japonica fucoidan (SJF)"), "home is missing the approved public SJF research summary");
 check(home.includes("HTML") && home.includes("CSS") && home.includes("JavaScript") && home.includes("no framework"), "home does not give a concrete Digital systems example");
-check(home.includes('class="project-gallery"') && home.includes("bearing-concept.webp"), "home is missing the image-led project gallery or Bearing visual");
+check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
 
@@ -101,9 +102,9 @@ check(publications.includes("No public publication records yet"), "Publications 
 check(!publications.includes("record-structure"), "Publications still exposes an internal record specification");
 
 const projects = fs.readFileSync(path.join(root, "projects/index.html"), "utf8");
-check(projects.includes('id="bearing-project"'), "Projects is missing the public Bearing concept");
-check(projects.includes("The private app runs separately; there is no public app or interactive demo here."), "Projects does not state the Bearing access boundary");
-check(projects.includes('href="/projects/bearing/"'), "Projects does not link to the Bearing concept case study");
+check(projects.includes('id="phase-shift-project"'), "Projects is missing Phase Shift");
+check(projects.includes('href="/projects/phase-shift/"') && projects.includes('href="/phase-shift/"'), "Projects is missing the Phase Shift case-study or game links");
+check(projects.includes("phase-shift-arena.webp"), "Projects is missing the Phase Shift visual");
 check(projects.includes('id="lighthouse-project"'), "Projects is missing Lighthouse");
 check(projects.includes('href="/projects/lighthouse/"') && projects.includes('href="/lighthouse/"'), "Projects is missing Lighthouse case-study or concept links");
 check(projects.includes("Lucinuo Website System"), "Projects does not explain the public website repository");
@@ -111,11 +112,27 @@ check(projects.includes("lucinuo-homepage-preview.png"), "Projects is missing th
 check(projects.includes("Plain HTML, CSS, and JavaScript") && projects.includes("No framework"), "Projects does not name the website implementation stack");
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
 
-const bearingCase = fs.readFileSync(path.join(root, "projects/bearing/index.html"), "utf8");
-check(bearingCase.includes("The concept is public. The working application and its data stay private."), "Bearing case study does not state the public/private boundary");
-check(bearingCase.includes("bearing-concept.webp") && bearingCase.includes("concept visual"), "Bearing case study is missing its public concept visual");
-check(!bearingCase.includes('href="/workspace/"') && !bearingCase.includes('href="/bearing/"'), "Bearing case study exposes a private application route");
-check(!bearingCase.includes("<form"), "Bearing case study contains an interactive app form");
+const phaseShiftCase = fs.readFileSync(path.join(root, "projects/phase-shift/index.html"), "utf8");
+check(phaseShiftCase.includes("Clear the field. Change the phase."), "Phase Shift case study is missing its product statement");
+check(phaseShiftCase.includes('href="/phase-shift/"'), "Phase Shift case study does not link to the playable game");
+check(phaseShiftCase.includes("phase-shift-arena.webp"), "Phase Shift case study is missing its game visual");
+check(phaseShiftCase.includes("Shift Attack") && phaseShiftCase.includes("Shift Guard"), "Phase Shift case study does not explain both phase choices");
+
+const phaseShift = fs.readFileSync(path.join(root, "phase-shift/index.html"), "utf8");
+const phaseShiftCss = fs.readFileSync(path.join(root, "phase-shift/styles.css"), "utf8");
+const phaseShiftScript = fs.readFileSync(path.join(root, "phase-shift/game.js"), "utf8");
+check(phaseShift.includes('rel="canonical" href="https://lucinuo.github.io/phase-shift/"'), "Phase Shift game has the wrong canonical URL");
+check(phaseShift.includes('href="/projects/phase-shift/"'), "Phase Shift game has no way back to its case study");
+check(phaseShift.includes("data-player-board") && phaseShift.includes("data-ai-board"), "Phase Shift is missing a player or AI field");
+for (const control of ["left", "right", "rotate", "soft", "drop", "hold", "phase"]) {
+  check(phaseShift.includes(`data-control="${control}"`), `Phase Shift is missing the ${control} touch control`);
+}
+check(phaseShift.includes('data-phase-mode="attack"') && phaseShift.includes('data-phase-mode="guard"'), "Phase Shift is missing an attack or guard phase choice");
+check(phaseShiftCss.includes("prefers-reduced-motion"), "Phase Shift does not respect reduced motion");
+check(phaseShiftCss.includes("arena-background.webp") && phaseShiftScript.includes("block-tile.png"), "Phase Shift does not use its generated production assets");
+check(phaseShiftScript.includes("chooseAIPlacement") && phaseShiftScript.includes("removeInterferenceRows"), "Phase Shift is missing AI placement or guard rules");
+check(fs.existsSync(path.join(root, "phase-shift/assets/arena-background.webp")), "Phase Shift arena background is missing");
+check(fs.existsSync(path.join(root, "phase-shift/assets/block-tile.png")), "Phase Shift block tile is missing");
 
 const lighthouseCase = fs.readFileSync(path.join(root, "projects/lighthouse/index.html"), "utf8");
 check(lighthouseCase.includes("Presence without pressure"), "Lighthouse case study is missing its core design principle");

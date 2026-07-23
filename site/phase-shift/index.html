@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b0e">
+  <meta name="description" content="Phase Shift is an original competitive falling-block puzzle game by Lucinuo. Clear the field. Change the phase.">
+  <meta name="robots" content="index, follow">
+  <title>Phase Shift — Lucinuo</title>
+  <link rel="canonical" href="https://lucinuo.github.io/phase-shift/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lucinuo.github.io/phase-shift/">
+  <meta property="og:site_name" content="Lucinuo">
+  <meta property="og:title" content="Phase Shift — Lucinuo">
+  <meta property="og:description" content="Clear the field, charge the phase, and choose attack or guard in an original competitive falling-block game.">
+  <meta property="og:image" content="https://lucinuo.github.io/images/phase-shift-arena.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./game.js" type="module"></script>
+</head>
+<body>
+  <main class="game-shell" data-game-shell>
+    <header class="game-header">
+      <a class="game-title" href="/projects/phase-shift/" aria-label="Phase Shift project page">Phase Shift</a>
+      <div class="match-score" aria-label="Match score">
+        <span>YOU</span>
+        <strong data-player-wins>0</strong>
+        <span aria-hidden="true">—</span>
+        <strong data-ai-wins>0</strong>
+        <span>AI</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-button" type="button" data-pause aria-label="Pause game">
+          <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7.5 5.5v13M16.5 5.5v13"/>
+          </svg>
+          <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m8 5 11 7-11 7Z"/>
+          </svg>
+          <span data-pause-label>Pause</span>
+        </button>
+        <button class="icon-button sound-button" type="button" data-sound aria-label="Mute sound">
+          <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 9v6h4l5 4V5L9 9H5Z"/>
+            <path d="M17 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>
+          </svg>
+          <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 9v6h4l5 4V5L9 9H5Z"/>
+            <path d="m18 9 4 4M22 9l-4 4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="arena" aria-label="Phase Shift match">
+      <aside class="player-utility" aria-label="Player pieces and score">
+        <div class="piece-preview">
+          <span class="utility-label">Hold</span>
+          <canvas width="112" height="88" data-player-hold aria-label="Held piece"></canvas>
+        </div>
+        <div class="piece-preview next-preview">
+          <span class="utility-label">Next</span>
+          <canvas width="112" height="268" data-player-next aria-label="Next pieces"></canvas>
+        </div>
+        <dl class="side-stats">
+          <div><dt>Score</dt><dd data-player-score>0</dd></div>
+          <div><dt>Lines</dt><dd data-player-lines>0</dd></div>
+          <div><dt>Combo</dt><dd class="accent-stat" data-player-combo>0</dd></div>
+        </dl>
+      </aside>
+
+      <section class="field-group player-field-group" aria-labelledby="player-label">
+        <h1 id="player-label">You</h1>
+        <div class="board-frame">
+          <canvas class="game-board" width="320" height="640" data-player-board aria-label="Your playfield"></canvas>
+          <div class="board-flash" data-player-flash aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="phase-column" aria-label="Phase controls">
+        <p class="phase-state" data-phase-state>Phase charging</p>
+        <div class="phase-meter" role="progressbar" aria-label="Phase energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="phase-fill" data-phase-fill></div>
+          <div class="phase-current" aria-hidden="true"></div>
+        </div>
+        <strong class="phase-value" data-phase-value>0%</strong>
+        <div class="phase-modes" role="group" aria-label="Choose phase mode">
+          <button type="button" class="phase-mode is-selected" data-phase-mode="attack">Shift<br>Attack</button>
+          <button type="button" class="phase-mode" data-phase-mode="guard">Shift<br>Guard</button>
+        </div>
+        <button type="button" class="phase-activate" data-phase-activate disabled>Activate phase</button>
+      </section>
+
+      <section class="field-group ai-field-group" aria-labelledby="ai-label">
+        <h2 id="ai-label">AI</h2>
+        <div class="board-frame">
+          <canvas class="game-board" width="320" height="640" data-ai-board aria-label="Computer playfield"></canvas>
+          <div class="board-flash" data-ai-flash aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <aside class="ai-utility" aria-label="Computer pieces and score">
+        <div class="piece-preview next-preview">
+          <span class="utility-label">Next</span>
+          <canvas width="112" height="268" data-ai-next aria-label="Computer next pieces"></canvas>
+        </div>
+        <dl class="side-stats">
+          <div><dt>Score</dt><dd data-ai-score>0</dd></div>
+          <div><dt>Lines</dt><dd data-ai-lines>0</dd></div>
+          <div><dt>Incoming</dt><dd class="accent-stat" data-ai-incoming>0</dd></div>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="mobile-status" aria-label="Match statistics">
+      <dl>
+        <div><dt>Score</dt><dd data-mobile-score>0</dd></div>
+        <div><dt>Lines</dt><dd data-mobile-lines>0</dd></div>
+        <div><dt>Combo</dt><dd class="accent-stat" data-mobile-combo>0</dd></div>
+        <div><dt>Incoming</dt><dd class="accent-stat" data-mobile-incoming>0</dd></div>
+      </dl>
+    </section>
+
+    <section class="mobile-phase" aria-label="Mobile phase controls">
+      <p class="phase-state" data-mobile-phase-state>Phase charging</p>
+      <div class="mobile-phase-meter" role="progressbar" aria-label="Phase energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div data-mobile-phase-fill></div>
+      </div>
+      <div class="phase-modes">
+        <button type="button" class="phase-mode is-selected" data-mobile-phase-mode="attack">Shift Attack</button>
+        <button type="button" class="phase-mode" data-mobile-phase-mode="guard">Shift Guard</button>
+      </div>
+    </section>
+
+    <section class="touch-controls" aria-label="Touch controls">
+      <button type="button" data-control="left" aria-label="Move left">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+        <span>Left</span>
+      </button>
+      <button type="button" data-control="right" aria-label="Move right">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+        <span>Right</span>
+      </button>
+      <button type="button" data-control="rotate" aria-label="Rotate piece">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4l-2 2a8 8 0 1 0 2.2 8"/><path d="M19 4h-4"/></svg>
+        <span>Rotate</span>
+      </button>
+      <button type="button" data-control="soft" aria-label="Soft drop">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg>
+        <span>Soft drop</span>
+      </button>
+      <button type="button" data-control="drop" aria-label="Hard drop">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 7 7 7-7M5 12l7 7 7-7"/></svg>
+        <span>Hard drop</span>
+      </button>
+      <button type="button" data-control="hold" aria-label="Hold piece">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h9a4 4 0 0 1 0 8H8"/><path d="m9 4-3 3 3 3M15 20l3-3-3-3"/></svg>
+        <span>Hold</span>
+      </button>
+      <button type="button" class="touch-phase" data-control="phase" disabled>
+        <span class="phase-ring" aria-hidden="true"></span>
+        <span>Phase</span>
+      </button>
+    </section>
+
+    <footer class="keyboard-help" aria-label="Keyboard controls">
+      <span>Move <kbd>←</kbd> <kbd>→</kbd></span>
+      <span>Rotate <kbd>↑</kbd></span>
+      <span>Soft drop <kbd>↓</kbd></span>
+      <span>Hard drop <kbd>Space</kbd></span>
+      <span>Hold <kbd>C</kbd></span>
+      <span>Phase <kbd>X</kbd></span>
+    </footer>
+
+    <section class="start-layer is-visible" data-start-layer aria-live="polite">
+      <div class="start-panel">
+        <h2 data-overlay-title>Phase Shift</h2>
+        <p data-overlay-copy>Clear the field. Change the phase.</p>
+        <button type="button" data-start>Start match</button>
+        <a href="/projects/phase-shift/">About this project</a>
+      </div>
+    </section>
+
+    <div class="announcement" data-announcement role="status" aria-live="polite"></div>
+  </main>
+</body>
+</html>
