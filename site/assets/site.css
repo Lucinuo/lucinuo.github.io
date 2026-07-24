@@ -806,6 +806,8 @@ h3 {
 .project-cinema img,
 .project-preview-cinema img {
   width: 100%;
+  /* 圖片標籤上的 height 屬性會變成高度，讓 aspect-ratio 失效並把圖框拉長，必須歸零 */
+  height: auto;
   aspect-ratio: 1643 / 957;
   object-fit: cover;
   object-position: center;
@@ -823,6 +825,10 @@ h3 {
 }
 
 .bearing-concept img {
+  aspect-ratio: 3 / 2;
+}
+
+.phase-shift-cinema img {
   aspect-ratio: 3 / 2;
 }
 
@@ -1128,6 +1134,11 @@ h3 {
   }
 
   .bearing-concept img {
+    min-height: 0;
+    object-position: center;
+  }
+
+  .phase-shift-cinema img {
     min-height: 0;
     object-position: center;
   }
