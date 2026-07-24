@@ -1,5 +1,9 @@
 import {
   PHASE_MAX,
+  advanceLock,
+  advanceRepeat,
+  attackLines,
+  isSpecialClear,
   phaseReward,
   removeInterferenceRows,
   shiftAttackBonus
@@ -23,8 +27,21 @@ const BASE_SHAPES = {
 };
 
 const SHAPE_KEYS = Object.keys(BASE_SHAPES);
-const LINE_ATTACK = [0, 0, 1, 2, 4];
 const LINE_SCORE = [0, 100, 300, 500, 800];
+
+// 手感參數。行為參考 ylsung/TetrisBattle（MIT），數值改採現行落方塊遊戲通則：
+// 該專案的落地緩衝為 800ms，但本作最高速時每格僅 120ms，800ms 會顯得漂浮，故取 500ms。
+const LOCK_DELAY = 500;        // 落地後仍可微調的緩衝時間
+const LOCK_RESET_LIMIT = 15;   // 緩衝可被重置的次數上限，避免無限拖延不鎖定
+const DAS_DELAY = 190;         // 長按初始延遲（沿用原本觸控的設定，鍵盤一併套用）
+const ARR_INTERVAL = 75;       // 長按超過初始延遲後的重複間隔
+
+// 旋轉踢牆偏移。前五組為原本的水平嘗試；後四組可將方塊往上頂，
+// 這是 T-spin 能夠成立的前提——沒有垂直踢牆就轉不進凹槽。
+const ROTATION_KICKS = [
+  [0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0],
+  [0, -1], [-1, -1], [1, -1], [0, -2]
+];
 
 const ui = {
   shell: document.querySelector("[data-game-shell]"),
@@ -110,6 +127,11 @@ function createSide(name, canvas, isAI) {
     attackBoost: 0,
     slowUntil: 0,
     fallAccumulator: 0,
+    lockTimer: 0,
+    lockResets: 0,
+    grounded: false,
+    rotatedLast: false,
+    backToBack: false,
     aiTarget: null
   };
 }
@@ -206,6 +228,10 @@ function spawn(side) {
   side.current = createPiece(side.queue.shift());
   fillQueue(side);
   side.canHold = true;
+  side.lockTimer = 0;
+  side.lockResets = 0;
+  side.grounded = false;
+  side.rotatedLast = false;
   side.aiTarget = side.isAI ? chooseAIPlacement(side) : null;
   if (collides(side, side.current, 0, 0)) endMatch(side.isAI ? "player" : "ai");
 }
@@ -256,6 +282,9 @@ function clearFullLines(board) {
 }
 
 function lockPiece(side, opponent) {
+  // 必須在方塊併入棋盤前判定，否則中心對角會被自己占據。
+  const tspin = detectTSpin(side);
+
   if (!mergePiece(side)) {
     endMatch(side.isAI ? "player" : "ai");
     return;
@@ -273,8 +302,22 @@ function lockPiece(side, opponent) {
     side.combo = -1;
   }
 
-  let outgoing = LINE_ATTACK[cleared] || 0;
-  if (cleared > 0 && side.combo > 0) outgoing += Math.min(3, Math.floor((side.combo + 1) / 2));
+  const special = isSpecialClear(cleared, tspin);
+  const chained = special && side.backToBack;
+
+  let outgoing = attackLines({
+    cleared,
+    combo: side.combo,
+    tspin,
+    backToBack: side.backToBack
+  });
+
+  if (tspin && cleared === 2) {
+    announce(side.isAI ? "AI T-spin" : "T-spin");
+    tone(700, 0.1);
+  }
+  if (chained) announce(side.isAI ? "AI back-to-back" : "Back-to-back");
+  if (cleared > 0) side.backToBack = special;
   if (cleared > 0 && side.attackBoost > 0) {
     outgoing += side.attackBoost;
     side.attackBoost = 0;
@@ -314,33 +357,102 @@ function removeGarbageRows(side, limit = 2) {
   return removeInterferenceRows(side.board, COLS, limit, BLOCK_GARBAGE);
 }
 
+// 方塊已落地時，成功的移動或旋轉會重置落地緩衝，讓玩家能在最後一刻調整；
+// 但重置次數有上限，否則可以無限左右搓來拖住不鎖定。
+function noteLockReset(side) {
+  if (!side.grounded) return;
+  if (side.lockResets >= LOCK_RESET_LIMIT) return;
+  side.lockResets += 1;
+  side.lockTimer = 0;
+}
+
 function move(side, offsetX) {
   if (!side.current || collides(side, side.current, offsetX, 0)) return false;
   side.current.x += offsetX;
+  side.rotatedLast = false;
+  noteLockReset(side);
   return true;
 }
 
 function rotate(side) {
   if (!side.current) return false;
   const nextRotation = (side.current.rotation + 1) % 4;
-  for (const kick of [0, -1, 1, -2, 2]) {
-    if (!collides(side, side.current, kick, 0, nextRotation)) {
+  for (const [kickX, kickY] of ROTATION_KICKS) {
+    if (!collides(side, side.current, kickX, kickY, nextRotation)) {
       side.current.rotation = nextRotation;
-      side.current.x += kick;
+      side.current.x += kickX;
+      side.current.y += kickY;
+      side.rotatedLast = true;
+      noteLockReset(side);
       return true;
     }
   }
   return false;
 }
 
-function softDrop(side, opponent) {
+// 單純往下一格，不負責鎖定；鎖定一律交給 updateLock 的落地緩衝處理。
+function stepDown(side) {
+  if (!side.current || collides(side, side.current, 0, 1)) return false;
+  side.current.y += 1;
+  side.rotatedLast = false;
+  return true;
+}
+
+function softDrop(side) {
+  if (!stepDown(side)) return false;
+  if (!side.isAI) side.score += 1;
+  side.fallAccumulator = 0;
+  return true;
+}
+
+function updateLock(side, opponent, delta) {
   if (!side.current) return;
-  if (!collides(side, side.current, 0, 1)) {
-    side.current.y += 1;
-    if (!side.isAI) side.score += 1;
-  } else {
-    lockPiece(side, opponent);
+  const grounded = collides(side, side.current, 0, 1);
+  if (grounded && !side.grounded) side.lockTimer = 0;
+  side.grounded = grounded;
+  const lockState = { timer: side.lockTimer };
+  const shouldLock = advanceLock(lockState, delta, LOCK_DELAY, grounded);
+  side.lockTimer = lockState.timer;
+  if (shouldLock) lockPiece(side, opponent);
+}
+
+// T 方塊在任一旋轉狀態下，正中心都是唯一擁有三個相鄰同塊的格子。
+function findTCentre(matrix) {
+  for (let y = 0; y < matrix.length; y += 1) {
+    for (let x = 0; x < matrix[y].length; x += 1) {
+      if (!matrix[y][x]) continue;
+      let neighbours = 0;
+      if (matrix[y - 1] && matrix[y - 1][x]) neighbours += 1;
+      if (matrix[y + 1] && matrix[y + 1][x]) neighbours += 1;
+      if (matrix[y][x - 1]) neighbours += 1;
+      if (matrix[y][x + 1]) neighbours += 1;
+      if (neighbours >= 3) return { x, y };
+    }
   }
+  return null;
+}
+
+// 三角判定：是 T 方塊、最後一個成功動作是旋轉、已落地，且中心四個對角至少三個被占據。
+function detectTSpin(side) {
+  const piece = side.current;
+  if (!piece || piece.type !== "T" || !side.rotatedLast) return false;
+  if (!collides(side, piece, 0, 1)) return false;
+  const centre = findTCentre(matrixFor(piece, piece.rotation));
+  if (!centre) return false;
+  const centreX = piece.x + centre.x;
+  const centreY = piece.y + centre.y;
+  let corners = 0;
+  for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const boardX = centreX + dx;
+    const boardY = centreY + dy;
+    if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
+      corners += 1;
+      continue;
+    }
+    if (boardY < 0) continue;
+    if (side.board[boardY][boardX]) corners += 1;
+  }
+  return corners >= 3;
 }
 
 function hardDrop(side, opponent) {
@@ -501,6 +613,11 @@ function resetSide(side) {
   side.attackBoost = 0;
   side.slowUntil = 0;
   side.fallAccumulator = 0;
+  side.lockTimer = 0;
+  side.lockResets = 0;
+  side.grounded = false;
+  side.rotatedLast = false;
+  side.backToBack = false;
   side.aiTarget = null;
   fillQueue(side);
   spawn(side);
@@ -532,6 +649,7 @@ function startMatch() {
 
 function togglePause() {
   if (!started || gameOver) return;
+  clearHeldActions();
   paused = !paused;
   ui.shell.classList.toggle("is-paused", paused);
   ui.pauseLabel.textContent = paused ? "Resume" : "Pause";
@@ -589,19 +707,22 @@ function updateAI(delta) {
   ai.fallAccumulator += delta;
   if (ai.fallAccumulator >= gravityInterval(ai)) {
     ai.fallAccumulator = 0;
-    softDrop(ai, player);
+    stepDown(ai);
   }
+  updateLock(ai, player, delta);
 }
 
 function loop(time) {
   if (paused || gameOver) return;
   const delta = Math.min(time - lastFrame, 80);
   lastFrame = time;
+  updateInput(delta);
   player.fallAccumulator += delta;
   if (player.fallAccumulator >= gravityInterval(player)) {
     player.fallAccumulator = 0;
-    softDrop(player, ai);
+    stepDown(player);
   }
+  updateLock(player, ai, delta);
   updateAI(delta);
   updateHUD();
   drawAll();
@@ -810,17 +931,49 @@ function tone(frequency, duration) {
   }
 }
 
-function runPlayerAction(action) {
+// 鍵盤原本送出 "down"，但動作分支只認得 "soft"，導致鍵盤軟降完全沒有作用。
+const ACTION_ALIASES = { down: "soft" };
+
+function runPlayerAction(rawAction) {
   if (!started || paused || gameOver) return;
+  const action = ACTION_ALIASES[rawAction] || rawAction;
   if (action === "left") move(player, -1);
   if (action === "right") move(player, 1);
   if (action === "rotate") rotate(player);
-  if (action === "soft") softDrop(player, ai);
+  if (action === "soft") softDrop(player);
   if (action === "drop") hardDrop(player, ai);
   if (action === "hold") holdPiece(player);
   if (action === "phase") activatePlayerPhase();
   updateHUD();
   drawAll();
+}
+
+// 長按節奏統一由遊戲迴圈驅動，鍵盤與觸控共用同一組參數。
+// 先前鍵盤直接吃作業系統的按鍵重複：初始延遲約 500ms 且速率因機器而異，手感不一致。
+const REPEATABLE_ACTIONS = new Set(["left", "right", "soft"]);
+const heldActions = new Map();
+
+function pressAction(rawAction) {
+  const action = ACTION_ALIASES[rawAction] || rawAction;
+  if (heldActions.has(action)) return;
+  heldActions.set(action, { elapsed: 0, repeating: false });
+  runPlayerAction(action);
+}
+
+function releaseAction(rawAction) {
+  heldActions.delete(ACTION_ALIASES[rawAction] || rawAction);
+}
+
+function clearHeldActions() {
+  heldActions.clear();
+}
+
+function updateInput(delta) {
+  heldActions.forEach((state, action) => {
+    if (!REPEATABLE_ACTIONS.has(action)) return;
+    const fires = advanceRepeat(state, delta, DAS_DELAY, ARR_INTERVAL);
+    for (let i = 0; i < fires; i += 1) runPlayerAction(action);
+  });
 }
 
 function bindControls() {
@@ -846,51 +999,51 @@ function bindControls() {
   });
   ui.phaseActivate.addEventListener("click", activatePlayerPhase);
 
-  const repeatable = new Set(["left", "right", "down"]);
   document.querySelectorAll("[data-control]").forEach((button) => {
     const action = button.dataset.control;
-    let delayTimer = 0;
-    let repeatTimer = 0;
-    const stop = () => {
-      window.clearTimeout(delayTimer);
-      window.clearInterval(repeatTimer);
-    };
+    const stop = () => releaseAction(action);
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-      runPlayerAction(action);
-      if (repeatable.has(action)) {
-        delayTimer = window.setTimeout(() => {
-          repeatTimer = window.setInterval(() => runPlayerAction(action), 75);
-        }, 190);
-      }
+      pressAction(action);
     });
     button.addEventListener("pointerup", stop);
     button.addEventListener("pointercancel", stop);
     button.addEventListener("pointerleave", stop);
   });
 
+  const keyControls = {
+    arrowleft: "left",
+    arrowright: "right",
+    arrowup: "rotate",
+    arrowdown: "down",
+    " ": "drop",
+    c: "hold",
+    x: "phase"
+  };
+
   window.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
-    const controls = {
-      arrowleft: "left",
-      arrowright: "right",
-      arrowup: "rotate",
-      arrowdown: "down",
-      " ": "drop",
-      c: "hold",
-      x: "phase"
-    };
     if (key === "p" || key === "escape") {
       event.preventDefault();
       togglePause();
       return;
     }
-    if (!controls[key]) return;
+    if (!keyControls[key]) return;
     event.preventDefault();
-    runPlayerAction(controls[key]);
+    // 忽略作業系統送出的按鍵重複，改由遊戲迴圈以固定節奏處理。
+    if (event.repeat) return;
+    pressAction(keyControls[key]);
   });
 
+  window.addEventListener("keyup", (event) => {
+    const key = event.key.toLowerCase();
+    if (keyControls[key]) releaseAction(keyControls[key]);
+  });
+
+  window.addEventListener("blur", clearHeldActions);
+
   document.addEventListener("visibilitychange", () => {
+    clearHeldActions();
     if (document.hidden && started && !paused && !gameOver) togglePause();
   });
 }
