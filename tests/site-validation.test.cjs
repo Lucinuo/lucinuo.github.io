@@ -92,6 +92,9 @@ check(home.includes("public digital studio"), "home does not define the public s
 check(home.includes("Research, tools, and work in progress"), "home lacks the direct public-studio introduction");
 check(home.includes("Saccharina japonica fucoidan (SJF)"), "home is missing the approved public SJF research summary");
 check(home.includes("HTML") && home.includes("CSS") && home.includes("JavaScript") && home.includes("no framework"), "home does not give a concrete Digital systems example");
+check(home.includes("流式細胞技術"), "home does not use the requested Chinese term for flow cytometry");
+check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
+check(home.includes("就是這個網站。自己做的，把上面這些東西收在一起。"), "home Lucinuo Website System copy does not match the approved wording");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
@@ -110,6 +113,7 @@ check(projects.includes('href="/projects/lighthouse/"') && projects.includes('hr
 check(projects.includes("Lucinuo Website System"), "Projects does not explain the public website repository");
 check(projects.includes("lucinuo-homepage-preview.png"), "Projects is missing the current homepage visual evidence");
 check(projects.includes("Plain HTML, CSS, and JavaScript") && projects.includes("No framework"), "Projects does not name the website implementation stack");
+check(projects.includes("就是這個網站。自己做的，把上面這些東西收在一起。"), "Projects does not use the approved Lucinuo Website System description");
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
 
 const phaseShiftCase = fs.readFileSync(path.join(root, "projects/phase-shift/index.html"), "utf8");
@@ -156,13 +160,19 @@ check(about.includes("I’m Lucille Huang"), "About does not begin with a direct
 check(about.includes('class="about-portrait"') && about.includes("lucille.jpg"), "About does not use the original portrait in the editorial layout");
 check(about.includes("我是 Lucille Huang"), "About does not use Lucille Huang in Chinese mode");
 check(about.includes("PhD Candidate, Graduate Institute of Life Sciences, National Defense Medical University"), "About contact context is missing the institutional affiliation");
-check(about.includes("國防醫學院生命科學研究所博士候選人"), "About page is missing Chinese PhD candidate status");
+check(about.includes("國防醫學大學生命科學研究所博士候選人"), "About page is missing Chinese PhD candidate status");
+check(about.includes("M.S. in Pharmacology, National Defense Medical University, 2023"), "About page is missing the master's institution and year");
+check(about.includes("國防醫學大學藥理學碩士，2023"), "About page is missing the Chinese master's institution and year");
+check(about.includes("國防醫學大學生命科學研究所"), "About page is missing the current Chinese affiliation");
+check(about.includes('class="plain-link" href="mailto:stu9500149@gmail.com"'), "About email link is not using the plain-link style");
+check(about.includes('class="plain-link" href="https://github.com/Lucinuo"'), "About GitHub URL is not using the plain-link style");
 check(about.indexOf("Biological research") < about.indexOf("Background"), "About leads with academic status instead of current work");
 
 const siteCss = fs.readFileSync(path.join(root, "assets/site.css"), "utf8");
 check(siteCss.includes("@media (max-width: 1080px)"), "iPad-width navigation does not collapse before clipping");
 check(siteCss.includes("safe-area-inset-top"), "site header does not account for Apple safe areas");
 check(siteCss.includes(':root[data-theme="dark"]'), "shared design system is missing dark mode tokens");
+check(siteCss.includes(".plain-link") && siteCss.includes("text-decoration: none"), "shared design system is missing the no-underline contact link style");
 const siteScript = fs.readFileSync(path.join(root, "assets/site.js"), "utf8");
 check(siteScript.includes('matchMedia("(prefers-color-scheme: dark)")'), "theme does not default to the system setting");
 check(siteScript.includes("data-theme-toggle"), "theme script does not manage the icon toggle");
