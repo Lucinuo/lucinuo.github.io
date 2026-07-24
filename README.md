@@ -79,3 +79,5 @@ Merging is the publication decision. Review branches do not change the live webs
 ## License
 
 Copyright remains with Lucille Huang. A separate code or content license has not yet been selected; reuse permission should not be assumed.
+
+Background music is generated with Google Gemini (Lyria 3) and carries a SynthID watermark. No copyright is claimed over it.
