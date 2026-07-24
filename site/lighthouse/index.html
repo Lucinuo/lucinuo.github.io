@@ -74,7 +74,8 @@
     <div class="veil" aria-hidden="true"></div>
     <div class="warmth" aria-hidden="true"></div>
     <div class="mist" aria-hidden="true"></div>
-    <header class="topbar"><span class="wordmark">Lighthouse</span><div class="top-actions"><a class="project-link" href="/projects/lighthouse/"><span data-copy="en">About</span><span data-copy="zh">作品說明</span></a><button class="lang-button" type="button" data-language-toggle aria-label="切換語言">EN / 中</button></div></header>
+    <header class="topbar"><span class="wordmark">Lighthouse</span><div class="top-actions"><a class="project-link" href="/projects/lighthouse/"><span data-copy="en">About</span><span data-copy="zh">作品說明</span></a><button class="lang-button" type="button" data-sound-toggle aria-pressed="false"><span data-copy="en">Sound: off</span><span data-copy="zh">聲音：關</span></button><button class="lang-button" type="button" data-language-toggle aria-label="切換語言">EN / 中</button></div></header>
+    <audio data-bgm loop preload="none" src="./assets/lighthouse-bgm.mp3"></audio>
     <div class="control-zone">
       <button class="lamp-control" type="button" data-lamp-toggle aria-pressed="false"><span class="lamp-dot" aria-hidden="true"></span><span data-label><span data-copy="en">Light the lamp</span><span data-copy="zh">點亮燈塔</span></span></button>
       <div class="note-panel">
@@ -90,11 +91,16 @@
     (function () {
       const languageKey = "lucinuo-language";
       const noteKey = "lighthouse-concept-note";
+      const soundKey = "lighthouse-concept-sound";
       const root = document.documentElement;
       const toggle = document.querySelector("[data-lamp-toggle]");
       const note = document.querySelector("#lighthouse-note");
       const languageToggle = document.querySelector("[data-language-toggle]");
+      const soundToggle = document.querySelector("[data-sound-toggle]");
+      const bgm = document.querySelector("[data-bgm]");
+      bgm.volume = 0.3;
       let lit = false;
+      let soundOn = false;
 
       function stored(key) { try { return localStorage.getItem(key); } catch { return null; } }
       function remember(key, value) { try { localStorage.setItem(key, value); } catch {} }
@@ -104,7 +110,17 @@
         root.lang = next === "zh" ? "zh-Hant" : "en";
         note.placeholder = next === "zh" ? "留一句話…" : "leave a note…";
         toggle.setAttribute("aria-label", lit ? (next === "zh" ? "熄滅燈塔" : "Turn off the lamp") : (next === "zh" ? "點亮燈塔" : "Light the lamp"));
+        const soundEn = soundToggle.querySelector('[data-copy="en"]');
+        const soundZh = soundToggle.querySelector('[data-copy="zh"]');
+        soundEn.textContent = soundOn ? "Sound: on" : "Sound: off";
+        soundZh.textContent = soundOn ? "聲音：開" : "聲音：關";
         remember(languageKey, next);
+      }
+      function applySound(next) {
+        soundOn = Boolean(next);
+        soundToggle.setAttribute("aria-pressed", String(soundOn));
+        if (soundOn) bgm.play().catch(() => {}); else bgm.pause();
+        applyLanguage(root.dataset.lang);
       }
       function applyLamp(next) {
         lit = Boolean(next);
@@ -118,6 +134,7 @@
       }
       toggle.addEventListener("click", () => applyLamp(!lit));
       languageToggle.addEventListener("click", () => applyLanguage(root.dataset.lang === "zh" ? "en" : "zh"));
+      soundToggle.addEventListener("click", () => applySound(!soundOn));
       note.value = stored(noteKey) || "";
       note.addEventListener("input", () => remember(noteKey, note.value));
       applyLanguage(stored(languageKey) || "en");

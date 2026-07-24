@@ -55,6 +55,7 @@ const ui = {
   pause: document.querySelector("[data-pause]"),
   pauseLabel: document.querySelector("[data-pause-label]"),
   sound: document.querySelector("[data-sound]"),
+  bgm: document.querySelector("[data-bgm]"),
   startLayer: document.querySelector("[data-start-layer]"),
   start: document.querySelector("[data-start]"),
   overlayTitle: document.querySelector("[data-overlay-title]"),
@@ -68,6 +69,7 @@ const ui = {
 
 const tileImage = new Image();
 tileImage.src = "./assets/block-tile.png";
+ui.bgm.volume = 0.25;
 
 let audioContext = null;
 let muted = false;
@@ -525,6 +527,7 @@ function startMatch() {
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(loop);
   tone(360, 0.05);
+  if (!muted) ui.bgm.play().catch(() => {});
 }
 
 function togglePause() {
@@ -538,10 +541,12 @@ function togglePause() {
     ui.overlayCopy.textContent = "The field will wait.";
     ui.start.textContent = "Resume";
     ui.startLayer.classList.add("is-visible");
+    ui.bgm.pause();
   } else {
     ui.startLayer.classList.remove("is-visible");
     lastFrame = performance.now();
     animationFrame = requestAnimationFrame(loop);
+    if (!muted) ui.bgm.play().catch(() => {});
   }
 }
 
@@ -825,7 +830,12 @@ function bindControls() {
     muted = !muted;
     ui.shell.classList.toggle("is-muted", muted);
     ui.sound.setAttribute("aria-label", muted ? "Turn sound on" : "Mute sound");
-    if (!muted) tone(440, 0.05);
+    if (muted) {
+      ui.bgm.pause();
+    } else {
+      tone(440, 0.05);
+      if (started && !paused) ui.bgm.play().catch(() => {});
+    }
   });
 
   document.querySelectorAll("[data-phase-mode]").forEach((button) => {
