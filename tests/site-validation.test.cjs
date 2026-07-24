@@ -84,8 +84,9 @@ check(legacyRedirect.includes("not being deleted"), "legacy route does not expla
 
 const workspace = fs.readFileSync(path.join(root, "workspace/index.html"), "utf8");
 check(workspace.includes('name="robots" content="noindex, nofollow"'), "workspace boundary remains indexable");
-check(workspace.includes("real identity") || workspace.includes("身份驗證"), "workspace boundary does not explain real authentication");
-check(workspace.includes("No public demo") || workspace.includes("不使用公開展示"), "workspace boundary does not reject a public demo or fake password");
+check(workspace.includes('location.replace("https://bearing-private.pages.dev/")'), "workspace does not open the deployed private sign-in");
+check(workspace.includes('rel="canonical" href="https://bearing-private.pages.dev/"'), "workspace canonical does not point to the private host");
+check(!workspace.includes("password") && !workspace.includes("Password"), "public workspace redirect contains password implementation");
 
 const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 check(home.includes("public digital studio"), "home does not define the public studio role");
