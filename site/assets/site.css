@@ -267,6 +267,15 @@ a:hover {
   display: block;
 }
 
+.sound-icon-on,
+.sound-toggle[aria-pressed="true"] .sound-icon-off {
+  display: none;
+}
+
+.sound-toggle[aria-pressed="true"] .sound-icon-on {
+  display: block;
+}
+
 .language-switch button[aria-pressed="true"],
 .theme-switch button[aria-pressed="true"] {
   color: var(--color-accent);

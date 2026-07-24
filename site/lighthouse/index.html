@@ -43,6 +43,9 @@
     .top-actions { display: flex; align-items: center; gap: 16px; }
     .project-link, .lang-button { min-height: 44px; display: inline-flex; align-items: center; border: 0; background: transparent; color: rgba(237, 241, 241, .66); font-size: 12px; text-decoration: none; cursor: pointer; }
     .lang-button { padding: 0; }
+    .sound-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+    .sound-button .sound-on, .sound-button[aria-pressed="true"] .sound-off { display: none; }
+    .sound-button[aria-pressed="true"] .sound-on { display: block; }
     .control-zone { position: fixed; z-index: 5; left: 50%; bottom: max(32px, calc(env(safe-area-inset-bottom) + 24px)); width: min(520px, calc(100% - 40px)); transform: translateX(-50%); display: grid; justify-items: center; gap: 18px; text-align: center; }
     .lamp-control { min-height: 48px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 15px; border: 1px solid rgba(207, 221, 229, .18); border-radius: 999px; background: rgba(5, 12, 19, .45); color: rgba(237, 241, 241, .74); font-size: 12px; letter-spacing: .04em; cursor: pointer; backdrop-filter: blur(16px); transition: color .6s, border-color .6s, background .6s; }
     .lamp-control:hover { color: #fff; border-color: rgba(237, 241, 241, .34); }
@@ -74,7 +77,7 @@
     <div class="veil" aria-hidden="true"></div>
     <div class="warmth" aria-hidden="true"></div>
     <div class="mist" aria-hidden="true"></div>
-    <header class="topbar"><span class="wordmark">Lighthouse</span><div class="top-actions"><a class="project-link" href="/projects/lighthouse/"><span data-copy="en">About</span><span data-copy="zh">作品說明</span></a><button class="lang-button" type="button" data-sound-toggle aria-pressed="false"><span data-copy="en">Sound: off</span><span data-copy="zh">聲音：關</span></button><button class="lang-button" type="button" data-language-toggle aria-label="切換語言">EN / 中</button></div></header>
+    <header class="topbar"><span class="wordmark">Lighthouse</span><div class="top-actions"><a class="project-link" href="/projects/lighthouse/"><span data-copy="en">About</span><span data-copy="zh">作品說明</span></a><button class="lang-button sound-button" type="button" data-sound-toggle aria-pressed="false" aria-label="Play background music"><svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="M17 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/></svg><svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="m18 9 4 4M22 9l-4 4"/></svg></button><button class="lang-button" type="button" data-language-toggle aria-label="切換語言">EN / 中</button></div></header>
     <audio data-bgm loop preload="none" src="./assets/lighthouse-bgm.mp3"></audio>
     <div class="control-zone">
       <button class="lamp-control" type="button" data-lamp-toggle aria-pressed="false"><span class="lamp-dot" aria-hidden="true"></span><span data-label><span data-copy="en">Light the lamp</span><span data-copy="zh">點亮燈塔</span></span></button>
@@ -110,10 +113,9 @@
         root.lang = next === "zh" ? "zh-Hant" : "en";
         note.placeholder = next === "zh" ? "留一句話…" : "leave a note…";
         toggle.setAttribute("aria-label", lit ? (next === "zh" ? "熄滅燈塔" : "Turn off the lamp") : (next === "zh" ? "點亮燈塔" : "Light the lamp"));
-        const soundEn = soundToggle.querySelector('[data-copy="en"]');
-        const soundZh = soundToggle.querySelector('[data-copy="zh"]');
-        soundEn.textContent = soundOn ? "Sound: on" : "Sound: off";
-        soundZh.textContent = soundOn ? "聲音：開" : "聲音：關";
+        soundToggle.setAttribute("aria-label", soundOn
+          ? (next === "zh" ? "關閉背景音樂" : "Turn background music off")
+          : (next === "zh" ? "播放背景音樂" : "Play background music"));
         remember(languageKey, next);
       }
       function applySound(next) {
