@@ -4,7 +4,6 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "../site");
 const publicPages = [
   ["/", "index.html"],
-  ["/research/", "research/index.html"],
   ["/publications/", "publications/index.html"],
   ["/projects/", "projects/index.html"],
   ["/projects/phase-shift/", "projects/phase-shift/index.html"],
@@ -153,8 +152,8 @@ check(lighthouse.includes("data-lamp-toggle") && lighthouse.includes("aria-press
 check(lighthouse.includes("prefers-reduced-motion"), "Lighthouse concept does not respect reduced motion");
 check(lighthouse.includes('href="/projects/lighthouse/"'), "Lighthouse concept has no way back to its case study");
 
-const research = fs.readFileSync(path.join(root, "research/index.html"), "utf8");
-check(!research.includes("HCC") && !research.includes("TAM"), "Research still centers the separate HCC/TAM demonstration");
+check(!fs.existsSync(path.join(root, "research")), "the retired /research/ page is back; Research now lives in the homepage #my-research section");
+check(!home.includes("HCC") && !home.includes("TAM"), "home research section still centers the separate HCC/TAM demonstration");
 
 const about = fs.readFileSync(path.join(root, "about/index.html"), "utf8");
 check(about.includes("I’m Lucille Huang"), "About does not begin with a direct introduction");
