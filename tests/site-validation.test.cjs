@@ -93,6 +93,8 @@ check(home.includes("Research, tools, and work in progress"), "home lacks the di
 check(home.includes("Saccharina japonica fucoidan (SJF)"), "home is missing the approved public SJF research summary");
 check(home.includes("HTML") && home.includes("CSS") && home.includes("JavaScript") && home.includes("no framework"), "home does not give a concrete Digital systems example");
 check(home.includes("流式細胞技術"), "home does not use the requested Chinese term for flow cytometry");
+check(!home.includes("calcium mobilization") && !home.includes("鈣離子動員"), "home overstates the Urolithin A thesis with calcium mobilization");
+check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home overstates the Urolithin A thesis with an animal thrombosis model");
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
 check(home.includes("就是這個網站。自己做的，把上面這些東西收在一起。"), "home Lucinuo Website System copy does not match the approved wording");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
