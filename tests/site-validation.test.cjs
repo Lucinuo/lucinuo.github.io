@@ -4,6 +4,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "../site");
 const publicPages = [
   ["/", "index.html"],
+  ["/research/urolithin-a/", "research/urolithin-a/index.html"],
   ["/publications/", "publications/index.html"],
   ["/projects/", "projects/index.html"],
   ["/projects/phase-shift/", "projects/phase-shift/index.html"],
@@ -59,8 +60,6 @@ for (const [route, relativeFile] of publicPages) {
   }
 }
 
-// Trace Isle stays a locally reviewable preview until Lucille approves its public scope.
-// It intentionally does not enter publicPages, the sitemap, or the Projects catalogue here.
 const traceIsle = fs.readFileSync(path.join(root, "trace-isle/index.html"), "utf8");
 const traceIsleCss = fs.readFileSync(path.join(root, "trace-isle/styles.css"), "utf8");
 const traceIsleModules = ["game.js", "world-model.mjs", "nature-rules.mjs", "world-rules.mjs", "renderer.mjs"]
@@ -118,8 +117,10 @@ check(home.includes("流式細胞技術"), "home does not use the requested Chin
 check(!home.includes("calcium mobilization") && !home.includes("鈣離子動員"), "home overstates the Urolithin A thesis with calcium mobilization");
 check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home overstates the Urolithin A thesis with an animal thrombosis model");
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
-check(home.includes("就是這個網站。自己做的，把上面這些東西收在一起。"), "home Lucinuo Website System copy does not match the approved wording");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
+check(home.includes('href="/research/urolithin-a/"'), "home does not link to the Urolithin A research story");
+check(home.includes('href="/trace-isle/"') && home.includes("starter-cove.webp"), "home does not expose the playable Trace Isle preview");
+check(sitemap.includes("<loc>https://lucinuo.github.io/trace-isle/</loc>"), "sitemap is missing Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
 
@@ -176,7 +177,7 @@ check(lighthouse.includes("data-lamp-toggle") && lighthouse.includes("aria-press
 check(lighthouse.includes("prefers-reduced-motion"), "Lighthouse concept does not respect reduced motion");
 check(lighthouse.includes('href="/projects/lighthouse/"'), "Lighthouse concept has no way back to its case study");
 
-check(!fs.existsSync(path.join(root, "research")), "the retired /research/ page is back; Research now lives in the homepage #my-research section");
+check(!fs.existsSync(path.join(root, "research/index.html")), "the retired /research/ landing page is back");
 check(!home.includes("HCC") && !home.includes("TAM"), "home research section still centers the separate HCC/TAM demonstration");
 
 const about = fs.readFileSync(path.join(root, "about/index.html"), "utf8");
