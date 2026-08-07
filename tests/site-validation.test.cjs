@@ -59,6 +59,28 @@ for (const [route, relativeFile] of publicPages) {
   }
 }
 
+// Trace Isle stays a locally reviewable preview until Lucille approves its public scope.
+// It intentionally does not enter publicPages, the sitemap, or the Projects catalogue here.
+const traceIsle = fs.readFileSync(path.join(root, "trace-isle/index.html"), "utf8");
+const traceIsleCss = fs.readFileSync(path.join(root, "trace-isle/styles.css"), "utf8");
+const traceIsleModules = ["game.js", "world-model.mjs", "nature-rules.mjs", "world-rules.mjs", "renderer.mjs"]
+  .map((file) => fs.readFileSync(path.join(root, "trace-isle", file), "utf8"));
+check(traceIsle.includes('rel="canonical" href="https://lucinuo.github.io/trace-isle/"'), "Trace Isle preview has the wrong canonical URL");
+check(/property="og:image" content="https:\/\/lucinuo\.github\.io\/trace-isle\/assets\/starter-[^"]+\.webp"/.test(traceIsle), "Trace Isle preview is missing a local social image");
+check(traceIsle.includes('href="/projects/"'), "Trace Isle preview has no return path to Projects");
+check(traceIsleCss.includes("prefers-reduced-motion"), "Trace Isle does not respect reduced motion");
+check(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.position-choice \{ animation: none; \}/.test(traceIsleCss), "Trace Isle still pulses location choices with reduced motion");
+check(traceIsleModules[0].includes("data-object-id") && traceIsleModules[0].includes("trigger?.focus()"), "Trace Isle does not restore focus after closing an object detail");
+check(!/<script[^>]+src="https?:\/\//.test(traceIsle), "Trace Isle loads a third-party script");
+for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
+  check(!traceIsleModules.some((source) => source.includes(bannedNetworkApi)), `Trace Isle contains prohibited network API: ${bannedNetworkApi}`);
+}
+for (const asset of ["starter-cove.webp", "starter-river.webp", "starter-ridge.webp"]) {
+  const assetPath = path.join(root, "trace-isle/assets", asset);
+  check(fs.existsSync(assetPath), `Trace Isle is missing ${asset}`);
+  check(fs.statSync(assetPath).size < 500 * 1024, `Trace Isle asset exceeds 500 KB: ${asset}`);
+}
+
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 for (const [route] of publicPages) {
   check(sitemap.includes(`<loc>https://lucinuo.github.io${route}</loc>`), `sitemap is missing ${route}`);
