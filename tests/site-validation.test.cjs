@@ -125,8 +125,8 @@ check(home.includes('href="/trace-isle/"') && home.includes("starter-cove.webp")
 check(sitemap.includes("<loc>https://lucinuo.github.io/trace-isle/</loc>"), "sitemap is missing Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
-check(uaStory.includes('class="ua-hero-art"') && uaStory.includes('class="ua-molecule"'), "Urolithin A story is missing its original platelet illustration system");
-check(uaStoryCss.includes("@media (prefers-reduced-motion: reduce)") && uaStoryCss.includes(".flow"), "Urolithin A story motion does not include a reduced-motion fallback");
+check(uaStory.includes('class="ua-hero-art"') && uaStory.includes("platelet-story.png"), "Urolithin A story is missing its original platelet illustration system");
+check(uaStoryCss.includes("@media (prefers-reduced-motion: reduce)") && uaStoryCss.includes(".ua-story-artwork"), "Urolithin A story motion does not include a reduced-motion fallback");
 
 const publications = fs.readFileSync(path.join(root, "publications/index.html"), "utf8");
 check(publications.includes("formally published") && publications.includes("checked it"), "Publications does not prevent unverified records");
