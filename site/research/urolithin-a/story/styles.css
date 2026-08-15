@@ -1,0 +1,22 @@
+.ua-story-page { background: #fbfbfa; color: #173b2d; }
+.story-header { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 clamp(20px, 5vw, 72px); border-bottom: 1px solid #d8dad4; }
+.story-header a:last-child { font-size: 14px; }
+.story-intro, .story-scroll { width: min(1200px, calc(100% - 64px)); margin: 0 auto; }
+.story-intro { min-height: calc(100svh - 64px); display: grid; grid-template-columns: 1fr .8fr; align-items: center; gap: clamp(48px, 9vw, 128px); }
+.story-number, .story-steps article > p { margin: 0 0 16px; color: #667066; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.story-intro h1 { max-width: 9ch; margin: 0; font-size: clamp(54px, 6vw, 92px); line-height: .98; letter-spacing: -.055em; }
+.story-intro p:not(.story-number) { max-width: 48ch; margin-top: 28px; color: #62665f; }
+.story-intro img { width: 100%; }
+.story-scroll { display: grid; grid-template-columns: minmax(300px, .9fr) minmax(0, 1.1fr); gap: clamp(48px, 10vw, 150px); align-items: start; padding-block: 14vh 18vh; }
+.story-art { position: sticky; top: 112px; }
+.story-art img { width: 100%; transition: transform .8s ease, opacity .8s ease; }
+.story-steps { display: grid; gap: 32vh; }
+.story-steps article { min-height: 46vh; display: grid; align-content: center; opacity: .3; transition: opacity .35s ease; }
+.story-steps article.is-current { opacity: 1; }
+.story-steps h2 { max-width: 15ch; margin: 0; font-size: clamp(30px, 3vw, 50px); line-height: 1.05; letter-spacing: -.035em; }
+.story-steps span { max-width: 48ch; margin-top: 20px; color: #62665f; }
+[data-stage="activation"] .story-art img { transform: scale(1.02) translate(-1%, 1%); }
+[data-stage="intervention"] .story-art img { transform: scale(1.05) translate(1%, -1%); }
+[data-stage="response"] .story-art img, [data-stage="boundary"] .story-art img { opacity: .74; transform: scale(.97); }
+@media (max-width: 760px) { .story-intro, .story-scroll { width: min(100% - 40px, 620px); } .story-intro, .story-scroll { grid-template-columns: 1fr; } .story-intro { min-height: auto; padding-block: 72px; gap: 40px; } .story-art { top: 80px; z-index: 1; } .story-steps { gap: 20vh; } .story-steps article { min-height: 62vh; padding-top: 260px; margin-top: -260px; } .story-header { padding-inline: 20px; } }
+@media (prefers-reduced-motion: reduce) { .story-art img, .story-steps article { transition: none; } }

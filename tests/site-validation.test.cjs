@@ -61,6 +61,10 @@ for (const [route, relativeFile] of publicPages) {
 }
 
 const traceIsle = fs.readFileSync(path.join(root, "trace-isle/index.html"), "utf8");
+const uaStoryExperience = fs.readFileSync(path.join(root, "research/urolithin-a/story/index.html"), "utf8");
+const uaStoryExperienceCss = fs.readFileSync(path.join(root, "research/urolithin-a/story/styles.css"), "utf8");
+check(uaStoryExperience.includes("platelet-story.png") && uaStoryExperience.includes("data-story-visual"), "Urolithin A story experience is missing its illustrated scroll scene");
+check(uaStoryExperienceCss.includes("prefers-reduced-motion"), "Urolithin A story experience does not respect reduced motion");
 const traceIsleCss = fs.readFileSync(path.join(root, "trace-isle/styles.css"), "utf8");
 const traceIsleModules = ["game.js", "world-model.mjs", "nature-rules.mjs", "world-rules.mjs", "renderer.mjs"]
   .map((file) => fs.readFileSync(path.join(root, "trace-isle", file), "utf8"));
@@ -109,8 +113,6 @@ check(workspace.includes('rel="canonical" href="https://bearing-private.pages.de
 check(!workspace.includes("password") && !workspace.includes("Password"), "public workspace redirect contains password implementation");
 
 const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
-const uaStory = fs.readFileSync(path.join(root, "research/urolithin-a/index.html"), "utf8");
-const uaStoryCss = fs.readFileSync(path.join(root, "research/urolithin-a/styles.css"), "utf8");
 check(home.includes("public digital studio"), "home does not define the public studio role");
 check(home.includes("Research, tools, and work in progress"), "home lacks the direct public-studio introduction");
 check(home.includes("Saccharina japonica fucoidan (SJF)"), "home is missing the approved public SJF research summary");
@@ -125,8 +127,6 @@ check(home.includes('href="/trace-isle/"') && home.includes("starter-cove.webp")
 check(sitemap.includes("<loc>https://lucinuo.github.io/trace-isle/</loc>"), "sitemap is missing Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
-check(uaStory.includes('class="ua-hero-art"') && uaStory.includes("platelet-story.png"), "Urolithin A story is missing its original platelet illustration system");
-check(uaStoryCss.includes("@media (prefers-reduced-motion: reduce)") && uaStoryCss.includes(".ua-story-artwork"), "Urolithin A story motion does not include a reduced-motion fallback");
 
 const publications = fs.readFileSync(path.join(root, "publications/index.html"), "utf8");
 check(publications.includes("formally published") && publications.includes("checked it"), "Publications does not prevent unverified records");
