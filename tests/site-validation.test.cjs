@@ -122,7 +122,7 @@ check(!home.includes("calcium mobilization") && !home.includes("鈣離子動員"
 check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home overstates the Urolithin A thesis with an animal thrombosis model");
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
-check(home.includes('href="/research/urolithin-a/story/"'), "home does not link to the Urolithin A research story");
+check(!home.includes('href="/research/urolithin-a/story/"'), "home still links to the retired Urolithin A research story");
 check(home.includes('href="/trace-isle/"') && home.includes("starter-cove.webp"), "home does not expose the playable Trace Isle preview");
 check(sitemap.includes("<loc>https://lucinuo.github.io/trace-isle/</loc>"), "sitemap is missing Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
