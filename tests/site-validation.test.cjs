@@ -60,25 +60,25 @@ for (const [route, relativeFile] of publicPages) {
   }
 }
 
-const fourShifts = fs.readFileSync(path.join(root, "four-shifts/index.html"), "utf8");
+const restaurantRookie = fs.readFileSync(path.join(root, "four-shifts/index.html"), "utf8");
 const uaStoryExperience = fs.readFileSync(path.join(root, "research/urolithin-a/story/index.html"), "utf8");
 const uaStoryExperienceCss = fs.readFileSync(path.join(root, "research/urolithin-a/story/styles.css"), "utf8");
 check(uaStoryExperience.includes("platelet-story.png") && uaStoryExperience.includes("data-story-visual"), "Urolithin A story experience is missing its illustrated scroll scene");
 check(uaStoryExperienceCss.includes("prefers-reduced-motion"), "Urolithin A story experience does not respect reduced motion");
-const fourShiftsCss = fs.readFileSync(path.join(root, "four-shifts/styles.css"), "utf8");
-const fourShiftsModules = ["game.js", "game-rules.mjs"].map((file) => fs.readFileSync(path.join(root, "four-shifts", file), "utf8"));
-check(fourShifts.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Four Shifts has the wrong canonical URL");
-check(fourShifts.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Four Shifts is missing its social image");
-check(fourShifts.includes('href="/projects/"'), "Four Shifts has no return path to Projects");
-check(fourShifts.includes("店家、人物與時間均已匿名"), "Four Shifts does not explain anonymization");
-check(fourShiftsCss.includes("prefers-reduced-motion"), "Four Shifts does not respect reduced motion");
-check(!/<script[^>]+src="https?:\/\//.test(fourShifts), "Four Shifts loads a third-party script");
+const restaurantRookieCss = fs.readFileSync(path.join(root, "four-shifts/styles.css"), "utf8");
+const restaurantRookieModules = ["game.js", "game-rules.mjs"].map((file) => fs.readFileSync(path.join(root, "four-shifts", file), "utf8"));
+check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Restaurant Rookie has the wrong canonical URL");
+check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Restaurant Rookie is missing its social image");
+check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
+check(restaurantRookie.includes("店家、人物、時間與空間均已匿名"), "Restaurant Rookie does not explain anonymization");
+check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
+check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
-  check(!fourShiftsModules.some((source) => source.includes(bannedNetworkApi)), `Four Shifts contains prohibited network API: ${bannedNetworkApi}`);
+  check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
 const restaurantAsset = path.join(root, "four-shifts/assets/restaurant.webp");
-check(fs.existsSync(restaurantAsset), "Four Shifts is missing its restaurant scene");
-check(fs.statSync(restaurantAsset).size < 500 * 1024, "Four Shifts restaurant scene exceeds 500 KB");
+check(fs.existsSync(restaurantAsset), "Restaurant Rookie is missing its restaurant scene");
+check(fs.statSync(restaurantAsset).size < 500 * 1024, "Restaurant Rookie restaurant scene exceeds 500 KB");
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 for (const [route] of publicPages) {
@@ -119,9 +119,9 @@ check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home over
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes('href="/research/urolithin-a/story/"'), "home still links to the retired Urolithin A research story");
-check(home.includes('href="/four-shifts/"') && home.includes("restaurant.webp"), "home does not expose Four Shifts");
+check(home.includes('href="/four-shifts/"') && home.includes("Restaurant Rookie") && home.includes("餐廳菜鳥"), "home does not expose Restaurant Rookie");
 check(!home.includes("Trace Isle") && !home.includes("trace-isle"), "home still exposes Trace Isle");
-check(sitemap.includes("<loc>https://lucinuo.github.io/four-shifts/</loc>"), "sitemap is missing Four Shifts");
+check(sitemap.includes("<loc>https://lucinuo.github.io/four-shifts/</loc>"), "sitemap is missing Restaurant Rookie");
 check(!sitemap.includes("trace-isle"), "sitemap still exposes Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");

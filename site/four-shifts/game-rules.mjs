@@ -1,47 +1,101 @@
+export const MENU = {
+  tomato: { label: "番茄麵", sauce: "番茄醬", topping: "起司", dish: "tomato" },
+  cream: { label: "白醬麵", sauce: "白醬", topping: "蘑菇", dish: "cream" },
+  pesto: { label: "青醬麵", sauce: "青醬", topping: "堅果", dish: "pesto" },
+};
+
+export const DONENESS = {
+  firm: { label: "偏硬", seconds: 5 },
+  normal: { label: "正常", seconds: 7 },
+  soft: { label: "偏軟", seconds: 9 },
+};
+
 export const SHIFTS = [
-  {
-    label: "第 1 班", time: "報到 10:30", crowd: "準備營業", context: "制服、打卡、站位，都在同一個上午出現。",
-    speaker: "主管對你說：", line: "先跟著看，等一下再教你。", thought: "我今天到底應該學會哪些事？",
-    choices: ["請對方先列出今天的完整流程", "跟著看，把不懂的先記下來", "先找眼前能幫忙的事"],
-  },
-  {
-    label: "第 2 班", time: "週日 12:20", crowd: "客滿", context: "人潮一下子湧進來，沒有人能停下手邊的事。",
-    speaker: "資深同事對你說：", line: "先把這個做完。", thought: "可是，接下來呢？",
-    choices: ["追問完整流程與注意事項", "先照做，記下疑問", "去處理最急的事"],
-  },
-  {
-    label: "第 3 班", time: "平日 15:10", crowd: "店內消毒", context: "今天客人少一點，原以為終於能完整練習。",
-    speaker: "同事一邊整理器具一邊說：", line: "今天先消毒，有空再練。", thought: "人少了，練習卻還是沒有開始。",
-    choices: ["問能否保留一段完整練習時間", "一邊消毒，一邊拼湊流程", "把所有清潔工作先做完"],
-  },
-  {
-    label: "第 4 班", time: "傍晚 18:40", crowd: "人潮回升", context: "你已經看過幾次操作，但沒有人從頭說過一次。",
-    speaker: "資深同事指著工作檯說：", line: "這個照剛才那樣做。", thought: "剛才只看過一次。完整流程、順序和注意事項呢？",
-    choices: ["停下來確認每一個步驟", "照印象完成，再問哪裡有錯", "先撐過人潮再說"],
-  },
+  { label: "第 1 班", rush: "開店準備", known: 2 },
+  { label: "第 2 班", rush: "午餐尖峰", known: 4 },
+  { label: "第 3 班", rush: "店內消毒", known: 6 },
+  { label: "第 4 班", rush: "晚餐回升", known: 7 },
 ];
 
-export const initialState = () => ({ shift: 0, learned: 23, assumed: 68, strain: 0, asked: 0 });
+export const STEPS = ["確認桌號與餐點", "選麵並下鍋", "依熟度計時", "起鍋瀝水", "拌入正確醬料", "加入指定配料", "送到正確桌號"];
 
-export function applyChoice(state, choice) {
-  if (!Number.isInteger(choice) || choice < 0 || choice > 2 || state.shift >= SHIFTS.length) return state;
-  const effects = [
-    { learned: 12, assumed: 8, strain: 4, asked: 1 },
-    { learned: 7, assumed: 13, strain: 9, asked: 0 },
-    { learned: 3, assumed: 17, strain: 14, asked: 0 },
-  ][choice];
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+export function createOrder(id, seed = id - 1) {
+  const dishes = Object.keys(MENU);
+  const doneness = Object.keys(DONENESS);
   return {
-    shift: state.shift + 1,
-    learned: Math.min(100, state.learned + effects.learned),
-    assumed: Math.min(100, state.assumed + effects.assumed),
-    strain: Math.min(100, state.strain + effects.strain),
-    asked: state.asked + effects.asked,
+    id,
+    table: seed % 5 + 1,
+    dish: dishes[seed % dishes.length],
+    doneness: doneness[(seed * 2 + 1) % doneness.length],
+    status: "waiting",
+    cookScore: 0,
+    plateScore: 0,
   };
 }
 
-export function endingFor(state) {
-  const gap = state.assumed - state.learned;
-  if (state.asked >= 3) return { title: "你把問題說得很清楚。", copy: `你多次要求完整流程，但學習與期待之間仍差了 ${gap}%。離開不是否定自己的能力，而是拒絕繼續替制度的缺口負責。` };
-  if (state.strain >= 40) return { title: "你撐過了每一次眼前的急事。", copy: `店裡越來越相信你什麼都會，實際學習卻追不上。最後留下的 ${gap}% 差距，不該只由新人承擔。` };
-  return { title: "你努力把碎片拼成流程。", copy: `你確實學會了一些，但店裡的期待仍比完整訓練走得更快。那 ${gap}% 的空白，是工作環境沒有交代完的部分。` };
+export function freshState() {
+  return {
+    version: 1,
+    station: "order",
+    shift: 0,
+    day: 1,
+    completed: 0,
+    reputation: 50,
+    orders: [createOrder(1, 0)],
+    pots: [null, null, null],
+    plate: { sauce: "", topping: "" },
+    floorTasks: [],
+    interruption: null,
+    seenInterruptions: [],
+  };
+}
+
+export function scoreDoneness(elapsedSeconds, target) {
+  const difference = Math.abs(elapsedSeconds - DONENESS[target].seconds);
+  if (difference <= 1) return 100;
+  if (difference <= 2.5) return 70;
+  if (difference <= 4) return 40;
+  return 15;
+}
+
+export function scorePlate(order, sauce, topping) {
+  const recipe = MENU[order.dish];
+  return (sauce === recipe.sauce ? 50 : 0) + (topping === recipe.topping ? 50 : 0);
+}
+
+export function completeDelivery(state, orderId) {
+  const order = state.orders.find((item) => item.id === orderId && item.status === "ready");
+  if (!order) return state;
+  const quality = Math.round((order.cookScore + order.plateScore) / 2);
+  const completed = state.completed + 1;
+  const shift = Math.min(SHIFTS.length, completed);
+  const nextId = Math.max(...state.orders.map((item) => item.id)) + 1;
+  return {
+    ...state,
+    shift,
+    day: shift < SHIFTS.length ? 1 : Math.floor((completed - SHIFTS.length) / 3) + 1,
+    completed,
+    reputation: clamp(state.reputation + Math.round((quality - 55) / 10), 0, 100),
+    orders: [...state.orders.filter((item) => item.id !== orderId), createOrder(nextId, nextId + completed)],
+    floorTasks: [...state.floorTasks, { id: `clear-${completed}`, table: order.table, type: "收桌" }].slice(-2),
+    plate: { sauce: "", topping: "" },
+  };
+}
+
+export function periodFor(state) {
+  if (state.shift < SHIFTS.length) return SHIFTS[state.shift];
+  return { label: `日常營運・第 ${state.day} 天`, rush: state.completed % 3 === 1 ? "午餐尖峰" : "正常營業", known: STEPS.length };
+}
+
+export function normalizeSave(value) {
+  if (!value || value.version !== 1 || !Array.isArray(value.orders) || !Array.isArray(value.pots)) return null;
+  return {
+    ...freshState(),
+    ...value,
+    station: ["order", "cook", "plate", "floor"].includes(value.station) ? value.station : "order",
+    reputation: clamp(Number(value.reputation) || 0, 0, 100),
+    pots: value.pots.slice(0, 3).concat([null, null, null]).slice(0, 3),
+  };
 }

@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1e9">
-  <meta name="description" content="《四個班》是一款改編自餐廳新人經驗的短篇互動遊戲：當店裡以為你會的，遠比你真正學過的多。">
-  <title>四個班 — Lucinuo</title>
+  <meta name="theme-color" content="#efe6d4">
+  <meta name="description" content="《餐廳菜鳥》是一款餐廳工作模擬遊戲：接單、煮麵、擺盤、送餐，同時處理收桌、補水與臨時支援。">
+  <title>餐廳菜鳥 — Lucinuo</title>
   <link rel="canonical" href="https://lucinuo.github.io/four-shifts/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lucinuo.github.io/four-shifts/">
-  <meta property="og:title" content="四個班 — Lucinuo">
-  <meta property="og:description" content="當店裡以為你會的，遠比你真正學過的多。">
+  <meta property="og:title" content="餐廳菜鳥 — Lucinuo">
+  <meta property="og:description" content="接單、煮麵、擺盤、送餐；在忙碌的班次裡熟悉流程，慢慢找到自己的工作節奏。">
   <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -20,58 +20,61 @@
 <body>
   <main class="game-shell" data-game>
     <header class="game-header">
-      <h1>四個班</h1>
+      <h1>餐廳菜鳥</h1>
       <a href="/projects/">返回作品</a>
     </header>
 
     <section class="intro" data-intro>
-      <div>
-        <p class="kicker">一段餐廳新人經驗</p>
-        <h2>當店裡以為你會的，<br>遠比你真正學過的多。</h2>
-        <p>四個班次裡，你會遇到客滿、消毒，以及一句句沒有下文的「先做這個」。這不是考你能不能撐住，而是讓你看見：缺少的究竟是能力，還是完整的帶訓。</p>
-        <p class="privacy">改編自真實經驗；店家、人物與時間均已匿名及重新編排。</p>
-        <button class="primary" type="button" data-start>開始第一班</button>
+      <div class="intro-copy">
+        <p class="kicker">餐廳新人管理遊戲</p>
+        <h2>先做這個。<br>然後呢？</h2>
+        <p>接單、煮麵、擺盤、送餐，同時處理收桌、補水與臨時支援；在忙碌的班次裡熟悉流程，慢慢找到自己的工作節奏。</p>
+        <p class="privacy">改編自真實工作經驗；店家、人物、時間與空間均已匿名及重新編排。</p>
+        <div class="intro-actions">
+          <button class="primary" type="button" data-start>開始第一班</button>
+          <button class="text-button" type="button" data-continue hidden>繼續上次進度</button>
+        </div>
       </div>
     </section>
 
     <section class="play" data-play hidden aria-live="polite">
-      <div class="scene">
-        <img src="./assets/restaurant.webp" width="1600" height="901" alt="忙碌餐廳裡，一位新人站在出餐口等待指示">
-        <div class="scene-state">
-          <strong data-shift-label></strong>
-          <span data-shift-time></span>
-          <span data-shift-crowd></span>
-        </div>
-        <div class="orders" data-orders aria-label="待處理單據"></div>
+      <div class="shift-bar">
+        <div><strong data-period>第 1 班</strong><span data-rush>開店準備</span></div>
+        <div class="score"><span>完成 <b data-completed>0</b> 單</span><span>店內評價 <b data-reputation>50</b></span></div>
       </div>
 
-      <aside class="status-rail" aria-label="目前狀態">
-        <p><span>我實際學會</span><strong data-learned>23%</strong></p>
-        <div class="meter"><i data-learned-meter></i></div>
-        <p><span>店裡以為我會</span><strong data-assumed>68%</strong></p>
-        <div class="meter assumed"><i data-assumed-meter></i></div>
-        <small>兩條線之間的距離，就是你被要求自己補上的空白。</small>
-      </aside>
+      <nav class="stations" aria-label="工作區">
+        <button type="button" data-station="order"><b>1</b>接單</button>
+        <button type="button" data-station="cook"><b>2</b>料理</button>
+        <button type="button" data-station="plate"><b>3</b>擺盤</button>
+        <button type="button" data-station="floor"><b>4</b>店面</button>
+      </nav>
 
-      <section class="decision" aria-labelledby="event-title">
-        <p class="context" data-context></p>
-        <p class="speaker" data-speaker></p>
-        <h2 id="event-title" data-line></h2>
-        <p class="thought" data-thought></p>
-        <div class="choices" data-choices></div>
-        <p class="note">按 1、2、3 也能選。你的選擇不分對錯，只會改變你看見的事。</p>
+      <div class="work-area">
+        <section class="station-view" data-view aria-label="目前工作區"></section>
+        <aside class="status-rail">
+          <section>
+            <h2>待辦單</h2>
+            <div class="tickets" data-tickets></div>
+          </section>
+          <section class="counters">
+            <p><span>待出餐</span><b data-ready>0</b></p>
+            <p><span>店面雜務</span><b data-floor-count>0</b></p>
+          </section>
+          <section class="notebook">
+            <h2>流程小抄 <span data-known-count></span></h2>
+            <ol data-notes></ol>
+          </section>
+        </aside>
+      </div>
+
+      <section class="interruption" data-interruption hidden>
+        <img src="./assets/coworker.webp" width="1120" height="1301" alt="一位忙碌的資深同事">
+        <div><small>同事臨時交代</small><p data-interruption-line></p></div>
+        <div class="interruption-actions" data-interruption-actions></div>
       </section>
-    </section>
 
-    <section class="ending" data-ending hidden aria-live="polite">
-      <p class="kicker">四個班之後</p>
-      <h2 data-ending-title></h2>
-      <p data-ending-copy></p>
-      <blockquote>「我不是因為做不到而離開；我是在沒有完整學習機會的情況下，被要求像已經會了一樣工作。」</blockquote>
-      <div class="ending-actions">
-        <button class="primary" type="button" data-restart>重新經歷</button>
-        <a href="/projects/">回到作品</a>
-      </div>
+      <p class="game-note" data-message>先到接單區看看今天的第一張單。</p>
     </section>
   </main>
 </body>
