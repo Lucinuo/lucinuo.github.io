@@ -6,6 +6,7 @@ hugo_stats.json
 
 # Dependencies
 node_modules/
+.worktrees/
 
 # OS
 .DS_Store
