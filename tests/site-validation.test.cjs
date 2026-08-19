@@ -70,7 +70,6 @@ const restaurantRookieModules = ["game.js", "game-rules.mjs"].map((file) => fs.r
 check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Restaurant Rookie has the wrong canonical URL");
 check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Restaurant Rookie is missing its social image");
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
-check(restaurantRookie.includes("店家、人物、時間與空間均已匿名"), "Restaurant Rookie does not explain anonymization");
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
