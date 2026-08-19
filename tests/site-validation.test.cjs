@@ -60,29 +60,25 @@ for (const [route, relativeFile] of publicPages) {
   }
 }
 
-const traceIsle = fs.readFileSync(path.join(root, "trace-isle/index.html"), "utf8");
+const fourShifts = fs.readFileSync(path.join(root, "four-shifts/index.html"), "utf8");
 const uaStoryExperience = fs.readFileSync(path.join(root, "research/urolithin-a/story/index.html"), "utf8");
 const uaStoryExperienceCss = fs.readFileSync(path.join(root, "research/urolithin-a/story/styles.css"), "utf8");
 check(uaStoryExperience.includes("platelet-story.png") && uaStoryExperience.includes("data-story-visual"), "Urolithin A story experience is missing its illustrated scroll scene");
 check(uaStoryExperienceCss.includes("prefers-reduced-motion"), "Urolithin A story experience does not respect reduced motion");
-const traceIsleCss = fs.readFileSync(path.join(root, "trace-isle/styles.css"), "utf8");
-const traceIsleModules = ["game.js", "world-model.mjs", "nature-rules.mjs", "world-rules.mjs", "renderer.mjs"]
-  .map((file) => fs.readFileSync(path.join(root, "trace-isle", file), "utf8"));
-check(traceIsle.includes('rel="canonical" href="https://lucinuo.github.io/trace-isle/"'), "Trace Isle preview has the wrong canonical URL");
-check(/property="og:image" content="https:\/\/lucinuo\.github\.io\/trace-isle\/assets\/starter-[^"]+\.webp"/.test(traceIsle), "Trace Isle preview is missing a local social image");
-check(traceIsle.includes('href="/projects/"'), "Trace Isle preview has no return path to Projects");
-check(traceIsleCss.includes("prefers-reduced-motion"), "Trace Isle does not respect reduced motion");
-check(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.position-choice \{ animation: none; \}/.test(traceIsleCss), "Trace Isle still pulses location choices with reduced motion");
-check(traceIsleModules[0].includes("data-object-id") && traceIsleModules[0].includes("trigger?.focus()"), "Trace Isle does not restore focus after closing an object detail");
-check(!/<script[^>]+src="https?:\/\//.test(traceIsle), "Trace Isle loads a third-party script");
+const fourShiftsCss = fs.readFileSync(path.join(root, "four-shifts/styles.css"), "utf8");
+const fourShiftsModules = ["game.js", "game-rules.mjs"].map((file) => fs.readFileSync(path.join(root, "four-shifts", file), "utf8"));
+check(fourShifts.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Four Shifts has the wrong canonical URL");
+check(fourShifts.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Four Shifts is missing its social image");
+check(fourShifts.includes('href="/projects/"'), "Four Shifts has no return path to Projects");
+check(fourShifts.includes("店家、人物與時間均已匿名"), "Four Shifts does not explain anonymization");
+check(fourShiftsCss.includes("prefers-reduced-motion"), "Four Shifts does not respect reduced motion");
+check(!/<script[^>]+src="https?:\/\//.test(fourShifts), "Four Shifts loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
-  check(!traceIsleModules.some((source) => source.includes(bannedNetworkApi)), `Trace Isle contains prohibited network API: ${bannedNetworkApi}`);
+  check(!fourShiftsModules.some((source) => source.includes(bannedNetworkApi)), `Four Shifts contains prohibited network API: ${bannedNetworkApi}`);
 }
-for (const asset of ["starter-cove.webp", "starter-river.webp", "starter-ridge.webp"]) {
-  const assetPath = path.join(root, "trace-isle/assets", asset);
-  check(fs.existsSync(assetPath), `Trace Isle is missing ${asset}`);
-  check(fs.statSync(assetPath).size < 500 * 1024, `Trace Isle asset exceeds 500 KB: ${asset}`);
-}
+const restaurantAsset = path.join(root, "four-shifts/assets/restaurant.webp");
+check(fs.existsSync(restaurantAsset), "Four Shifts is missing its restaurant scene");
+check(fs.statSync(restaurantAsset).size < 500 * 1024, "Four Shifts restaurant scene exceeds 500 KB");
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 for (const [route] of publicPages) {
@@ -123,8 +119,10 @@ check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home over
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes('href="/research/urolithin-a/story/"'), "home still links to the retired Urolithin A research story");
-check(home.includes('href="/trace-isle/"') && home.includes("starter-cove.webp"), "home does not expose the playable Trace Isle preview");
-check(sitemap.includes("<loc>https://lucinuo.github.io/trace-isle/</loc>"), "sitemap is missing Trace Isle");
+check(home.includes('href="/four-shifts/"') && home.includes("restaurant.webp"), "home does not expose Four Shifts");
+check(!home.includes("Trace Isle") && !home.includes("trace-isle"), "home still exposes Trace Isle");
+check(sitemap.includes("<loc>https://lucinuo.github.io/four-shifts/</loc>"), "sitemap is missing Four Shifts");
+check(!sitemap.includes("trace-isle"), "sitemap still exposes Trace Isle");
 check(!home.includes("Storytelling Demo"), "home overpromises an interactive storytelling demo");
 check(!home.includes("Featured product"), "home still uses public product marketing language");
 

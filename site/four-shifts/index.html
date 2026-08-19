@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="description" content="《四個班》是一款改編自餐廳新人經驗的短篇互動遊戲：當店裡以為你會的，遠比你真正學過的多。">
+  <title>四個班 — Lucinuo</title>
+  <link rel="canonical" href="https://lucinuo.github.io/four-shifts/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lucinuo.github.io/four-shifts/">
+  <meta property="og:title" content="四個班 — Lucinuo">
+  <meta property="og:description" content="當店裡以為你會的，遠比你真正學過的多。">
+  <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./game.js"></script>
+</head>
+<body>
+  <main class="game-shell" data-game>
+    <header class="game-header">
+      <h1>四個班</h1>
+      <a href="/projects/">返回作品</a>
+    </header>
+
+    <section class="intro" data-intro>
+      <div>
+        <p class="kicker">一段餐廳新人經驗</p>
+        <h2>當店裡以為你會的，<br>遠比你真正學過的多。</h2>
+        <p>四個班次裡，你會遇到客滿、消毒，以及一句句沒有下文的「先做這個」。這不是考你能不能撐住，而是讓你看見：缺少的究竟是能力，還是完整的帶訓。</p>
+        <p class="privacy">改編自真實經驗；店家、人物與時間均已匿名及重新編排。</p>
+        <button class="primary" type="button" data-start>開始第一班</button>
+      </div>
+    </section>
+
+    <section class="play" data-play hidden aria-live="polite">
+      <div class="scene">
+        <img src="./assets/restaurant.webp" width="1600" height="901" alt="忙碌餐廳裡，一位新人站在出餐口等待指示">
+        <div class="scene-state">
+          <strong data-shift-label></strong>
+          <span data-shift-time></span>
+          <span data-shift-crowd></span>
+        </div>
+        <div class="orders" data-orders aria-label="待處理單據"></div>
+      </div>
+
+      <aside class="status-rail" aria-label="目前狀態">
+        <p><span>我實際學會</span><strong data-learned>23%</strong></p>
+        <div class="meter"><i data-learned-meter></i></div>
+        <p><span>店裡以為我會</span><strong data-assumed>68%</strong></p>
+        <div class="meter assumed"><i data-assumed-meter></i></div>
+        <small>兩條線之間的距離，就是你被要求自己補上的空白。</small>
+      </aside>
+
+      <section class="decision" aria-labelledby="event-title">
+        <p class="context" data-context></p>
+        <p class="speaker" data-speaker></p>
+        <h2 id="event-title" data-line></h2>
+        <p class="thought" data-thought></p>
+        <div class="choices" data-choices></div>
+        <p class="note">按 1、2、3 也能選。你的選擇不分對錯，只會改變你看見的事。</p>
+      </section>
+    </section>
+
+    <section class="ending" data-ending hidden aria-live="polite">
+      <p class="kicker">四個班之後</p>
+      <h2 data-ending-title></h2>
+      <p data-ending-copy></p>
+      <blockquote>「我不是因為做不到而離開；我是在沒有完整學習機會的情況下，被要求像已經會了一樣工作。」</blockquote>
+      <div class="ending-actions">
+        <button class="primary" type="button" data-restart>重新經歷</button>
+        <a href="/projects/">回到作品</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

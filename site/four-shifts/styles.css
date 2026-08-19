@@ -1,0 +1,65 @@
+:root { color-scheme: light; font-family: "Noto Sans TC", "PingFang TC", system-ui, sans-serif; color: #20231f; background: #f4f1e9; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #f4f1e9; }
+button, a { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid #315b47; outline-offset: 4px; }
+[hidden] { display: none !important; }
+.game-shell { width: min(1180px, 100%); min-height: 100vh; margin: auto; padding: max(1rem, env(safe-area-inset-top)) clamp(1rem, 3vw, 2.5rem) max(1.5rem, env(safe-area-inset-bottom)); }
+.game-header { display: flex; align-items: baseline; justify-content: space-between; padding: .4rem 0 1rem; border-bottom: 1px solid #aca99f; }
+.game-header h1 { margin: 0; font: 700 clamp(1.8rem, 4vw, 3rem) Georgia, "Noto Serif TC", serif; letter-spacing: .04em; }
+.game-header a, .ending a { color: inherit; text-underline-offset: .25rem; }
+.intro { min-height: calc(100vh - 7rem); display: grid; align-items: center; background: linear-gradient(90deg, rgba(244,241,233,.98) 0 42%, rgba(244,241,233,.08) 68%), url("./assets/restaurant.webp") center/cover; }
+.intro > div { max-width: 38rem; padding: clamp(2rem, 8vw, 6rem) 0; }
+.kicker { margin: 0 0 1rem; color: #526258; font-size: .85rem; letter-spacing: .12em; }
+.intro h2, .ending h2 { margin: 0; font: 700 clamp(2rem, 5vw, 4.3rem)/1.16 Georgia, "Noto Serif TC", serif; }
+.intro h2 { font-size: clamp(2rem, 4.2vw, 3.6rem); }
+.intro p:not(.kicker), .ending p { max-width: 36rem; line-height: 1.8; }
+.privacy { color: #666a64; font-size: .84rem; }
+.primary { border: 1px solid #274c3a; padding: .85rem 1.2rem; color: #fff; background: #315b47; font-weight: 700; }
+.play { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: 1.25rem; padding-top: 1.25rem; }
+.scene { position: relative; min-height: 28rem; overflow: hidden; background: #292e2a; }
+.scene img { width: 100%; height: 100%; min-height: 28rem; display: block; object-fit: cover; transition: filter .4s ease; }
+.scene-state { position: absolute; top: 0; left: 0; display: flex; gap: .85rem; padding: .75rem 1rem; color: #fff; background: rgba(24,28,25,.86); }
+.scene-state strong { font-family: Georgia, "Noto Serif TC", serif; }
+.orders { position: absolute; right: 1rem; top: 1rem; display: flex; align-items: flex-start; gap: .25rem; max-width: 42%; }
+.order { width: 1.5rem; height: 3.8rem; border-top: .35rem solid #b34c42; background: #eee9dc; box-shadow: 0 3px 8px rgba(0,0,0,.22); transform: rotate(var(--tilt)); }
+.status-rail { padding: 1.2rem; border: 1px solid #b7b4aa; background: #faf8f2; }
+.status-rail p { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin: .8rem 0 .4rem; }
+.status-rail strong { font: 700 1.6rem Georgia, serif; }
+.meter { height: .45rem; background: #d7d6cf; }
+.meter i { display: block; width: 0; height: 100%; background: #456f57; transition: width .35s ease; }
+.meter.assumed i { background: #c18a35; }
+.status-rail small { display: block; margin-top: 2.2rem; color: #62665f; line-height: 1.65; }
+.decision { grid-column: 1 / -1; padding: 1.2rem 0 0; border-top: 1px solid #aaa79e; }
+.context, .speaker { margin: 0 0 .45rem; color: #62665f; font-size: .9rem; }
+.decision h2 { margin: 0; font: 700 clamp(1.45rem, 3vw, 2.2rem) Georgia, "Noto Serif TC", serif; }
+.thought { margin: .7rem 0 1rem; font-size: 1.1rem; }
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+.choice { min-height: 4.8rem; padding: .8rem 1rem; text-align: left; border: 1px solid #979a94; color: inherit; background: transparent; }
+.choice:hover, .choice:focus-visible { border-color: #315b47; background: #e2e8df; }
+.choice b { display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; margin-right: .5rem; color: #fff; background: #315b47; font-size: .78rem; }
+.note { margin: .8rem 0 0; color: #686c66; font-size: .8rem; text-align: center; }
+.ending { min-height: calc(100vh - 7rem); display: grid; align-content: center; justify-items: start; max-width: 52rem; margin: auto; }
+.ending blockquote { margin: 2rem 0; padding: 1rem 0 1rem 1.2rem; border-left: 3px solid #315b47; font: 1.25rem/1.7 Georgia, "Noto Serif TC", serif; }
+.ending-actions { display: flex; align-items: center; gap: 1.25rem; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; } }
+@media (max-width: 760px) {
+  .game-shell { padding-inline: 0; }
+  .game-header { margin-inline: 1rem; }
+  .intro { padding-inline: 1rem; min-height: calc(100svh - 5rem); background: linear-gradient(180deg, rgba(244,241,233,.2), #f4f1e9 52%), url("./assets/restaurant.webp") top center/auto 48% no-repeat; align-items: end; }
+  .intro > div { padding-bottom: 2.5rem; }
+  .play { display: block; padding-top: .8rem; }
+  .scene, .scene img { min-height: 15rem; }
+  .scene img { aspect-ratio: 4/3; }
+  .scene-state { inset: auto 0 0; flex-wrap: wrap; }
+  .orders { top: .75rem; }
+  .status-rail { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .8rem; margin: .75rem 1rem; padding: .75rem; }
+  .status-rail p { margin: 0; }
+  .status-rail .meter { grid-row: 2; }
+  .status-rail small { grid-column: 1 / -1; margin-top: .35rem; }
+  .decision { margin-inline: 1rem; }
+  .choices { grid-template-columns: 1fr; }
+  .choice { min-height: 3.6rem; }
+  .ending { padding: 2rem 1rem; }
+}
