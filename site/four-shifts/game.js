@@ -1,14 +1,9 @@
-import { DONENESS, MENU, SHIFTS, STEPS, completeDelivery, freshState, normalizeSave, periodFor, scoreDoneness, scorePlate } from "./game-rules.mjs";
+import { DONENESS, GUEST_PATHS, MENU, SHIFTS, STEPS, completeDelivery, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const SAVE_KEY = "restaurant-rookie-v1";
 const SETTINGS_KEY = "restaurant-rookie-settings-v1";
-const POSITIONS = {
-  order: [46, 25], cook: [25, 36], plate: [37, 39],
-  1: [52, 34], 2: [71, 34], 3: [35, 72], 4: [57, 69], 5: [78, 73],
-};
-const HUB = [46, 51];
 const INTERRUPTIONS = [
   { zh: "等一下再教，先幫 4 號桌補水。", en: "I'll show you later. Refill water at table 4 first.", task: { type: "補水", table: 4 } },
   { zh: "先幫我收一下 5 號桌。", en: "Please clear table 5 first.", task: { type: "收桌", table: 5 } },
@@ -18,7 +13,6 @@ const INTERRUPTIONS = [
 const COPY = {
   zh: {
     title: "餐廳菜鳥", back: "返回作品", genre: "餐廳新人模擬遊戲", introTitle: "先看清楚。<br>再動起來。",
-    introBody: "點選餐廳裡的工作地點，讓菜鳥走去接單、料理、擺盤與送餐；同時留意客人、同事和突然插進來的店面工作。",
     start: "開始第一班", continue: "繼續上次進度", soundHint: "開始後會以低音量播放音樂與餐廳環境聲，可隨時關閉。",
     completed: "完成", ordersUnit: "單", reputation: "店內評價", music: "音樂", ambience: "環境聲",
     orderStation: "接單", cookStation: "料理", plateStation: "擺盤", coworkerRequest: "同事臨時交代",
@@ -47,12 +41,11 @@ const COPY = {
       plated: (ok, table) => `擺盤完成：${ok ? "內容正確" : "餐點有誤"}。送到 ${table} 號桌。`,
       delivered: (finished) => `送餐完成。${finished ? "新手班次結束，進入日常營運。" : "下一張單已經進來了。"}`,
       noTask: (table) => `${table} 號桌目前沒有待辦。`, taskDone: (table, task) => `${table} 號桌的「${task}」完成。`,
-      switched: (task) => `先去處理「${task}」。原本的餐點還在等。`, kept: "先把手上的餐點完成；臨時要求沒有消失，但順序比較清楚。",
+      switched: (task) => `先去處理「${task}」。原本的餐點還在等。`,
     },
   },
   en: {
     title: "Restaurant Rookie", back: "Back to projects", genre: "New-hire restaurant simulator", introTitle: "Look first.<br>Then get moving.",
-    introBody: "Choose a place in the restaurant and the rookie will walk there to take orders, cook, plate and serve—while guests, coworkers and sudden floor tasks keep the room alive.",
     start: "Start first shift", continue: "Continue saved game", soundHint: "Soft music and restaurant ambience begin after you start. Both can be turned off anytime.",
     completed: "Completed", ordersUnit: "orders", reputation: "Rating", music: "Music", ambience: "Ambience",
     orderStation: "Orders", cookStation: "Kitchen", plateStation: "Plating", coworkerRequest: "Coworker request",
@@ -81,7 +74,7 @@ const COPY = {
       plated: (ok, table) => `Plating finished: ${ok ? "correct" : "something is wrong"}. Serve table ${table}.`,
       delivered: (finished) => `Order served. ${finished ? "Training shifts complete; daily service begins." : "A new ticket just came in."}`,
       noTask: (table) => `Table ${table} has nothing pending.`, taskDone: (table, task) => `Table ${table}: ${task} complete.`,
-      switched: (task) => `Handle “${task}” first. The original order is still waiting.`, kept: "Finish the current dish first. The extra request remains, but the order is clearer.",
+      switched: (task) => `Handle “${task}” first. The original order is still waiting.`,
     },
   },
 };
@@ -92,7 +85,9 @@ let messageKey = "first";
 let messageArgs = [];
 let panelOpen = false;
 let moving = false;
-let actorPosition = [...HUB];
+let actorDestination = "hub";
+let guestsStarted = false;
+let guestTraffic = false;
 let audioContext;
 let musicGain;
 let ambienceGain;
@@ -250,22 +245,59 @@ async function walkTo(destination) {
   moving = true;
   closePanel();
   say("walk");
+  while (guestTraffic) await new Promise((resolve) => setTimeout(resolve, 50));
   const actor = $("[data-rookie]");
-  const target = POSITIONS[destination];
-  const route = [HUB, target];
-  actor.classList.remove("carrying", "wiping");
+  const route = routeBetween(actorDestination, destination);
+  let current = route[0];
+  actor.classList.remove("wiping");
+  actor.classList.toggle("carrying", Boolean(activeOrder("ready")));
   actor.classList.add("walking");
-  for (const point of route) {
-    actor.classList.toggle("facing-left", point[0] < actorPosition[0]);
+  for (const point of route.slice(1)) {
+    const distance = Math.hypot(point[0] - current[0], point[1] - current[1]);
+    const duration = Math.min(700, Math.max(220, distance * 30));
+    actor.classList.toggle("facing-left", point[0] < current[0]);
+    actor.style.transitionDuration = `${duration}ms`;
     actor.style.left = `${point[0]}%`;
     actor.style.top = `${point[1]}%`;
-    actorPosition = [...point];
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, 500));
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, duration));
+    current = point;
   }
   actor.classList.remove("walking");
+  actorDestination = destination;
   moving = false;
   render();
   return true;
+}
+
+async function startGuests() {
+  if (guestsStarted) return;
+  guestsStarted = true;
+  await new Promise((resolve) => setTimeout(resolve, 1600));
+  while (moving) await new Promise((resolve) => setTimeout(resolve, 50));
+  guestTraffic = true;
+  for (const kind of ["male", "female"]) {
+    const guest = $(`[data-guest="${kind}"]`);
+    const route = GUEST_PATHS[kind].walk;
+    let current = route[0];
+    guest.hidden = false;
+    guest.classList.add("walking");
+    guest.style.left = `${current[0]}%`;
+    guest.style.top = `${current[1]}%`;
+    for (const point of route.slice(1)) {
+      const duration = Math.min(650, Math.max(240, Math.hypot(point[0] - current[0], point[1] - current[1]) * 28));
+      guest.style.transitionDuration = `${duration}ms`;
+      guest.style.left = `${point[0]}%`;
+      guest.style.top = `${point[1]}%`;
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, duration));
+      current = point;
+    }
+    guest.classList.remove("walking");
+    guest.classList.add("seated");
+    guest.style.left = `${GUEST_PATHS[kind].seat[0]}%`;
+    guest.style.top = `${GUEST_PATHS[kind].seat[1]}%`;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  guestTraffic = false;
 }
 async function openDestination(destination) {
   if (!await walkTo(destination)) return;
@@ -345,7 +377,7 @@ function chooseInterruption(choice) {
     messageArgs = [taskName(event.task.type)];
   } else {
     state.reputation = Math.max(0, state.reputation - 1);
-    messageKey = "kept";
+    messageKey = "accepted";
     messageArgs = [];
   }
   state.interruption = null;
@@ -419,6 +451,7 @@ function start(nextState, key) {
   $("[data-play]").hidden = false;
   ensureAudio();
   update();
+  startGuests();
 }
 
 $("[data-start]").addEventListener("click", () => {

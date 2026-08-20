@@ -72,6 +72,8 @@ check(restaurantRookie.includes('property="og:image" content="https://lucinuo.gi
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
 check(restaurantRookie.includes("data-language") && restaurantRookie.includes("data-music") && restaurantRookie.includes("data-ambience"), "Restaurant Rookie is missing language or sound controls");
 check(restaurantRookie.includes("data-destination=\"order\"") && restaurantRookie.includes("data-rookie"), "Restaurant Rookie is missing click-to-walk destinations or the rookie actor");
+check(!restaurantRookie.includes("點選餐廳裡的工作地點") && !restaurantRookieModules.some((source) => source.includes("點選餐廳裡的工作地點")), "Restaurant Rookie still contains the rejected intro copy");
+check(!restaurantRookieModules.some((source) => source.includes("臨時要求沒有消失")), "Restaurant Rookie still contains the rejected interruption copy");
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {

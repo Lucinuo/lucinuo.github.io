@@ -19,6 +19,33 @@ export const SHIFTS = [
 
 export const STEPS = ["確認桌號與餐點", "選麵並下鍋", "依熟度計時", "起鍋瀝水", "拌入正確醬料", "加入指定配料", "送到正確桌號"];
 
+const SCENE_HUB = [39, 48];
+export const SCENE_DESTINATIONS = {
+  order: [[36, 43]],
+  cook: [[34, 47], [29, 42], [25, 35]],
+  plate: [[35, 46], [34, 42]],
+  1: [[40, 38], [43, 31]],
+  2: [[51, 39], [59, 34], [60, 31]],
+  3: [[35, 58], [35, 69], [35, 75]],
+  4: [[59, 48], [60, 53], [58, 60]],
+  5: [[61, 47], [83, 52], [83, 65]],
+};
+export const SCENE_BLOCKERS = [
+  [45, 15, 55, 29], [62, 15, 72, 29],
+  [18, 70, 32, 89], [42, 53, 56, 73], [67, 54, 81, 74],
+  [85, 28, 96, 52], [10, 22, 20, 43],
+];
+export const GUEST_PATHS = {
+  male: { walk: [[8, 65], [20, 57], [34, 49], [40, 38], [43, 31]], seat: [50, 45] },
+  female: { walk: [[8, 65], [20, 57], [34, 49], [51, 39], [59, 34], [60, 31]], seat: [67, 45] },
+};
+
+export function routeBetween(from, to) {
+  const outbound = [SCENE_HUB, ...SCENE_DESTINATIONS[to]];
+  if (from === "hub" || !SCENE_DESTINATIONS[from]) return outbound;
+  return [...SCENE_DESTINATIONS[from]].reverse().concat(outbound);
+}
+
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 export function createOrder(id, seed = id - 1) {
