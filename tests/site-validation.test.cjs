@@ -70,6 +70,8 @@ const restaurantRookieModules = ["game.js", "game-rules.mjs"].map((file) => fs.r
 check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Restaurant Rookie has the wrong canonical URL");
 check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Restaurant Rookie is missing its social image");
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
+check(restaurantRookie.includes("data-language") && restaurantRookie.includes("data-music") && restaurantRookie.includes("data-ambience"), "Restaurant Rookie is missing language or sound controls");
+check(restaurantRookie.includes("data-destination=\"order\"") && restaurantRookie.includes("data-rookie"), "Restaurant Rookie is missing click-to-walk destinations or the rookie actor");
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
@@ -78,6 +80,11 @@ for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBe
 const restaurantAsset = path.join(root, "four-shifts/assets/restaurant.webp");
 check(fs.existsSync(restaurantAsset), "Restaurant Rookie is missing its restaurant scene");
 check(fs.statSync(restaurantAsset).size < 500 * 1024, "Restaurant Rookie restaurant scene exceeds 500 KB");
+for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "customer-sprites.webp", "coworker-sprites.webp"]) {
+  const assetPath = path.join(root, "four-shifts/assets", asset);
+  check(fs.existsSync(assetPath), `Restaurant Rookie is missing animated asset: ${asset}`);
+  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 200 * 1024, `Restaurant Rookie animated asset exceeds 200 KB: ${asset}`);
+}
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 for (const [route] of publicPages) {

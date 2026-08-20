@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#efe6d4">
-  <meta name="description" content="《餐廳菜鳥》是一款餐廳工作模擬遊戲：接單、煮麵、擺盤、送餐，同時處理收桌、補水與臨時支援。">
+  <meta name="description" content="《餐廳菜鳥》是一款餐廳工作模擬遊戲：在活生生的餐廳裡走動、接單、料理、擺盤與送餐。">
   <title>餐廳菜鳥 — Lucinuo</title>
   <link rel="canonical" href="https://lucinuo.github.io/four-shifts/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lucinuo.github.io/four-shifts/">
   <meta property="og:title" content="餐廳菜鳥 — Lucinuo">
-  <meta property="og:description" content="接單、煮麵、擺盤、送餐；在忙碌的班次裡熟悉流程，慢慢找到自己的工作節奏。">
+  <meta property="og:description" content="在忙碌的餐廳裡走動、接單、料理、擺盤與送餐，慢慢找到自己的工作節奏。">
   <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -20,60 +20,85 @@
 <body>
   <main class="game-shell" data-game>
     <header class="game-header">
-      <h1>餐廳菜鳥</h1>
-      <a href="/projects/">返回作品</a>
+      <h1 data-i18n="title">餐廳菜鳥</h1>
+      <div class="header-actions">
+        <button class="utility-button" type="button" data-language aria-label="Switch language">中 / EN</button>
+        <a href="/projects/" data-i18n="back">返回作品</a>
+      </div>
     </header>
 
     <section class="intro" data-intro>
       <div class="intro-copy">
-        <p class="kicker">餐廳新人管理遊戲</p>
-        <h2>先做這個。<br>然後呢？</h2>
-        <p>接單、煮麵、擺盤、送餐，同時處理收桌、補水與臨時支援；在忙碌的班次裡熟悉流程，慢慢找到自己的工作節奏。</p>
+        <p class="kicker" data-i18n="genre">餐廳新人模擬遊戲</p>
+        <h2 data-i18n-html="introTitle">先看清楚。<br>再動起來。</h2>
+        <p data-i18n="introBody">點選餐廳裡的工作地點，讓菜鳥走去接單、料理、擺盤與送餐；同時留意客人、同事和突然插進來的店面工作。</p>
         <div class="intro-actions">
-          <button class="primary" type="button" data-start>開始第一班</button>
-          <button class="text-button" type="button" data-continue hidden>繼續上次進度</button>
+          <button class="primary" type="button" data-start data-i18n="start">開始第一班</button>
+          <button class="text-button" type="button" data-continue hidden data-i18n="continue">繼續上次進度</button>
         </div>
+        <small data-i18n="soundHint">開始後會以低音量播放音樂與餐廳環境聲，可隨時關閉。</small>
       </div>
     </section>
 
     <section class="play" data-play hidden aria-live="polite">
       <div class="shift-bar">
         <div><strong data-period>第 1 班</strong><span data-rush>開店準備</span></div>
-        <div class="score"><span>完成 <b data-completed>0</b> 單</span><span>店內評價 <b data-reputation>50</b></span></div>
+        <div class="score">
+          <span><span data-i18n="completed">完成</span> <b data-completed>0</b> <span data-i18n="ordersUnit">單</span></span>
+          <span><span data-i18n="reputation">店內評價</span> <b data-reputation>50</b></span>
+        </div>
+        <div class="sound-controls" aria-label="Sound controls">
+          <button class="utility-button" type="button" data-music aria-pressed="true">♫ <span data-i18n="music">音樂</span></button>
+          <button class="utility-button" type="button" data-ambience aria-pressed="true">◌ <span data-i18n="ambience">環境聲</span></button>
+        </div>
       </div>
 
-      <nav class="stations" aria-label="工作區">
-        <button type="button" data-station="order"><b>1</b>接單</button>
-        <button type="button" data-station="cook"><b>2</b>料理</button>
-        <button type="button" data-station="plate"><b>3</b>擺盤</button>
-        <button type="button" data-station="floor"><b>4</b>店面</button>
-      </nav>
-
       <div class="work-area">
-        <section class="station-view" data-view aria-label="目前工作區"></section>
+        <section class="restaurant-scene" data-scene aria-label="餐廳全景">
+          <button class="destination station-destination destination-order" type="button" data-destination="order"><span data-i18n="orderStation">接單</span></button>
+          <button class="destination station-destination destination-cook" type="button" data-destination="cook"><span data-i18n="cookStation">料理</span></button>
+          <button class="destination station-destination destination-plate" type="button" data-destination="plate"><span data-i18n="plateStation">擺盤</span></button>
+          <button class="destination table-destination table-1" type="button" data-table="1" aria-label="前往 1 號桌">1</button>
+          <button class="destination table-destination table-2" type="button" data-table="2" aria-label="前往 2 號桌">2</button>
+          <button class="destination table-destination table-3" type="button" data-table="3" aria-label="前往 3 號桌">3</button>
+          <button class="destination table-destination table-4" type="button" data-table="4" aria-label="前往 4 號桌">4</button>
+          <button class="destination table-destination table-5" type="button" data-table="5" aria-label="前往 5 號桌">5</button>
+
+          <div class="customer customer-a" aria-hidden="true"></div>
+          <div class="customer customer-b" aria-hidden="true"></div>
+          <div class="customer customer-walk" aria-hidden="true"></div>
+          <div class="coworker" aria-hidden="true"></div>
+          <div class="rookie" data-rookie role="img" aria-label="餐廳新人角色"></div>
+
+          <section class="station-panel" data-panel hidden role="dialog" aria-modal="true" aria-labelledby="station-title">
+            <header><h2 id="station-title" data-panel-title></h2><button type="button" data-close-panel aria-label="關閉">×</button></header>
+            <div data-view></div>
+          </section>
+
+          <section class="interruption" data-interruption hidden role="dialog" aria-modal="true">
+            <div class="coworker-portrait" aria-hidden="true"></div>
+            <div><small data-i18n="coworkerRequest">同事臨時交代</small><p data-interruption-line></p></div>
+            <div class="interruption-actions" data-interruption-actions></div>
+          </section>
+        </section>
+
         <aside class="status-rail">
           <section>
-            <h2>待辦單</h2>
+            <h2 data-i18n="tickets">待辦單</h2>
             <div class="tickets" data-tickets></div>
           </section>
           <section class="counters">
-            <p><span>待出餐</span><b data-ready>0</b></p>
-            <p><span>店面雜務</span><b data-floor-count>0</b></p>
+            <p><span data-i18n="ready">待出餐</span><b data-ready>0</b></p>
+            <p><span data-i18n="floorTasks">店面雜務</span><b data-floor-count>0</b></p>
           </section>
           <section class="notebook">
-            <h2>流程小抄 <span data-known-count></span></h2>
+            <h2><span data-i18n="notes">流程小抄</span> <span data-known-count></span></h2>
             <ol data-notes></ol>
           </section>
         </aside>
       </div>
 
-      <section class="interruption" data-interruption hidden>
-        <img src="./assets/coworker.webp" width="1120" height="1301" alt="一位忙碌的資深同事">
-        <div><small>同事臨時交代</small><p data-interruption-line></p></div>
-        <div class="interruption-actions" data-interruption-actions></div>
-      </section>
-
-      <p class="game-note" data-message>先到接單區看看今天的第一張單。</p>
+      <p class="game-note" data-message>先走到接單櫃台，看看今天的第一張單。</p>
     </section>
   </main>
 </body>
