@@ -88,6 +88,7 @@ let moving = false;
 let actorDestination = "hub";
 let guestsStarted = false;
 let guestTraffic = false;
+let coworkerPatrolStarted = false;
 let audioContext;
 let musicGain;
 let ambienceGain;
@@ -244,6 +245,12 @@ const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mill
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function setSpriteFrame(element, direction, frame, kind) {
+  if (kind === "coworker") {
+    element.style.backgroundPosition = `${frame > 0 && frame % 2 === 0 ? 100 : 50}% 0`;
+    element.style.transform = `translate(-50%, -76%) scaleX(${direction === "left" ? -1 : 1})`;
+    element.dataset.direction = direction;
+    return;
+  }
   const rows = kind === "rookie"
     ? { down: 0, right: 1, up: 2, left: 3 }
     : { right: kind === "male" ? 0 : 2, up: kind === "male" ? 1 : 3 };
@@ -258,7 +265,7 @@ function placeActor(element, motion, scene) {
   element.style.zIndex = String(7 + Math.floor(motion.y / scene.clientHeight * 10));
 }
 
-function animateRoute(element, route, kind, speed = 165) {
+function animateRoute(element, route, kind, speed = 110, stride = 22) {
   const scene = $("[data-scene]");
   const points = route.map(([x, y]) => [x / 100 * scene.clientWidth, y / 100 * scene.clientHeight]);
   let motion = createMotion(points);
@@ -273,7 +280,7 @@ function animateRoute(element, route, kind, speed = 165) {
     const tick = (time) => {
       const dt = previousTime == null ? 0 : Math.min((time - previousTime) / 1000, 0.05);
       previousTime = time;
-      motion = advanceMotion(motion, dt, { maxSpeed: speed, acceleration: speed * 2.4, deceleration: speed * 2.8, stride: 32 });
+      motion = advanceMotion(motion, dt, { maxSpeed: speed, acceleration: speed * 2.4, deceleration: speed * 2.8, stride });
       placeActor(element, motion, scene);
       setSpriteFrame(element, motion.direction, motion.frame, kind);
       if (motion.done) resolve();
@@ -313,7 +320,7 @@ async function startGuests() {
     const route = GUEST_PATHS[kind].walk;
     guest.hidden = false;
     guest.classList.add("walking");
-    await animateRoute(guest, route, kind, 125);
+    await animateRoute(guest, route, kind, 95, 18);
     guest.classList.remove("walking");
     guest.classList.add("taking-seat");
     await wait(reducedMotion() ? 0 : 180);
@@ -325,6 +332,25 @@ async function startGuests() {
     await wait(250);
   }
   guestTraffic = false;
+}
+
+async function startCoworkerPatrol() {
+  if (coworkerPatrolStarted) return;
+  coworkerPatrolStarted = true;
+  const coworker = $("[data-coworker]");
+  if (reducedMotion()) return;
+  const routes = [
+    [[24, 36], [33, 36]],
+    [[33, 36], [24, 36]],
+  ];
+  let index = 0;
+  while (coworkerPatrolStarted) {
+    coworker.classList.add("walking");
+    await animateRoute(coworker, routes[index], "coworker", 62, 16);
+    coworker.classList.remove("walking");
+    await wait(850);
+    index = 1 - index;
+  }
 }
 async function openDestination(destination) {
   if (!await walkTo(destination)) return;
@@ -479,6 +505,7 @@ function start(nextState, key) {
   ensureAudio();
   update();
   startGuests();
+  startCoworkerPatrol();
 }
 
 $("[data-start]").addEventListener("click", () => {

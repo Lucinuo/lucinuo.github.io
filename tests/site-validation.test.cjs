@@ -78,6 +78,19 @@ check(!restaurantRookieModules.some((source) => source.includes("臨時要求沒
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
 check(restaurantRookieCss.includes("background-size: 500% 400%") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing four-direction frame-timed movement");
 check(!restaurantRookieModules[0].includes("transitionDuration"), "Restaurant Rookie still uses segmented CSS sliding");
+const stationTop = (selector) => Number(restaurantRookieCss.match(new RegExp(`\\.${selector}\\s*\\{[^}]*top:\\s*([\\d.]+)%`))?.[1]);
+check(Math.abs(stationTop("destination-order") - stationTop("destination-plate")) >= 12, "Restaurant Rookie order and plating buttons can overlap at desktop widths");
+const stationRules = (selector) => [...restaurantRookieCss.matchAll(new RegExp(`\\.${selector}\\s*\\{([^}]+)\\}`, "g"))].map((match) => ({
+  left: Number(match[1].match(/left:\s*([\d.]+)%/)?.[1]),
+  top: Number(match[1].match(/top:\s*([\d.]+)%/)?.[1]),
+}));
+const mobileStations = ["destination-order", "destination-cook", "destination-plate"].map((selector) => stationRules(selector).at(-1));
+const mobileRects = mobileStations.map(({ left, top }) => ({ left: left / 100 * 390, top: top / 100 * 243.75, right: left / 100 * 390 + 57.6, bottom: top / 100 * 243.75 + 30.4 }));
+const mobileOverlap = mobileRects.some((rect, index) => mobileRects.slice(index + 1).some((other) => Math.min(rect.right, other.right) > Math.max(rect.left, other.left) && Math.min(rect.bottom, other.bottom) > Math.max(rect.top, other.top)));
+check(!mobileOverlap, "Restaurant Rookie station buttons overlap at 390px mobile width");
+const seatedBottomClip = Number(restaurantRookieCss.match(/\.customer\.seated\s*\{[^}]*clip-path:\s*inset\([^)]*?([\d.]+)%\s+0\)/)?.[1]);
+check(seatedBottomClip >= 45, "Restaurant Rookie seated guests still expose their lap through the table");
+check(restaurantRookie.includes("data-coworker") && restaurantRookieModules[0].includes("startCoworkerPatrol") && !restaurantRookieCss.includes("coworker-patrol"), "Restaurant Rookie coworker still uses unsynchronised CSS sliding");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);

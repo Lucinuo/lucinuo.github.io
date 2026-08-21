@@ -32,13 +32,22 @@ const crossesFurniture = (route) => route.some((point, index) => {
     return SCENE_BLOCKERS.some(([left, top, right, bottom]) => x > left && x < right && y > top && y < bottom);
   });
 });
+const hasDiagonalSegment = (route) => route.some((point, index) => {
+  if (index === 0) return false;
+  const previous = route[index - 1];
+  return point[0] !== previous[0] && point[1] !== previous[1];
+});
 for (const from of ["hub", ...Object.keys(SCENE_DESTINATIONS)]) {
   for (const to of Object.keys(SCENE_DESTINATIONS)) {
-    assert.equal(crossesFurniture(routeBetween(from, to)), false, `${from} -> ${to} crosses furniture`);
+    const route = routeBetween(from, to);
+    assert.equal(crossesFurniture(route), false, `${from} -> ${to} crosses furniture`);
+    assert.equal(hasDiagonalSegment(route), false, `${from} -> ${to} makes a four-direction sprite slide diagonally`);
   }
 }
 assert.equal(crossesFurniture(GUEST_PATHS.male.walk), false, "male guest crosses furniture");
 assert.equal(crossesFurniture(GUEST_PATHS.female.walk), false, "female guest crosses furniture");
+assert.equal(hasDiagonalSegment(GUEST_PATHS.male.walk), false, "male guest slides diagonally");
+assert.equal(hasDiagonalSegment(GUEST_PATHS.female.walk), false, "female guest slides diagonally");
 assert.notDeepEqual(GUEST_PATHS.male.seat, GUEST_PATHS.female.seat);
 assert.equal(GUEST_PATHS.male.table, 1);
 assert.equal(GUEST_PATHS.female.table, 2);

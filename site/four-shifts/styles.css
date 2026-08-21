@@ -47,9 +47,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .destination { position: absolute; z-index: 18; display: grid; place-items: center; border: 2px solid #fff; color: #fff; background: var(--green); font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
 .destination:hover { transform: translateY(-2px); }
 .station-destination { min-width: 4.6rem; min-height: 2.3rem; border-radius: 999px; }
-.destination-order { left: 30%; top: 35%; }
-.destination-cook { left: 12%; top: 31%; }
-.destination-plate { left: 32%; top: 29%; }
+.destination-order { left: 29%; top: 40%; }
+.destination-cook { left: 11%; top: 31%; }
+.destination-plate { left: 35%; top: 27%; }
 .table-destination { width: clamp(1.85rem, 3vw, 2.35rem); aspect-ratio: 1; border-radius: 50%; }
 .table-destination[data-alert="true"] { background: var(--red); animation: pulse 1.1s infinite; }
 .table-1 { left: 52.5%; top: 27.5%; }
@@ -64,13 +64,13 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .rookie.wiping { animation: wipe-motion .28s ease-in-out 3 alternate; }
 .customer { left: 10%; top: 64%; width: clamp(4rem, 7.2vw, 6.5rem); aspect-ratio: 1.2; background-image: url("./assets/customer-sprites.webp"); background-size: 500% 400%; background-position: 0 0; transform: translate(-50%, -76%); transition: opacity .18s ease, transform .18s ease; }
 .customer.taking-seat { opacity: 0; transform: translate(-50%, -76%) scale(.9); }
-.customer.seated { width: clamp(4.2rem, 6.6vw, 6.1rem); aspect-ratio: 1; background-image: url("./assets/customer-seated.webp"); background-size: 200% 100%; transform: translate(-50%, -50%); clip-path: inset(0 0 20% 0); opacity: 1; transition: none; }
+.customer.seated { width: clamp(4.2rem, 6.6vw, 6.1rem); aspect-ratio: 1; background-image: url("./assets/customer-seated.webp"); background-size: 200% 100%; transform: translate(-50%, -50%); clip-path: inset(0 0 48% 0); opacity: 1; transition: none; }
 .guest-male.seated { background-position: 0 0 !important; }
 .guest-female.seated { background-position: 100% 0 !important; }
 .furniture-occlusion { position: absolute; z-index: 9; inset: 0; pointer-events: none; background: url("./assets/restaurant.webp") center/cover no-repeat; }
 .occlusion-table-1 { clip-path: polygon(50% 22%, 58% 22%, 58% 26.5%, 50% 26.5%); }
 .occlusion-table-2 { clip-path: polygon(67% 22%, 75% 22%, 75% 26.5%, 67% 26.5%); }
-.coworker { left: 13%; top: 28%; width: clamp(2.8rem, 5.6vw, 5rem); aspect-ratio: 1 / 1.65; background-image: url("./assets/coworker-sprites.webp"); background-size: 300% 100%; animation: coworker-patrol 7s ease-in-out infinite, coworker-steps .38s steps(1) infinite; }
+.coworker { left: 24%; top: 36%; width: clamp(2.8rem, 5.6vw, 5rem); aspect-ratio: 1 / 1.65; background-image: url("./assets/coworker-sprites.webp"); background-size: 300% 100%; background-position: 50% 0; transform: translate(-50%, -76%); clip-path: inset(0 0 48% 0); }
 
 .status-rail { display: grid; align-content: start; gap: .65rem; padding: .65rem; color: #f8f1e3; background: var(--rail); }
 .status-rail section { border: 1px solid #15120f; padding: .7rem; color: var(--ink); background: var(--paper); }
@@ -123,8 +123,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .game-note { min-height: 2rem; margin: .6rem 0 0; padding: .5rem .75rem; border-left: 4px solid var(--green); background: rgba(255,250,240,.76); }
 
 @keyframes pulse { 50% { transform: scale(1.12); } }
-@keyframes coworker-steps { 0%, 49% { background-position: 50% 0; } 50%, 100% { background-position: 100% 0; } }
-@keyframes coworker-patrol { 0%, 100% { left: 12%; top: 28%; } 50% { left: 19%; top: 28%; } }
 @keyframes wipe-motion { to { transform: translate(-50%, -76%) rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; } }
 
@@ -155,7 +153,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
   .station-destination { min-width: 3.6rem; min-height: 1.9rem; font-size: .75rem; }
   .destination-order { left: 34%; top: 32%; }
   .destination-cook { left: 9%; top: 27%; }
-  .destination-plate { left: 21%; top: 43%; }
+  .destination-plate { left: 21%; top: 47%; }
   .interruption { grid-template-columns: 3.3rem 1fr; }
   .coworker-portrait { width: 3rem; }
   .interruption-actions { grid-column: 1 / -1; }
