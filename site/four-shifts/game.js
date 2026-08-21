@@ -1,9 +1,15 @@
-import { DONENESS, GUEST_PATHS, MENU, SHIFTS, STEPS, advanceMotion, completeDelivery, createMotion, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
+import { DONENESS, MENU, SHIFTS, STEPS, advanceMotion, completeDelivery, createMotion, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const SAVE_KEY = "restaurant-rookie-v1";
 const SETTINGS_KEY = "restaurant-rookie-settings-v1";
+const ROOKIE_FRAME_OFFSETS = [
+  [[3.41, -2.21], [1.82, 0], [0.28, 0.26], [-1.88, -0.13], [-1.84, 0.52]],
+  [[3.29, 0], [1.7, 0], [0.2, 0], [-1.35, -2.99], [-1.76, 0]],
+  [[3.41, 0], [1.5, 0], [-0.21, 0], [-1.55, 0], [-2.49, 0]],
+  [[3.69, -0.13], [1.62, 0], [-0.25, -0.13], [-1.68, 0.13], [-2.21, 0.26]],
+];
 const INTERRUPTIONS = [
   { zh: "等一下再教，先幫 4 號桌補水。", en: "I'll show you later. Refill water at table 4 first.", task: { type: "補水", table: 4 } },
   { zh: "先幫我收一下 5 號桌。", en: "Please clear table 5 first.", task: { type: "收桌", table: 5 } },
@@ -86,8 +92,6 @@ let messageArgs = [];
 let panelOpen = false;
 let moving = false;
 let actorDestination = "hub";
-let guestsStarted = false;
-let guestTraffic = false;
 let coworkerPatrolStarted = false;
 let audioContext;
 let musicGain;
@@ -251,11 +255,10 @@ function setSpriteFrame(element, direction, frame, kind) {
     element.dataset.direction = direction;
     return;
   }
-  const rows = kind === "rookie"
-    ? { down: 0, right: 1, up: 2, left: 3 }
-    : { right: kind === "male" ? 0 : 2, up: kind === "male" ? 1 : 3 };
+  const rows = { down: 0, right: 1, up: 2, left: 3 };
   const row = rows[direction] ?? rows.right ?? 0;
-  element.style.backgroundPosition = `${frame * 25}% ${row * 100 / 3}%`;
+  const [xOffset, yOffset] = ROOKIE_FRAME_OFFSETS[row][frame];
+  element.style.backgroundPosition = `${frame * 25 + xOffset}% ${row * 100 / 3 + yOffset}%`;
   element.dataset.direction = direction;
 }
 
@@ -295,7 +298,6 @@ async function walkTo(destination) {
   moving = true;
   closePanel();
   say("walk");
-  while (guestTraffic) await wait(50);
   const actor = $("[data-rookie]");
   const route = routeBetween(actorDestination, destination);
   actor.classList.remove("wiping");
@@ -307,31 +309,6 @@ async function walkTo(destination) {
   moving = false;
   render();
   return true;
-}
-
-async function startGuests() {
-  if (guestsStarted) return;
-  guestsStarted = true;
-  await wait(1600);
-  while (moving) await wait(50);
-  guestTraffic = true;
-  for (const kind of ["male", "female"]) {
-    const guest = $(`[data-guest="${kind}"]`);
-    const route = GUEST_PATHS[kind].walk;
-    guest.hidden = false;
-    guest.classList.add("walking");
-    await animateRoute(guest, route, kind, 95, 18);
-    guest.classList.remove("walking");
-    guest.classList.add("taking-seat");
-    await wait(reducedMotion() ? 0 : 180);
-    guest.classList.add("seated");
-    guest.classList.remove("taking-seat");
-    guest.style.left = `${GUEST_PATHS[kind].seat[0]}%`;
-    guest.style.top = `${GUEST_PATHS[kind].seat[1]}%`;
-    guest.style.zIndex = "8";
-    await wait(250);
-  }
-  guestTraffic = false;
 }
 
 async function startCoworkerPatrol() {
@@ -504,7 +481,6 @@ function start(nextState, key) {
   $("[data-play]").hidden = false;
   ensureAudio();
   update();
-  startGuests();
   startCoworkerPatrol();
 }
 

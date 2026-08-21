@@ -14,8 +14,8 @@
   <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./game.js"></script>
+  <link rel="stylesheet" href="./styles.css?v=20260821-3">
+  <script type="module" src="./game.js?v=20260821-3"></script>
 </head>
 <body>
   <main class="game-shell" data-game>
@@ -53,34 +53,35 @@
       </div>
 
       <div class="work-area">
-        <section class="restaurant-scene" data-scene aria-label="餐廳全景">
-          <button class="destination station-destination destination-order" type="button" data-destination="order"><span data-i18n="orderStation">接單</span></button>
-          <button class="destination station-destination destination-cook" type="button" data-destination="cook"><span data-i18n="cookStation">料理</span></button>
-          <button class="destination station-destination destination-plate" type="button" data-destination="plate"><span data-i18n="plateStation">擺盤</span></button>
-          <button class="destination table-destination table-1" type="button" data-table="1" aria-label="前往 1 號桌">1</button>
-          <button class="destination table-destination table-2" type="button" data-table="2" aria-label="前往 2 號桌">2</button>
-          <button class="destination table-destination table-3" type="button" data-table="3" aria-label="前往 3 號桌">3</button>
-          <button class="destination table-destination table-4" type="button" data-table="4" aria-label="前往 4 號桌">4</button>
-          <button class="destination table-destination table-5" type="button" data-table="5" aria-label="前往 5 號桌">5</button>
+        <div class="scene-column">
+          <section class="restaurant-scene" data-scene aria-label="餐廳全景">
+            <button class="destination table-destination table-1" type="button" data-table="1" aria-label="前往 1 號桌">1</button>
+            <button class="destination table-destination table-2" type="button" data-table="2" aria-label="前往 2 號桌">2</button>
+            <button class="destination table-destination table-3" type="button" data-table="3" aria-label="前往 3 號桌">3</button>
+            <button class="destination table-destination table-4" type="button" data-table="4" aria-label="前往 4 號桌">4</button>
+            <button class="destination table-destination table-5" type="button" data-table="5" aria-label="前往 5 號桌">5</button>
 
-          <div class="customer guest-male" data-guest="male" hidden aria-hidden="true"></div>
-          <div class="customer guest-female" data-guest="female" hidden aria-hidden="true"></div>
-          <div class="furniture-occlusion occlusion-table-1" aria-hidden="true"></div>
-          <div class="furniture-occlusion occlusion-table-2" aria-hidden="true"></div>
-          <div class="coworker" data-coworker aria-hidden="true"></div>
-          <div class="rookie" data-rookie role="img" aria-label="餐廳新人角色"></div>
+            <div class="coworker" data-coworker aria-hidden="true"></div>
+            <div class="rookie" data-rookie role="img" aria-label="餐廳新人角色"></div>
 
-          <section class="station-panel" data-panel hidden role="dialog" aria-modal="true" aria-labelledby="station-title">
-            <header><h2 id="station-title" data-panel-title></h2><button type="button" data-close-panel aria-label="關閉">×</button></header>
-            <div data-view></div>
+            <section class="station-panel" data-panel hidden role="dialog" aria-modal="true" aria-labelledby="station-title">
+              <header><h2 id="station-title" data-panel-title></h2><button type="button" data-close-panel aria-label="關閉">×</button></header>
+              <div data-view></div>
+            </section>
+
+            <section class="interruption" data-interruption hidden role="dialog" aria-modal="true">
+              <div class="coworker-portrait" aria-hidden="true"></div>
+              <div><small data-i18n="coworkerRequest">同事臨時交代</small><p data-interruption-line></p></div>
+              <div class="interruption-actions" data-interruption-actions></div>
+            </section>
           </section>
 
-          <section class="interruption" data-interruption hidden role="dialog" aria-modal="true">
-            <div class="coworker-portrait" aria-hidden="true"></div>
-            <div><small data-i18n="coworkerRequest">同事臨時交代</small><p data-interruption-line></p></div>
-            <div class="interruption-actions" data-interruption-actions></div>
-          </section>
-        </section>
+          <nav class="work-controls" data-work-controls aria-label="工作地點">
+            <button type="button" data-destination="order"><span data-i18n="orderStation">接單</span></button>
+            <button type="button" data-destination="cook"><span data-i18n="cookStation">料理</span></button>
+            <button type="button" data-destination="plate"><span data-i18n="plateStation">擺盤</span></button>
+          </nav>
+        </div>
 
         <aside class="status-rail">
           <section>

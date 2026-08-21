@@ -72,33 +72,27 @@ check(restaurantRookie.includes('property="og:image" content="https://lucinuo.gi
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
 check(restaurantRookie.includes("data-language") && restaurantRookie.includes("data-music") && restaurantRookie.includes("data-ambience"), "Restaurant Rookie is missing language or sound controls");
 check(restaurantRookie.includes("data-destination=\"order\"") && restaurantRookie.includes("data-rookie"), "Restaurant Rookie is missing click-to-walk destinations or the rookie actor");
-check(restaurantRookie.includes("occlusion-table-1") && restaurantRookie.includes("occlusion-table-2"), "Restaurant Rookie is missing table foreground occlusion layers");
 check(!restaurantRookie.includes("點選餐廳裡的工作地點") && !restaurantRookieModules.some((source) => source.includes("點選餐廳裡的工作地點")), "Restaurant Rookie still contains the rejected intro copy");
 check(!restaurantRookieModules.some((source) => source.includes("臨時要求沒有消失")), "Restaurant Rookie still contains the rejected interruption copy");
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
 check(restaurantRookieCss.includes("background-size: 500% 400%") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing four-direction frame-timed movement");
 check(!restaurantRookieModules[0].includes("transitionDuration"), "Restaurant Rookie still uses segmented CSS sliding");
-const stationTop = (selector) => Number(restaurantRookieCss.match(new RegExp(`\\.${selector}\\s*\\{[^}]*top:\\s*([\\d.]+)%`))?.[1]);
-check(Math.abs(stationTop("destination-order") - stationTop("destination-plate")) >= 12, "Restaurant Rookie order and plating buttons can overlap at desktop widths");
-const stationRules = (selector) => [...restaurantRookieCss.matchAll(new RegExp(`\\.${selector}\\s*\\{([^}]+)\\}`, "g"))].map((match) => ({
-  left: Number(match[1].match(/left:\s*([\d.]+)%/)?.[1]),
-  top: Number(match[1].match(/top:\s*([\d.]+)%/)?.[1]),
-}));
-const mobileStations = ["destination-order", "destination-cook", "destination-plate"].map((selector) => stationRules(selector).at(-1));
-const mobileRects = mobileStations.map(({ left, top }) => ({ left: left / 100 * 390, top: top / 100 * 243.75, right: left / 100 * 390 + 57.6, bottom: top / 100 * 243.75 + 30.4 }));
-const mobileOverlap = mobileRects.some((rect, index) => mobileRects.slice(index + 1).some((other) => Math.min(rect.right, other.right) > Math.max(rect.left, other.left) && Math.min(rect.bottom, other.bottom) > Math.max(rect.top, other.top)));
-check(!mobileOverlap, "Restaurant Rookie station buttons overlap at 390px mobile width");
-const seatedBottomClip = Number(restaurantRookieCss.match(/\.customer\.seated\s*\{[^}]*clip-path:\s*inset\([^)]*?([\d.]+)%\s+0\)/)?.[1]);
-check(seatedBottomClip >= 45, "Restaurant Rookie seated guests still expose their lap through the table");
+check(restaurantRookie.includes("data-work-controls"), "Restaurant Rookie is missing the separate work control bar");
+const sceneMarkup = restaurantRookie.match(/<section class="restaurant-scene"[\s\S]*?<\/section>\s*<\/div>/)?.[0] || "";
+check(!sceneMarkup.includes("data-destination"), "Restaurant Rookie still places work controls over the actors");
+check(restaurantRookieCss.includes("restaurant-seated.webp") && !restaurantRookie.includes("data-guest="), "Restaurant Rookie does not use the integrated seated-customer scene");
+check(!restaurantRookieCss.includes("customer-seated.webp") && !restaurantRookieModules.some((source) => source.includes("customer-seated.webp")), "Restaurant Rookie still uses the front-facing seated portrait");
 check(restaurantRookie.includes("data-coworker") && restaurantRookieModules[0].includes("startCoworkerPatrol") && !restaurantRookieCss.includes("coworker-patrol"), "Restaurant Rookie coworker still uses unsynchronised CSS sliding");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
-const restaurantAsset = path.join(root, "four-shifts/assets/restaurant.webp");
-check(fs.existsSync(restaurantAsset), "Restaurant Rookie is missing its restaurant scene");
-check(fs.statSync(restaurantAsset).size < 500 * 1024, "Restaurant Rookie restaurant scene exceeds 500 KB");
-for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "customer-sprites.webp", "customer-seated.webp", "coworker-sprites.webp"]) {
+for (const asset of ["restaurant.webp", "restaurant-seated.webp"]) {
+  const assetPath = path.join(root, "four-shifts/assets", asset);
+  check(fs.existsSync(assetPath), `Restaurant Rookie is missing scene asset: ${asset}`);
+  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 500 * 1024, `Restaurant Rookie scene asset exceeds 500 KB: ${asset}`);
+}
+for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "coworker-sprites.webp"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing animated asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 200 * 1024, `Restaurant Rookie animated asset exceeds 200 KB: ${asset}`);

@@ -35,10 +35,6 @@ export const SCENE_BLOCKERS = [
   [23, 62, 39, 92], [44, 49, 59, 76], [69, 56, 84, 84],
   [87, 30, 100, 60],
 ];
-export const GUEST_PATHS = {
-  male: { table: 1, walk: [[10, 64], [19, 64], [19, 56], [34, 56], [34, 47], [53, 47], [53, 40], [61.5, 40], [61.5, 29]], seat: [54, 23] },
-  female: { table: 2, walk: [[10, 64], [19, 64], [19, 56], [34, 56], [34, 47], [53, 47], [53, 40], [63, 40], [63, 29]], seat: [71, 23] },
-};
 
 export function routeBetween(from, to) {
   const outbound = [SCENE_HUB, ...SCENE_DESTINATIONS[to]];
