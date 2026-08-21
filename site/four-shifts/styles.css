@@ -44,35 +44,33 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .restaurant-scene { position: relative; min-width: 0; aspect-ratio: 16 / 9; overflow: hidden; isolation: isolate; background: #674e36 url("./assets/restaurant.webp") center/cover no-repeat; }
 .restaurant-scene::after { content: ""; position: absolute; z-index: 20; inset: 0; pointer-events: none; box-shadow: inset 0 0 45px rgba(32,20,11,.25); }
 
-.destination { position: absolute; z-index: 12; display: grid; place-items: center; border: 2px solid #fff; color: #fff; background: var(--green); font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.destination { position: absolute; z-index: 18; display: grid; place-items: center; border: 2px solid #fff; color: #fff; background: var(--green); font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
 .destination:hover { transform: translateY(-2px); }
 .station-destination { min-width: 4.6rem; min-height: 2.3rem; border-radius: 999px; }
-.destination-order { left: 37%; top: 33%; }
-.destination-cook { left: 18%; top: 29%; }
-.destination-plate { left: 27%; top: 43%; }
-.table-destination { width: clamp(2rem, 3.4vw, 2.8rem); aspect-ratio: 1; border-radius: 50%; }
+.destination-order { left: 30%; top: 35%; }
+.destination-cook { left: 12%; top: 31%; }
+.destination-plate { left: 32%; top: 29%; }
+.table-destination { width: clamp(1.85rem, 3vw, 2.35rem); aspect-ratio: 1; border-radius: 50%; }
 .table-destination[data-alert="true"] { background: var(--red); animation: pulse 1.1s infinite; }
-.table-1 { left: 44%; top: 23%; }
-.table-2 { left: 61%; top: 23%; }
-.table-3 { left: 24%; top: 78%; }
-.table-4 { left: 48%; top: 64%; }
-.table-5 { left: 73%; top: 65%; }
+.table-1 { left: 52.5%; top: 27.5%; }
+.table-2 { left: 69.5%; top: 27.5%; }
+.table-3 { left: 29%; top: 76%; }
+.table-4 { left: 50%; top: 59%; }
+.table-5 { left: 75%; top: 66%; }
 
 .rookie, .customer, .coworker { position: absolute; z-index: 8; pointer-events: none; background-repeat: no-repeat; filter: drop-shadow(0 3px 2px rgba(30,20,12,.35)); }
-.rookie { left: 39%; top: 48%; width: clamp(2.9rem, 6.4vw, 5.8rem); aspect-ratio: 1 / 2.35; background-image: url("./assets/rookie-sprites.webp"); background-size: 800% 100%; background-position: 0 0; transform: translate(-50%, -84%); transition-property: left, top; transition-timing-function: linear; }
-.rookie.walking { animation: rookie-walk .56s steps(1) infinite; }
-.rookie.facing-left { scale: -1 1; }
-.rookie.carrying { background-position: 71.429% 0; }
-.rookie.walking.carrying { animation-name: rookie-carry-walk; animation-duration: .42s; }
-.rookie.wiping { width: clamp(3.1rem, 6.7vw, 6rem); aspect-ratio: 2 / 3; background-image: url("./assets/rookie-wipe.webp"); background-size: contain; background-position: center; }
-.customer { left: 8%; top: 65%; width: clamp(2.5rem, 5.3vw, 4.8rem); aspect-ratio: 1 / 2.4; background-image: url("./assets/customer-sprites.webp"); background-size: 900% 100%; transform: translate(-50%, -88%); transition-property: left, top; transition-timing-function: linear; }
-.guest-male { background-position: 0 0; }
-.guest-female { background-position: 62.5% 0; }
-.guest-male.walking { animation: male-guest-walk .56s steps(1) infinite; }
-.guest-female.walking { animation: female-guest-walk .56s steps(1) infinite; }
-.guest-male.seated { background-position: 50% 0; transform: translate(-50%, -91%); }
-.guest-female.seated { background-position: 100% 0; transform: translate(-50%, -83%); }
-.coworker { left: 13%; top: 24%; width: clamp(2.8rem, 5.6vw, 5rem); aspect-ratio: 1 / 1.65; background-image: url("./assets/coworker-sprites.webp"); background-size: 300% 100%; animation: coworker-patrol 7s ease-in-out infinite, coworker-steps .38s steps(1) infinite; }
+.rookie { left: 42%; top: 46%; width: clamp(4.2rem, 7.8vw, 7rem); aspect-ratio: 1.2; background-image: url("./assets/rookie-sprites.webp"); background-size: 500% 400%; background-position: 0 0; transform: translate(-50%, -76%); }
+.rookie.carrying::after { content: ""; position: absolute; left: 57%; top: 43%; width: 34%; aspect-ratio: 1; border-radius: 50%; background: #f8f1e3 url("./assets/pasta.webp") 0 center/300% auto no-repeat; box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.rookie.wiping { animation: wipe-motion .28s ease-in-out 3 alternate; }
+.customer { left: 10%; top: 64%; width: clamp(4rem, 7.2vw, 6.5rem); aspect-ratio: 1.2; background-image: url("./assets/customer-sprites.webp"); background-size: 500% 400%; background-position: 0 0; transform: translate(-50%, -76%); transition: opacity .18s ease, transform .18s ease; }
+.customer.taking-seat { opacity: 0; transform: translate(-50%, -76%) scale(.9); }
+.customer.seated { width: clamp(4.2rem, 6.6vw, 6.1rem); aspect-ratio: 1; background-image: url("./assets/customer-seated.webp"); background-size: 200% 100%; transform: translate(-50%, -50%); clip-path: inset(0 0 20% 0); opacity: 1; transition: none; }
+.guest-male.seated { background-position: 0 0 !important; }
+.guest-female.seated { background-position: 100% 0 !important; }
+.furniture-occlusion { position: absolute; z-index: 9; inset: 0; pointer-events: none; background: url("./assets/restaurant.webp") center/cover no-repeat; }
+.occlusion-table-1 { clip-path: polygon(50% 22%, 58% 22%, 58% 26.5%, 50% 26.5%); }
+.occlusion-table-2 { clip-path: polygon(67% 22%, 75% 22%, 75% 26.5%, 67% 26.5%); }
+.coworker { left: 13%; top: 28%; width: clamp(2.8rem, 5.6vw, 5rem); aspect-ratio: 1 / 1.65; background-image: url("./assets/coworker-sprites.webp"); background-size: 300% 100%; animation: coworker-patrol 7s ease-in-out infinite, coworker-steps .38s steps(1) infinite; }
 
 .status-rail { display: grid; align-content: start; gap: .65rem; padding: .65rem; color: #f8f1e3; background: var(--rail); }
 .status-rail section { border: 1px solid #15120f; padding: .7rem; color: var(--ink); background: var(--paper); }
@@ -125,12 +123,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .game-note { min-height: 2rem; margin: .6rem 0 0; padding: .5rem .75rem; border-left: 4px solid var(--green); background: rgba(255,250,240,.76); }
 
 @keyframes pulse { 50% { transform: scale(1.12); } }
-@keyframes rookie-walk { 0%, 24% { background-position: 14.286% 0; } 25%, 49% { background-position: 28.571% 0; } 50%, 74% { background-position: 42.857% 0; } 75%, 100% { background-position: 57.143% 0; } }
-@keyframes rookie-carry-walk { 0%, 49% { background-position: 85.714% 0; } 50%, 100% { background-position: 100% 0; } }
-@keyframes male-guest-walk { 0%, 24% { background-position: 0 0; } 25%, 49% { background-position: 12.5% 0; } 50%, 74% { background-position: 25% 0; } 75%, 100% { background-position: 37.5% 0; } }
-@keyframes female-guest-walk { 0%, 32% { background-position: 62.5% 0; } 33%, 65% { background-position: 75% 0; } 66%, 100% { background-position: 87.5% 0; } }
 @keyframes coworker-steps { 0%, 49% { background-position: 50% 0; } 50%, 100% { background-position: 100% 0; } }
-@keyframes coworker-patrol { 0%, 100% { left: 11%; top: 24%; } 50% { left: 17%; top: 24%; } }
+@keyframes coworker-patrol { 0%, 100% { left: 12%; top: 28%; } 50% { left: 19%; top: 28%; } }
+@keyframes wipe-motion { to { transform: translate(-50%, -76%) rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; } }
 
 @media (max-width: 900px) {
@@ -143,6 +138,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 }
 @media (max-width: 600px) {
   .game-header { align-items: flex-start; }
+  .rookie, .customer { width: 3.2rem; }
+  .customer.seated { width: 3.6rem; }
   .intro { min-height: calc(100svh - 4.5rem); padding: 44svh .85rem 1rem; align-items: end; background: linear-gradient(180deg, rgba(238,229,211,.04), #eee5d3 47%), url("./assets/restaurant.webp") top center/auto 48% no-repeat; }
   .intro-copy { padding: 0; }
   .intro h2 { font-size: 2.6rem; }

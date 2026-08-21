@@ -1,4 +1,4 @@
-import { DONENESS, GUEST_PATHS, MENU, SHIFTS, STEPS, completeDelivery, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
+import { DONENESS, GUEST_PATHS, MENU, SHIFTS, STEPS, advanceMotion, completeDelivery, createMotion, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -240,28 +240,61 @@ function closePanel() {
   $("[data-panel]").hidden = true;
 }
 
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function setSpriteFrame(element, direction, frame, kind) {
+  const rows = kind === "rookie"
+    ? { down: 0, right: 1, up: 2, left: 3 }
+    : { right: kind === "male" ? 0 : 2, up: kind === "male" ? 1 : 3 };
+  const row = rows[direction] ?? rows.right ?? 0;
+  element.style.backgroundPosition = `${frame * 25}% ${row * 100 / 3}%`;
+  element.dataset.direction = direction;
+}
+
+function placeActor(element, motion, scene) {
+  element.style.left = `${motion.x / scene.clientWidth * 100}%`;
+  element.style.top = `${motion.y / scene.clientHeight * 100}%`;
+  element.style.zIndex = String(7 + Math.floor(motion.y / scene.clientHeight * 10));
+}
+
+function animateRoute(element, route, kind, speed = 165) {
+  const scene = $("[data-scene]");
+  const points = route.map(([x, y]) => [x / 100 * scene.clientWidth, y / 100 * scene.clientHeight]);
+  let motion = createMotion(points);
+  placeActor(element, motion, scene);
+  if (reducedMotion()) {
+    motion = { ...motion, x: points.at(-1)[0], y: points.at(-1)[1], done: true };
+    placeActor(element, motion, scene);
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    let previousTime;
+    const tick = (time) => {
+      const dt = previousTime == null ? 0 : Math.min((time - previousTime) / 1000, 0.05);
+      previousTime = time;
+      motion = advanceMotion(motion, dt, { maxSpeed: speed, acceleration: speed * 2.4, deceleration: speed * 2.8, stride: 32 });
+      placeActor(element, motion, scene);
+      setSpriteFrame(element, motion.direction, motion.frame, kind);
+      if (motion.done) resolve();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
 async function walkTo(destination) {
   if (moving) return false;
   moving = true;
   closePanel();
   say("walk");
-  while (guestTraffic) await new Promise((resolve) => setTimeout(resolve, 50));
+  while (guestTraffic) await wait(50);
   const actor = $("[data-rookie]");
   const route = routeBetween(actorDestination, destination);
-  let current = route[0];
   actor.classList.remove("wiping");
   actor.classList.toggle("carrying", Boolean(activeOrder("ready")));
   actor.classList.add("walking");
-  for (const point of route.slice(1)) {
-    const distance = Math.hypot(point[0] - current[0], point[1] - current[1]);
-    const duration = Math.min(700, Math.max(220, distance * 30));
-    actor.classList.toggle("facing-left", point[0] < current[0]);
-    actor.style.transitionDuration = `${duration}ms`;
-    actor.style.left = `${point[0]}%`;
-    actor.style.top = `${point[1]}%`;
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, duration));
-    current = point;
-  }
+  await animateRoute(actor, route, "rookie");
   actor.classList.remove("walking");
   actorDestination = destination;
   moving = false;
@@ -272,30 +305,24 @@ async function walkTo(destination) {
 async function startGuests() {
   if (guestsStarted) return;
   guestsStarted = true;
-  await new Promise((resolve) => setTimeout(resolve, 1600));
-  while (moving) await new Promise((resolve) => setTimeout(resolve, 50));
+  await wait(1600);
+  while (moving) await wait(50);
   guestTraffic = true;
   for (const kind of ["male", "female"]) {
     const guest = $(`[data-guest="${kind}"]`);
     const route = GUEST_PATHS[kind].walk;
-    let current = route[0];
     guest.hidden = false;
     guest.classList.add("walking");
-    guest.style.left = `${current[0]}%`;
-    guest.style.top = `${current[1]}%`;
-    for (const point of route.slice(1)) {
-      const duration = Math.min(650, Math.max(240, Math.hypot(point[0] - current[0], point[1] - current[1]) * 28));
-      guest.style.transitionDuration = `${duration}ms`;
-      guest.style.left = `${point[0]}%`;
-      guest.style.top = `${point[1]}%`;
-      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, duration));
-      current = point;
-    }
+    await animateRoute(guest, route, kind, 125);
     guest.classList.remove("walking");
+    guest.classList.add("taking-seat");
+    await wait(reducedMotion() ? 0 : 180);
     guest.classList.add("seated");
+    guest.classList.remove("taking-seat");
     guest.style.left = `${GUEST_PATHS[kind].seat[0]}%`;
     guest.style.top = `${GUEST_PATHS[kind].seat[1]}%`;
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    guest.style.zIndex = "8";
+    await wait(250);
   }
   guestTraffic = false;
 }

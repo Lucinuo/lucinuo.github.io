@@ -72,9 +72,12 @@ check(restaurantRookie.includes('property="og:image" content="https://lucinuo.gi
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
 check(restaurantRookie.includes("data-language") && restaurantRookie.includes("data-music") && restaurantRookie.includes("data-ambience"), "Restaurant Rookie is missing language or sound controls");
 check(restaurantRookie.includes("data-destination=\"order\"") && restaurantRookie.includes("data-rookie"), "Restaurant Rookie is missing click-to-walk destinations or the rookie actor");
+check(restaurantRookie.includes("occlusion-table-1") && restaurantRookie.includes("occlusion-table-2"), "Restaurant Rookie is missing table foreground occlusion layers");
 check(!restaurantRookie.includes("點選餐廳裡的工作地點") && !restaurantRookieModules.some((source) => source.includes("點選餐廳裡的工作地點")), "Restaurant Rookie still contains the rejected intro copy");
 check(!restaurantRookieModules.some((source) => source.includes("臨時要求沒有消失")), "Restaurant Rookie still contains the rejected interruption copy");
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
+check(restaurantRookieCss.includes("background-size: 500% 400%") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing four-direction frame-timed movement");
+check(!restaurantRookieModules[0].includes("transitionDuration"), "Restaurant Rookie still uses segmented CSS sliding");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
@@ -82,7 +85,7 @@ for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBe
 const restaurantAsset = path.join(root, "four-shifts/assets/restaurant.webp");
 check(fs.existsSync(restaurantAsset), "Restaurant Rookie is missing its restaurant scene");
 check(fs.statSync(restaurantAsset).size < 500 * 1024, "Restaurant Rookie restaurant scene exceeds 500 KB");
-for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "customer-sprites.webp", "coworker-sprites.webp"]) {
+for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "customer-sprites.webp", "customer-seated.webp", "coworker-sprites.webp"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing animated asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 200 * 1024, `Restaurant Rookie animated asset exceeds 200 KB: ${asset}`);
