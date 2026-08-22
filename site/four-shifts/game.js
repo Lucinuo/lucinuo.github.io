@@ -4,6 +4,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const SAVE_KEY = "restaurant-rookie-v1";
 const SETTINGS_KEY = "restaurant-rookie-settings-v1";
+const CHARACTER_SAMPLE = new URLSearchParams(location.search).get("sample") === "characters";
 const ROOKIE_FRAME_OFFSETS = [
   [[3.41, -2.21], [1.82, 0], [0.28, 0.26], [-1.88, -0.13], [-1.84, 0.52]],
   [[3.29, 0], [1.7, 0], [0.2, 0], [-1.35, -2.99], [-1.76, 0]],
@@ -255,6 +256,13 @@ function setSpriteFrame(element, direction, frame, kind) {
     element.dataset.direction = direction;
     return;
   }
+  if (kind === "male" || kind === "female") {
+    const row = direction === "up" ? (kind === "male" ? 1 : 3) : (kind === "male" ? 0 : 2);
+    element.style.backgroundPosition = (frame * 25) + "% " + (row * 100 / 3) + "%";
+    element.style.transform = "translate(-50%, -76%) scaleX(" + (direction === "left" ? -1 : 1) + ")";
+    element.dataset.direction = direction;
+    return;
+  }
   const rows = { down: 0, right: 1, up: 2, left: 3 };
   const row = rows[direction] ?? rows.right ?? 0;
   const [xOffset, yOffset] = ROOKIE_FRAME_OFFSETS[row][frame];
@@ -268,8 +276,7 @@ function placeActor(element, motion, scene) {
   element.style.zIndex = String(7 + Math.floor(motion.y / scene.clientHeight * 10));
 }
 
-function animateRoute(element, route, kind, speed = 110, stride = 22) {
-  const scene = $("[data-scene]");
+function animateRoute(element, route, kind, speed = 110, stride = 22, scene = $("[data-scene]")) {
   const points = route.map(([x, y]) => [x / 100 * scene.clientWidth, y / 100 * scene.clientHeight]);
   let motion = createMotion(points);
   placeActor(element, motion, scene);
@@ -473,6 +480,116 @@ function toggleSound(kind) {
   render();
 }
 
+function setSamplePosition(element, [x, y], scene) {
+  placeActor(element, { x: x / 100 * scene.clientWidth, y: y / 100 * scene.clientHeight }, scene);
+}
+
+function resetCharacterSample() {
+  const scene = $("[data-sample-scene]");
+  const rookie = $("[data-sample-rookie]");
+  const coworker = $("[data-sample-coworker]");
+  const male = $("[data-sample-male]");
+  const female = $("[data-sample-female]");
+  rookie.classList.remove("greeting");
+  male.classList.remove("seated");
+  female.classList.remove("seated");
+  setSpriteFrame(rookie, "down", 0, "rookie");
+  setSpriteFrame(coworker, "right", 0, "coworker");
+  setSpriteFrame(male, "right", 0, "male");
+  setSpriteFrame(female, "right", 0, "female");
+  setSamplePosition(rookie, [42, 47], scene);
+  setSamplePosition(coworker, [78, 47], scene);
+  setSamplePosition(male, [8, 62], scene);
+  setSamplePosition(female, [5, 68], scene);
+}
+
+async function playCharacterSample() {
+  const replay = $("[data-sample-replay]");
+  const note = $("[data-sample-note]");
+  const scene = $("[data-sample-scene]");
+  const rookie = $("[data-sample-rookie]");
+  const coworker = $("[data-sample-coworker]");
+  const male = $("[data-sample-male]");
+  const female = $("[data-sample-female]");
+  replay.disabled = true;
+  resetCharacterSample();
+  note.textContent = "菜鳥走到門口迎接客人。";
+
+  const coworkerPass = animateRoute(coworker, [[78, 47], [84, 47], [78, 47]], "coworker", 64, 16, scene);
+  await animateRoute(rookie, [[42, 47], [30, 51], [18, 58], [10, 62]], "rookie", 92, 20, scene);
+  rookie.classList.add("greeting");
+  rookie.style.backgroundPosition = "center";
+  rookie.style.transform = "translate(-50%, -72%)";
+  await wait(reducedMotion() ? 150 : 850);
+  rookie.classList.remove("greeting");
+  setSpriteFrame(rookie, "right", 0, "rookie");
+
+  note.textContent = "菜鳥先走，男客沿同一條通道到沙發席。";
+  await Promise.all([
+    animateRoute(rookie, [[10, 62], [24, 58], [38, 48], [49, 38]], "rookie", 88, 20, scene),
+    (async () => {
+      await wait(reducedMotion() ? 0 : 260);
+      await animateRoute(male, [[8, 62], [22, 59], [36, 49], [48, 39]], "male", 78, 19, scene);
+    })(),
+  ]);
+  male.classList.add("seated");
+  male.style.backgroundPosition = "center";
+  male.style.transform = "translate(-50%, -72%)";
+  setSamplePosition(male, [54.3, 26], scene);
+
+  note.textContent = "菜鳥回門口，再帶女客到一般餐椅。";
+  await animateRoute(rookie, [[49, 38], [38, 49], [23, 60], [9, 66]], "rookie", 92, 20, scene);
+  rookie.classList.add("greeting");
+  rookie.style.backgroundPosition = "center";
+  rookie.style.transform = "translate(-50%, -72%)";
+  await wait(reducedMotion() ? 150 : 700);
+  rookie.classList.remove("greeting");
+  setSpriteFrame(rookie, "right", 0, "rookie");
+  await Promise.all([
+    animateRoute(rookie, [[9, 66], [24, 70], [37, 72], [44, 72]], "rookie", 90, 20, scene),
+    (async () => {
+      await wait(reducedMotion() ? 0 : 260);
+      await animateRoute(female, [[5, 68], [22, 71], [35, 73], [44, 74]], "female", 78, 19, scene);
+    })(),
+  ]);
+  female.classList.add("seated");
+  female.style.backgroundPosition = "center";
+  female.style.transform = "translate(-50%, -105%)";
+  setSamplePosition(female, [48, 67], scene);
+  setSamplePosition(rookie, [38, 72], scene);
+  await coworkerPass;
+  note.textContent = "樣板結束：人物全身、腳步、迎接與兩種坐姿均可重播檢查。";
+  replay.disabled = false;
+}
+
+function startCharacterSample() {
+  document.body.classList.add("character-sample-mode");
+  $("[data-language]").hidden = true;
+  $("[data-intro]").hidden = true;
+  $("[data-play]").hidden = true;
+  const sample = document.createElement("section");
+  sample.className = "character-sample";
+  sample.innerHTML = [
+    '<header class="character-sample-header">',
+    '<div><h2>人物動態樣板</h2><p>只檢查走路、招呼、帶位和坐姿；尚未接訂單玩法。</p></div>',
+    '<button class="primary" type="button" data-sample-replay>重播動作</button>',
+    '</header>',
+    '<div class="restaurant-scene sample-stage" data-sample-scene aria-label="人物動態樣板">',
+    '<div class="coworker sample-coworker" data-sample-coworker aria-hidden="true"></div>',
+    '<div class="rookie sample-rookie" data-sample-rookie role="img" aria-label="菜鳥店員"></div>',
+    '<div class="customer sample-male" data-sample-male role="img" aria-label="男客人"></div>',
+      '<div class="customer sample-female" data-sample-female role="img" aria-label="女客人"></div>',
+      '<div class="sample-occlusion sample-booth-occlusion" aria-hidden="true"></div>',
+      '<div class="sample-occlusion sample-booth-chair-occlusion" aria-hidden="true"></div>',
+      '<div class="sample-occlusion sample-table-occlusion" aria-hidden="true"></div>',
+    '<p class="sample-note" data-sample-note></p>',
+    '</div>',
+  ].join("");
+  $("[data-game]").append(sample);
+  $("[data-sample-replay]").addEventListener("click", playCharacterSample);
+  playCharacterSample();
+}
+
 function start(nextState, key) {
   state = nextState;
   messageKey = key;
@@ -484,36 +601,40 @@ function start(nextState, key) {
   startCoworkerPatrol();
 }
 
-$("[data-start]").addEventListener("click", () => {
-  try { localStorage.removeItem(SAVE_KEY); } catch {}
-  start(freshState(), "first");
-});
-$("[data-continue]").addEventListener("click", () => start(load() || freshState(), "loaded"));
-$("[data-language]").addEventListener("click", () => {
-  settings.locale = settings.locale === "zh" ? "en" : "zh";
-  saveSettings();
-  render();
-});
-$("[data-music]").addEventListener("click", () => toggleSound("music"));
-$("[data-ambience]").addEventListener("click", () => toggleSound("ambience"));
-$("[data-close-panel]").addEventListener("click", closePanel);
-$("[data-game]").addEventListener("click", (event) => {
-  const target = event.target.closest("button");
-  if (!target || target.hasAttribute("disabled")) return;
-  if (target.dataset.destination) openDestination(target.dataset.destination);
-  if (target.dataset.table) visitTable(Number(target.dataset.table));
-  if (target.dataset.action === "accept") accept(Number(target.dataset.order));
-  if (target.dataset.action === "boil") boil(Number(target.dataset.pot));
-  if (target.dataset.action === "lift") lift(Number(target.dataset.pot));
-  if (target.dataset.action === "plate") plate(Number(target.dataset.order));
-  if (target.dataset.plateOption) { state.plate[target.dataset.plateOption] = target.dataset.value; update(); }
-  if (target.dataset.interruptChoice) chooseInterruption(target.dataset.interruptChoice);
-});
-addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closePanel();
-});
-setInterval(updateTimers, 100);
+if (CHARACTER_SAMPLE) {
+  startCharacterSample();
+} else {
+  $("[data-start]").addEventListener("click", () => {
+    try { localStorage.removeItem(SAVE_KEY); } catch {}
+    start(freshState(), "first");
+  });
+  $("[data-continue]").addEventListener("click", () => start(load() || freshState(), "loaded"));
+  $("[data-language]").addEventListener("click", () => {
+    settings.locale = settings.locale === "zh" ? "en" : "zh";
+    saveSettings();
+    render();
+  });
+  $("[data-music]").addEventListener("click", () => toggleSound("music"));
+  $("[data-ambience]").addEventListener("click", () => toggleSound("ambience"));
+  $("[data-close-panel]").addEventListener("click", closePanel);
+  $("[data-game]").addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target || target.hasAttribute("disabled")) return;
+    if (target.dataset.destination) openDestination(target.dataset.destination);
+    if (target.dataset.table) visitTable(Number(target.dataset.table));
+    if (target.dataset.action === "accept") accept(Number(target.dataset.order));
+    if (target.dataset.action === "boil") boil(Number(target.dataset.pot));
+    if (target.dataset.action === "lift") lift(Number(target.dataset.pot));
+    if (target.dataset.action === "plate") plate(Number(target.dataset.order));
+    if (target.dataset.plateOption) { state.plate[target.dataset.plateOption] = target.dataset.value; update(); }
+    if (target.dataset.interruptChoice) chooseInterruption(target.dataset.interruptChoice);
+  });
+  addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePanel();
+  });
+  setInterval(updateTimers, 100);
 
-$("[data-continue]").hidden = !load();
-applyLanguage();
-render();
+  $("[data-continue]").hidden = !load();
+  applyLanguage();
+  render();
+}

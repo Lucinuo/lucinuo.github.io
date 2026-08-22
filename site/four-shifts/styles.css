@@ -61,6 +61,27 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 .rookie.wiping { animation: wipe-motion .28s ease-in-out 3 alternate; }
 .coworker { left: 24%; top: 36%; width: clamp(2.8rem, 5.6vw, 5rem); aspect-ratio: 1 / 1.65; background-image: url("./assets/coworker-sprites.webp"); background-size: 300% 100%; background-position: 50% 0; transform: translate(-50%, -76%); clip-path: inset(0 0 48% 0); }
 
+.character-sample { padding-top: .8rem; }
+.character-sample-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .65rem; border: 2px solid var(--ink); padding: .75rem .9rem; background: var(--paper); }
+.character-sample-header h2 { margin: 0; font: 800 clamp(1.25rem, 2.5vw, 1.8rem) Georgia, "Noto Serif TC", serif; }
+.character-sample-header p { margin: .25rem 0 0; color: #645b4f; line-height: 1.5; }
+.character-sample-header .primary:disabled { opacity: .55; cursor: wait; }
+.sample-stage { border: 2px solid var(--ink); background-image: url("./assets/restaurant.webp"); }
+.sample-stage .rookie { width: 7.8%; }
+.sample-stage .coworker { width: 5%; clip-path: none; }
+.sample-stage .customer { width: 5.8%; }
+.customer { position: absolute; z-index: 8; width: clamp(3.3rem, 5.8vw, 5.6rem); aspect-ratio: 1.2; pointer-events: none; background: url("./assets/customer-sprites.webp") 0 0/500% 400% no-repeat; filter: drop-shadow(0 3px 2px rgba(30,20,12,.35)); transform: translate(-50%, -76%); }
+.sample-rookie.greeting { width: 3.6%; aspect-ratio: 2 / 3; background-image: url("./assets/rookie-greeting-v2.webp"); background-size: contain; background-repeat: no-repeat; }
+.sample-male.seated, .sample-female.seated { aspect-ratio: 2 / 3; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.sample-male.seated, .sample-female.seated { width: 7%; }
+.sample-male.seated { background-image: url("./assets/customer-male-seated-v2.webp"); }
+.sample-female.seated { background-image: url("./assets/customer-female-seated-v2.webp"); }
+.sample-occlusion { position: absolute; z-index: 18; inset: 0; pointer-events: none; background: url("./assets/restaurant.webp") center/cover no-repeat; }
+.sample-booth-occlusion { clip-path: polygon(50% 20%, 58% 20%, 58% 26%, 50% 26%); }
+.sample-booth-chair-occlusion { clip-path: polygon(52% 24%, 56% 24%, 56% 36%, 52% 36%); }
+.sample-table-occlusion { clip-path: polygon(45% 55%, 57% 55%, 57% 75%, 45% 75%); }
+.sample-note { position: absolute; z-index: 25; left: .65rem; right: .65rem; bottom: .65rem; margin: 0; border-left: 4px solid var(--green); padding: .55rem .7rem; color: var(--ink); background: rgba(255,248,233,.94); font-weight: 800; box-shadow: 0 2px 8px rgba(30,20,12,.18); }
+
 .work-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; padding: .55rem; background: var(--rail); }
 .work-controls button { min-height: 2.8rem; border: 2px solid #fff; border-radius: .45rem; color: #fff; background: var(--green); font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,.35); }
 .work-controls button:hover { background: #4d805d; }
@@ -130,6 +151,14 @@ button:focus-visible, a:focus-visible { outline: 3px solid #1978aa; outline-offs
 @media (max-width: 600px) {
   .game-header { align-items: flex-start; }
   .rookie { width: 3.2rem; }
+  .sample-stage .rookie { width: 9.5%; }
+  .sample-stage .coworker { width: 6.5%; }
+  .sample-stage .customer { width: 7.5%; }
+  .sample-stage .sample-rookie.greeting { width: 4.7%; }
+  .sample-stage .sample-male.seated, .sample-stage .sample-female.seated { width: 8.5%; }
+  .character-sample-header { align-items: stretch; flex-direction: column; margin-inline: .65rem; }
+  .character-sample-header .primary { width: 100%; }
+  .sample-note { font-size: .75rem; }
   .intro { min-height: calc(100svh - 4.5rem); padding: 44svh .85rem 1rem; align-items: end; background: linear-gradient(180deg, rgba(238,229,211,.04), #eee5d3 47%), url("./assets/restaurant.webp") top center/auto 48% no-repeat; }
   .intro-copy { padding: 0; }
   .intro h2 { font-size: 2.6rem; }

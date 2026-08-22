@@ -83,6 +83,8 @@ check(!sceneMarkup.includes("data-destination"), "Restaurant Rookie still places
 check(restaurantRookieCss.includes("restaurant-seated.webp") && !restaurantRookie.includes("data-guest="), "Restaurant Rookie does not use the integrated seated-customer scene");
 check(!restaurantRookieCss.includes("customer-seated.webp") && !restaurantRookieModules.some((source) => source.includes("customer-seated.webp")), "Restaurant Rookie still uses the front-facing seated portrait");
 check(restaurantRookie.includes("data-coworker") && restaurantRookieModules[0].includes("startCoworkerPatrol") && !restaurantRookieCss.includes("coworker-patrol"), "Restaurant Rookie coworker still uses unsynchronised CSS sliding");
+check(restaurantRookieModules[0].includes('get("sample") === "characters"') && restaurantRookieModules[0].includes("playCharacterSample"), "Restaurant Rookie is missing the isolated character-motion sample");
+check(restaurantRookieCss.includes(".sample-stage .coworker") && restaurantRookieCss.includes("clip-path: none"), "Character sample still crops the coworker legs");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
@@ -96,6 +98,12 @@ for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "coworker-sprite
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing animated asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 200 * 1024, `Restaurant Rookie animated asset exceeds 200 KB: ${asset}`);
+}
+
+for (const asset of ["rookie-greeting-v2.webp", "customer-male-seated-v2.webp", "customer-female-seated-v2.webp"]) {
+  const assetPath = path.join(root, "four-shifts/assets", asset);
+  check(fs.existsSync(assetPath), "Restaurant Rookie is missing character sample asset: " + asset);
+  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 100 * 1024, "Restaurant Rookie character sample asset exceeds 100 KB: " + asset);
 }
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
