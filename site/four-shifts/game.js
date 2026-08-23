@@ -1,640 +1,297 @@
-import { DONENESS, MENU, SHIFTS, STEPS, advanceMotion, completeDelivery, createMotion, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "./game-rules.mjs";
+import {
+  SAVE_KEY,
+  TABLES,
+  calculateOfflineIncome,
+  chefSeconds,
+  freshState,
+  hydrateState,
+  incomePerGuest,
+  purchaseUpgrade,
+  restaurantLevel,
+  serializeState,
+  tickGame,
+  upgradeCost,
+  waiterSpeed,
+} from "./game-rules.mjs";
 
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => [...document.querySelectorAll(selector)];
-const SAVE_KEY = "restaurant-rookie-v1";
-const SETTINGS_KEY = "restaurant-rookie-settings-v1";
-const CHARACTER_SAMPLE = new URLSearchParams(location.search).get("sample") === "characters";
-const ROOKIE_FRAME_OFFSETS = [
-  [[3.41, -2.21], [1.82, 0], [0.28, 0.26], [-1.88, -0.13], [-1.84, 0.52]],
-  [[3.29, 0], [1.7, 0], [0.2, 0], [-1.35, -2.99], [-1.76, 0]],
-  [[3.41, 0], [1.5, 0], [-0.21, 0], [-1.55, 0], [-2.49, 0]],
-  [[3.69, -0.13], [1.62, 0], [-0.25, -0.13], [-1.68, 0.13], [-2.21, 0.26]],
-];
-const INTERRUPTIONS = [
-  { zh: "等一下再教，先幫 4 號桌補水。", en: "I'll show you later. Refill water at table 4 first.", task: { type: "補水", table: 4 } },
-  { zh: "先幫我收一下 5 號桌。", en: "Please clear table 5 first.", task: { type: "收桌", table: 5 } },
-  { zh: "今天先消毒，有空再練。", en: "Sanitizing comes first today. Practice when there's time.", task: { type: "消毒", table: 2 } },
-  { zh: "這個照剛才那樣做。", en: "Do this the same way as before.", task: { type: "擦桌", table: 3 } },
-];
-const COPY = {
-  zh: {
-    title: "餐廳菜鳥", back: "返回作品", genre: "餐廳新人模擬遊戲", introTitle: "先看清楚。<br>再動起來。",
-    start: "開始第一班", continue: "繼續上次進度", soundHint: "開始後會以低音量播放音樂與餐廳環境聲，可隨時關閉。",
-    completed: "完成", ordersUnit: "單", reputation: "店內評價", music: "音樂", ambience: "環境聲",
-    orderStation: "接單", cookStation: "料理", plateStation: "擺盤", coworkerRequest: "同事臨時交代",
-    tickets: "待辦單", ready: "待出餐", floorTasks: "店面雜務", notes: "流程小抄",
-    close: "關閉", newOrder: "號桌的新訂單", meal: "餐點", noodles: "麵條", topping: "指定配料",
-    accept: "確認接單", noOrder: "目前沒有新單", noOrderHelp: "看看待辦單目前卡在哪一站，或到桌邊處理臨時工作。",
-    emptyPot: "空鍋", lift: "起鍋", boil: "下麵", target: "目標", timerHint: "秒附近起鍋",
-    noCook: "目前沒有餐點可料理", noCookHelp: "先到接單櫃台確認新訂單。",
-    sauce: "選醬料", addTopping: "加一種配料", finishPlate: "完成擺盤",
-    noPlate: "目前沒有餐點可擺盤", noPlateHelp: "先到料理區把麵煮好。",
-    finishFirst: "先完成手上工作", switchTask: "改去處理",
-    unknown: "???", table: "號桌", goTable: "前往", soundOn: "開啟", soundOff: "關閉",
-    statuses: { waiting: "等候接單", accepted: "待下麵", cooking: "料理中", cooked: "待擺盤", ready: "待送餐" },
-    tasks: { "補水": "補水", "收桌": "收桌", "消毒": "消毒", "擦桌": "擦桌" },
-    dishes: { tomato: "番茄麵", cream: "白醬麵", pesto: "青醬麵" },
-    doneness: { firm: "偏硬", normal: "正常", soft: "偏軟" },
-    ingredients: { "番茄醬": "番茄醬", "白醬": "白醬", "青醬": "青醬", "起司": "起司", "蘑菇": "蘑菇", "羅勒": "羅勒", "培根": "培根", "番茄": "番茄", "堅果": "堅果" },
-    steps: STEPS,
-    shifts: SHIFTS.map((shift) => [shift.label, shift.rush]),
-    daily: (day) => `日常營運・第 ${day} 天`,
-    dailyRush: (completed) => completed % 3 === 1 ? "午餐尖峰" : "正常營業",
-    messages: {
-      first: "先走到接單櫃台，看看今天的第一張單。", loaded: "已載入上次進度。",
-      walk: "菜鳥正走過去……", accepted: "接單完成。走到料理區選一口空鍋下麵。",
-      pot: (n) => `第 ${n} 口鍋開始計時。`, lifted: (ok) => `起鍋完成：熟度${ok ? "合格" : "有偏差"}。接著走到擺盤區。`,
-      plated: (ok, table) => `擺盤完成：${ok ? "內容正確" : "餐點有誤"}。送到 ${table} 號桌。`,
-      delivered: (finished) => `送餐完成。${finished ? "新手班次結束，進入日常營運。" : "下一張單已經進來了。"}`,
-      noTask: (table) => `${table} 號桌目前沒有待辦。`, taskDone: (table, task) => `${table} 號桌的「${task}」完成。`,
-      switched: (task) => `先去處理「${task}」。原本的餐點還在等。`,
-    },
-  },
-  en: {
-    title: "Restaurant Rookie", back: "Back to projects", genre: "New-hire restaurant simulator", introTitle: "Look first.<br>Then get moving.",
-    start: "Start first shift", continue: "Continue saved game", soundHint: "Soft music and restaurant ambience begin after you start. Both can be turned off anytime.",
-    completed: "Completed", ordersUnit: "orders", reputation: "Rating", music: "Music", ambience: "Ambience",
-    orderStation: "Orders", cookStation: "Kitchen", plateStation: "Plating", coworkerRequest: "Coworker request",
-    tickets: "Order tickets", ready: "Ready to serve", floorTasks: "Floor tasks", notes: "Process notes",
-    close: "Close", newOrder: " has a new order", meal: "Dish", noodles: "Noodles", topping: "Requested topping",
-    accept: "Confirm order", noOrder: "No new orders", noOrderHelp: "Check the ticket status, or handle a floor task at a table.",
-    emptyPot: "Empty", lift: "Lift", boil: "Boil", target: "Target", timerHint: " seconds",
-    noCook: "Nothing to cook", noCookHelp: "Confirm the new ticket at the order counter first.",
-    sauce: "Choose sauce", addTopping: "Add one topping", finishPlate: "Finish plating",
-    noPlate: "Nothing to plate", noPlateHelp: "Cook the noodles in the kitchen first.",
-    finishFirst: "Finish current task", switchTask: "Switch tasks",
-    unknown: "???", table: "Table", goTable: "Go to table", soundOn: "Turn on", soundOff: "Turn off",
-    statuses: { waiting: "Waiting", accepted: "Ready to boil", cooking: "Cooking", cooked: "Ready to plate", ready: "Ready to serve" },
-    tasks: { "補水": "refill water", "收桌": "clear table", "消毒": "sanitize", "擦桌": "wipe table" },
-    dishes: { tomato: "Tomato pasta", cream: "Cream pasta", pesto: "Pesto pasta" },
-    doneness: { firm: "Firm", normal: "Regular", soft: "Soft" },
-    ingredients: { "番茄醬": "Tomato sauce", "白醬": "Cream sauce", "青醬": "Pesto", "起司": "Cheese", "蘑菇": "Mushrooms", "羅勒": "Basil", "培根": "Bacon", "番茄": "Tomato", "堅果": "Nuts" },
-    steps: ["Confirm table and dish", "Choose noodles and boil", "Time the doneness", "Lift and drain", "Mix in the right sauce", "Add the requested topping", "Serve the correct table"],
-    shifts: [["Shift 1", "Opening prep"], ["Shift 2", "Lunch rush"], ["Shift 3", "Sanitizing"], ["Shift 4", "Dinner pickup"]],
-    daily: (day) => `Daily service · Day ${day}`,
-    dailyRush: (completed) => completed % 3 === 1 ? "Lunch rush" : "Regular service",
-    messages: {
-      first: "Walk to the order counter and check the first ticket.", loaded: "Saved progress loaded.",
-      walk: "The rookie is walking over…", accepted: "Order confirmed. Walk to the kitchen and choose an empty pot.",
-      pot: (n) => `Pot ${n} is timing.`, lifted: (ok) => `Noodles lifted: doneness ${ok ? "on target" : "was off"}. Walk to plating next.`,
-      plated: (ok, table) => `Plating finished: ${ok ? "correct" : "something is wrong"}. Serve table ${table}.`,
-      delivered: (finished) => `Order served. ${finished ? "Training shifts complete; daily service begins." : "A new ticket just came in."}`,
-      noTask: (table) => `Table ${table} has nothing pending.`, taskDone: (table, task) => `Table ${table}: ${task} complete.`,
-      switched: (task) => `Handle “${task}” first. The original order is still waiting.`,
-    },
-  },
+const canvas = document.querySelector("[data-canvas]");
+const context = canvas.getContext("2d");
+context.imageSmoothingEnabled = false;
+
+const elements = {
+  coins: document.querySelector("[data-coins]"),
+  served: document.querySelector("[data-served]"),
+  level: document.querySelector("[data-level]"),
+  state: document.querySelector("[data-state]"),
+  message: document.querySelector("[data-message]"),
+  live: document.querySelector("[data-live]"),
+  offline: document.querySelector("[data-offline]"),
+  toggle: document.querySelector("[data-toggle]"),
+  reset: document.querySelector("[data-reset]"),
+  upgrades: [...document.querySelectorAll("[data-upgrade]")],
 };
 
-let state = freshState();
-let settings = loadSettings();
-let messageKey = "first";
-let messageArgs = [];
-let panelOpen = false;
-let moving = false;
-let actorDestination = "hub";
-let coworkerPatrolStarted = false;
-let audioContext;
-let musicGain;
-let ambienceGain;
-let ambienceSource;
-let musicTimer;
-
-const copy = () => COPY[settings.locale];
-const dishName = (dish) => copy().dishes[dish];
-const donenessName = (value) => copy().doneness[value];
-const ingredientName = (value) => copy().ingredients[value] || value;
-const taskName = (value) => copy().tasks[value] || value;
-const messageText = () => {
-  const value = copy().messages[messageKey];
-  return typeof value === "function" ? value(...messageArgs) : value;
+const images = {
+  room: loadImage("./assets/pixel-restaurant.png"),
+  atlas: loadImage("./assets/pixel-atlas.png"),
 };
 
-function loadSettings() {
+let state = loadState();
+let roomImage;
+let atlasImage;
+let previousTime = performance.now();
+let accumulator = 0;
+let lastUiUpdate = 0;
+let resetArmed = false;
+let resetTimer;
+saveState();
+
+function loadImage(source) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Unable to load ${source}`));
+    image.src = source;
+  });
+}
+
+function readSave() {
   try {
-    return { locale: "zh", music: true, ambience: true, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)) };
+    return JSON.parse(localStorage.getItem(SAVE_KEY));
   } catch {
-    return { locale: "zh", music: true, ambience: true };
+    return null;
   }
 }
-function saveSettings() {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {}
-}
-function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch {}
-}
-function load() {
-  try { return normalizeSave(JSON.parse(localStorage.getItem(SAVE_KEY))); } catch { return null; }
-}
-function activeOrder(status) {
-  return state.orders.find((order) => order.status === status);
-}
-function say(key, ...args) {
-  messageKey = key;
-  messageArgs = args;
-  $("[data-message]").textContent = messageText();
-}
-function update(key, ...args) {
-  if (key) {
-    messageKey = key;
-    messageArgs = args;
+
+function loadState() {
+  const save = readSave();
+  const offline = calculateOfflineIncome(save);
+  const loaded = hydrateState(save);
+  if (offline.amount > 0) {
+    loaded.coins += offline.amount;
+    const minutes = Math.max(1, Math.floor(offline.seconds / 60));
+    loaded.message = `離開 ${minutes} 分鐘期間，小館帶回 ${offline.amount} 金幣。`;
+    requestAnimationFrame(() => {
+      elements.offline.hidden = false;
+      elements.offline.textContent = `歡迎回來！離線營運 ${minutes} 分鐘，獲得 ${offline.amount} 金幣。`;
+    });
   }
-  save();
-  render();
+  return loaded;
 }
 
-function applyLanguage() {
-  document.documentElement.lang = settings.locale === "zh" ? "zh-Hant" : "en";
-  $$("[data-i18n]").forEach((node) => { node.textContent = copy()[node.dataset.i18n]; });
-  $$("[data-i18n-html]").forEach((node) => { node.innerHTML = copy()[node.dataset.i18nHtml]; });
-  $("[data-close-panel]").ariaLabel = copy().close;
-  $$("[data-table]").forEach((button) => {
-    button.ariaLabel = `${copy().goTable} ${button.dataset.table}`;
-  });
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState(state)));
+  } catch {
+    state.message = "瀏覽器拒絕儲存進度；目前遊戲仍可繼續。";
+  }
 }
 
-function localizedPeriod() {
-  const period = periodFor(state);
-  if (state.shift < SHIFTS.length) return { label: copy().shifts[state.shift][0], rush: copy().shifts[state.shift][1], known: period.known };
-  return { label: copy().daily(state.day), rush: copy().dailyRush(state.completed), known: period.known };
+function toggleRestaurant() {
+  state.running = !state.running;
+  state.message = state.running ? "開始營業！客人會自動進店。" : "小館暫停營業，進度已保存。";
+  saveState();
+  updateUi();
 }
 
-function render() {
-  applyLanguage();
-  const period = localizedPeriod();
-  $("[data-period]").textContent = period.label;
-  $("[data-rush]").textContent = period.rush;
-  $("[data-completed]").textContent = state.completed;
-  $("[data-reputation]").textContent = state.reputation;
-  $("[data-ready]").textContent = state.orders.filter((order) => order.status === "ready").length;
-  $("[data-floor-count]").textContent = state.floorTasks.length;
-  $("[data-message]").textContent = messageText();
-  $("[data-music]").setAttribute("aria-pressed", String(settings.music));
-  $("[data-ambience]").setAttribute("aria-pressed", String(settings.ambience));
-  renderTickets();
-  renderNotes(period.known);
-  renderAlerts();
-  renderInterruption();
-  if (panelOpen) renderStation();
-  const rookie = $("[data-rookie]");
-  rookie.classList.toggle("carrying", Boolean(activeOrder("ready")) && !moving);
-}
-
-function renderTickets() {
-  $("[data-tickets]").replaceChildren(...state.orders.map((order) => {
-    const ticket = document.createElement("article");
-    ticket.className = "ticket";
-    ticket.dataset.status = order.status;
-    ticket.innerHTML = `<strong>${order.table}</strong><div><p>${dishName(order.dish)}</p><small>${donenessName(order.doneness)} · ${ingredientName(MENU[order.dish].topping)} · ${copy().statuses[order.status]}</small></div>`;
-    return ticket;
-  }));
-}
-function renderNotes(known) {
-  $("[data-known-count]").textContent = `${known}/${STEPS.length}`;
-  $("[data-notes]").innerHTML = copy().steps.map((step, index) => `<li class="${index < known ? "" : "unknown"}">${index < known ? step : copy().unknown}</li>`).join("");
-}
-function renderAlerts() {
-  const ready = activeOrder("ready");
-  const alerts = new Set([...state.floorTasks.map((task) => task.table), ...(ready ? [ready.table] : [])]);
-  $$("[data-table]").forEach((button) => button.dataset.alert = String(alerts.has(Number(button.dataset.table))));
-}
-function renderInterruption() {
-  const box = $("[data-interruption]");
-  box.hidden = state.interruption == null;
-  if (state.interruption == null) return;
-  const event = INTERRUPTIONS[state.interruption];
-  $("[data-interruption-line]").textContent = event[settings.locale];
-  $("[data-interruption-actions]").innerHTML = `
-    <button class="choice-button" type="button" data-interrupt-choice="finish">${copy().finishFirst}</button>
-    <button class="choice-button" type="button" data-interrupt-choice="switch">${copy().switchTask}</button>`;
-}
-
-function renderStation() {
-  const panel = $("[data-panel]");
-  panel.hidden = false;
-  const names = { order: copy().orderStation, cook: copy().cookStation, plate: copy().plateStation };
-  $("[data-panel-title]").textContent = names[state.station] || copy().orderStation;
-  ({ order: renderOrder, cook: renderCook, plate: renderPlate })[state.station]?.();
-}
-function renderOrder() {
-  const order = activeOrder("waiting");
-  $("[data-view]").innerHTML = `<div class="panel-content order-card">
-    ${order ? `<h3>${settings.locale === "zh" ? `${order.table} ${copy().newOrder}` : `${copy().table} ${order.table}${copy().newOrder}`}</h3>
-      <dl><dt>${copy().meal}</dt><dd>${dishName(order.dish)}</dd><dt>${copy().noodles}</dt><dd>${donenessName(order.doneness)}</dd><dt>${copy().topping}</dt><dd>${ingredientName(MENU[order.dish].topping)}</dd></dl>
-      <button class="primary" type="button" data-action="accept" data-order="${order.id}">${copy().accept}</button>`
-      : `<h3>${copy().noOrder}</h3><p class="empty-state">${copy().noOrderHelp}</p>`}
-  </div>`;
-}
-function renderCook() {
-  const order = activeOrder("accepted") || activeOrder("cooking");
-  const pots = state.pots.map((pot, index) => `<div class="pot"><div class="timer" data-pot-time="${index}">${pot ? "0.0" : copy().emptyPot}</div><button class="action" type="button" data-action="${pot ? "lift" : "boil"}" data-pot="${index}" ${!pot && !activeOrder("accepted") ? "disabled" : ""}>${pot ? copy().lift : copy().boil}</button></div>`).join("");
-  $("[data-view]").innerHTML = `<div class="panel-content"><div class="pot-grid">${pots}</div>${order ? `<article class="cook-ticket"><strong>${copy().table} ${order.table} · ${dishName(order.dish)}</strong><p>${copy().target}: ${donenessName(order.doneness)}</p><p>${DONENESS[order.doneness].seconds}${copy().timerHint}</p></article>` : `<article class="cook-ticket"><strong>${copy().noCook}</strong><p>${copy().noCookHelp}</p></article>`}</div>`;
-  updateTimers();
-}
-function renderPlate() {
-  const order = activeOrder("cooked");
-  const sauces = ["番茄醬", "白醬", "青醬"];
-  const toppings = ["起司", "蘑菇", "羅勒", "培根", "番茄", "堅果"];
-  const options = (items, type) => items.map((item) => `<button type="button" data-plate-option="${type}" data-value="${item}" aria-pressed="${state.plate[type] === item}">${ingredientName(item)}</button>`).join("");
-  $("[data-view]").innerHTML = `<div class="panel-content plate-panel">
-    ${order ? `<h3>${copy().table} ${order.table} · ${dishName(order.dish)}</h3><div class="dish-preview" data-dish="${MENU[order.dish].dish}" role="img" aria-label="${dishName(order.dish)}"></div><div class="option-group"><strong>${copy().sauce}</strong><div class="options">${options(sauces, "sauce")}</div></div><div class="option-group"><strong>${copy().addTopping}</strong><div class="options">${options(toppings, "topping")}</div></div><button class="primary plate-submit" type="button" data-action="plate" data-order="${order.id}" ${!state.plate.sauce || !state.plate.topping ? "disabled" : ""}>${copy().finishPlate}</button>`
-      : `<h3>${copy().noPlate}</h3><p class="empty-state">${copy().noPlateHelp}</p>`}
-  </div>`;
-}
-function closePanel() {
-  panelOpen = false;
-  $("[data-panel]").hidden = true;
-}
-
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function setSpriteFrame(element, direction, frame, kind) {
-  if (kind === "coworker") {
-    element.style.backgroundPosition = `${frame > 0 && frame % 2 === 0 ? 100 : 50}% 0`;
-    element.style.transform = `translate(-50%, -76%) scaleX(${direction === "left" ? -1 : 1})`;
-    element.dataset.direction = direction;
+function resetGame() {
+  if (!resetArmed) {
+    resetArmed = true;
+    elements.reset.textContent = "再按一次重置";
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      resetArmed = false;
+      elements.reset.textContent = "重置";
+    }, 3_000);
     return;
   }
-  if (kind === "male" || kind === "female") {
-    const row = direction === "up" ? (kind === "male" ? 1 : 3) : (kind === "male" ? 0 : 2);
-    element.style.backgroundPosition = (frame * 25) + "% " + (row * 100 / 3) + "%";
-    element.style.transform = "translate(-50%, -76%) scaleX(" + (direction === "left" ? -1 : 1) + ")";
-    element.dataset.direction = direction;
+  resetArmed = false;
+  clearTimeout(resetTimer);
+  localStorage.removeItem(SAVE_KEY);
+  state = freshState();
+  elements.offline.hidden = true;
+  elements.reset.textContent = "重置";
+  updateUi();
+}
+
+function buyUpgrade(event) {
+  const type = event.currentTarget.dataset.upgrade;
+  if (!purchaseUpgrade(state, type)) {
+    state.message = upgradeCost(type, state.upgrades) === null ? "餐桌已全部解鎖。" : "金幣還不夠，讓小館多服務幾位客人吧。";
+  }
+  saveState();
+  updateUi();
+}
+
+function updateUi() {
+  elements.coins.textContent = Math.floor(state.coins).toLocaleString("zh-TW");
+  elements.served.textContent = state.served.toLocaleString("zh-TW");
+  elements.level.textContent = restaurantLevel(state.upgrades);
+  elements.state.textContent = state.running ? "營業中" : "休息中";
+  elements.toggle.textContent = state.running ? "暫停營業" : state.served ? "繼續營業" : "開始營業";
+  elements.message.textContent = state.message;
+
+  const effects = {
+    chef: `每餐 ${chefSeconds(state.upgrades.chef).toFixed(1)} 秒`,
+    waiter: `移動 ${Math.round(waiterSpeed(state.upgrades.waiter))} px／秒`,
+    tables: `同時接待 ${state.upgrades.tables} 位客人`,
+    income: `每位客人 ${incomePerGuest(state.upgrades.income)} 金幣`,
+  };
+  for (const button of elements.upgrades) {
+    const type = button.dataset.upgrade;
+    const cost = upgradeCost(type, state.upgrades);
+    button.querySelector(`[data-effect="${type}"]`).textContent = effects[type];
+    button.querySelector(`[data-level="${type}"]`).textContent = type === "tables" ? `${state.upgrades.tables} 桌` : `Lv.${state.upgrades[type]}`;
+    button.querySelector(`[data-cost="${type}"]`).textContent = cost === null ? "已滿級" : `● ${cost}`;
+    button.disabled = cost === null || state.coins < cost;
+  }
+
+  const queue = state.customers.filter((customer) => customer.state === "queueing" || customer.state === "entering").length;
+  const dining = state.customers.filter((customer) => ["ordering", "waitingFood", "eating"].includes(customer.state)).length;
+  elements.live.textContent = `店內 ${state.customers.length} 位客人，${queue} 位等候，${dining} 位入座，已完成 ${state.served} 單。`;
+}
+
+function draw() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  if (!roomImage || !atlasImage) {
+    context.fillStyle = "#35251c";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#f3dfb5";
+    context.font = "bold 24px sans-serif";
+    context.fillText("像素小館載入中…", 360, 270);
     return;
   }
-  const rows = { down: 0, right: 1, up: 2, left: 3 };
-  const row = rows[direction] ?? rows.right ?? 0;
-  const [xOffset, yOffset] = ROOKIE_FRAME_OFFSETS[row][frame];
-  element.style.backgroundPosition = `${frame * 25 + xOffset}% ${row * 100 / 3 + yOffset}%`;
-  element.dataset.direction = direction;
+
+  context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
+  drawLockedTables();
+  drawKitchenStatus();
+
+  const actors = [
+    { kind: "chef", x: 325, y: 270 },
+    { kind: "waiter", ...state.waiter },
+    ...state.customers.map((customer) => ({ kind: "customer", ...customer })),
+  ].sort((first, second) => first.y - second.y);
+
+  for (const actor of actors) drawActor(actor);
+  for (const table of TABLES.slice(0, state.upgrades.tables)) redrawTableTop(table);
+  drawCustomerBubbles();
 }
 
-function placeActor(element, motion, scene) {
-  element.style.left = `${motion.x / scene.clientWidth * 100}%`;
-  element.style.top = `${motion.y / scene.clientHeight * 100}%`;
-  element.style.zIndex = String(7 + Math.floor(motion.y / scene.clientHeight * 10));
-}
-
-function animateRoute(element, route, kind, speed = 110, stride = 22, scene = $("[data-scene]")) {
-  const points = route.map(([x, y]) => [x / 100 * scene.clientWidth, y / 100 * scene.clientHeight]);
-  let motion = createMotion(points);
-  placeActor(element, motion, scene);
-  if (reducedMotion()) {
-    motion = { ...motion, x: points.at(-1)[0], y: points.at(-1)[1], done: true };
-    placeActor(element, motion, scene);
-    return Promise.resolve();
+function drawLockedTables() {
+  context.save();
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.font = "900 14px monospace";
+  for (const table of TABLES.slice(state.upgrades.tables)) {
+    context.fillStyle = "rgba(18, 15, 12, .72)";
+    context.fillRect(table.cover.x - 38, table.cover.y - 16, table.cover.w + 76, table.cover.h + 96);
+    context.fillStyle = "#f3dfb5";
+    context.fillText("LOCKED", table.cover.x + table.cover.w / 2, table.cover.y + table.cover.h / 2 + 25);
   }
-  return new Promise((resolve) => {
-    let previousTime;
-    const tick = (time) => {
-      const dt = previousTime == null ? 0 : Math.min((time - previousTime) / 1000, 0.05);
-      previousTime = time;
-      motion = advanceMotion(motion, dt, { maxSpeed: speed, acceleration: speed * 2.4, deceleration: speed * 2.8, stride });
-      placeActor(element, motion, scene);
-      setSpriteFrame(element, motion.direction, motion.frame, kind);
-      if (motion.done) resolve();
-      else requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
+  context.restore();
 }
 
-async function walkTo(destination) {
-  if (moving) return false;
-  moving = true;
-  closePanel();
-  say("walk");
-  const actor = $("[data-rookie]");
-  const route = routeBetween(actorDestination, destination);
-  actor.classList.remove("wiping");
-  actor.classList.toggle("carrying", Boolean(activeOrder("ready")));
-  actor.classList.add("walking");
-  await animateRoute(actor, route, "rookie");
-  actor.classList.remove("walking");
-  actorDestination = destination;
-  moving = false;
-  render();
-  return true;
+function drawKitchenStatus() {
+  if (!state.kitchen.active) return;
+  const total = chefSeconds(state.upgrades.chef);
+  const progress = Math.max(0, 1 - state.kitchen.timer / total);
+  context.fillStyle = "#17130f";
+  context.fillRect(242, 202, 142, 15);
+  context.fillStyle = "#e6b43c";
+  context.fillRect(245, 205, 136 * progress, 9);
 }
 
-async function startCoworkerPatrol() {
-  if (coworkerPatrolStarted) return;
-  coworkerPatrolStarted = true;
-  const coworker = $("[data-coworker]");
-  if (reducedMotion()) return;
-  const routes = [
-    [[24, 36], [33, 36]],
-    [[33, 36], [24, 36]],
-  ];
-  let index = 0;
-  while (coworkerPatrolStarted) {
-    coworker.classList.add("walking");
-    await animateRoute(coworker, routes[index], "coworker", 62, 16);
-    coworker.classList.remove("walking");
-    await wait(850);
-    index = 1 - index;
-  }
-}
-async function openDestination(destination) {
-  if (!await walkTo(destination)) return;
-  state.station = destination;
-  panelOpen = true;
-  update();
-}
-
-function accept(orderId) {
-  const order = state.orders.find((item) => item.id === orderId && item.status === "waiting");
-  if (!order) return;
-  order.status = "accepted";
-  if (state.shift < SHIFTS.length && !state.seenInterruptions.includes(state.shift)) {
-    state.interruption = state.shift;
-    state.seenInterruptions.push(state.shift);
-  }
-  closePanel();
-  update("accepted");
-}
-function boil(potIndex) {
-  const order = activeOrder("accepted");
-  if (!order || state.pots[potIndex]) return;
-  order.status = "cooking";
-  state.pots[potIndex] = { orderId: order.id, startedAt: Date.now() };
-  update("pot", potIndex + 1);
-}
-function lift(potIndex) {
-  const pot = state.pots[potIndex];
-  if (!pot) return;
-  const order = state.orders.find((item) => item.id === pot.orderId);
-  order.cookScore = scoreDoneness((Date.now() - pot.startedAt) / 1000, order.doneness);
-  order.status = "cooked";
-  state.pots[potIndex] = null;
-  closePanel();
-  update("lifted", order.cookScore >= 70);
-}
-function plate(orderId) {
-  const order = state.orders.find((item) => item.id === orderId && item.status === "cooked");
-  if (!order) return;
-  order.plateScore = scorePlate(order, state.plate.sauce, state.plate.topping);
-  order.status = "ready";
-  closePanel();
-  update("plated", order.plateScore === 100, order.table);
-}
-async function visitTable(table) {
-  if (!await walkTo(String(table))) return;
-  const ready = state.orders.find((order) => order.status === "ready" && order.table === table);
-  if (ready) {
-    state = completeDelivery(state, ready.id);
-    update("delivered", state.shift === SHIFTS.length && state.completed === SHIFTS.length);
+function drawActor(actor) {
+  if (actor.kind === "chef") {
+    const frame = state.kitchen.active ? 1 + Math.floor(state.elapsed * 4) % 2 : 0;
+    drawAtlas(frame, 1, actor.x, actor.y, 94, state.kitchen.active);
     return;
   }
-  const task = state.floorTasks.find((item) => item.table === table);
-  if (task) {
-    await completeTask(task.id);
+
+  const next = actor.path?.[0];
+  const facingLeft = next ? next.x < actor.x : false;
+  const moving = Boolean(actor.walking && actor.path?.length);
+  const bob = moving ? Math.sin(state.elapsed * 12) * 2 : 0;
+
+  if (actor.kind === "waiter") {
+    const carrying = actor.task?.type === "deliver" && actor.task.phase === "table";
+    const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
+    drawAtlas(frame, 0, actor.x, actor.y + bob, 92, facingLeft);
     return;
   }
-  update("noTask", table);
+
+  const seated = ["ordering", "waitingFood", "eating"].includes(actor.state);
+  const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
+  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 94 : 88, facingLeft);
 }
-async function completeTask(id) {
-  const task = state.floorTasks.find((item) => item.id === id);
-  if (!task) return;
-  const actor = $("[data-rookie]");
-  actor.classList.add("wiping");
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await new Promise((resolve) => setTimeout(resolve, 900));
-  actor.classList.remove("wiping");
-  state.floorTasks = state.floorTasks.filter((item) => item.id !== id);
-  state.reputation = Math.min(100, state.reputation + 1);
-  update("taskDone", task.table, taskName(task.type));
+
+function drawAtlas(column, row, x, y, size, flip = false) {
+  const cell = 256;
+  context.save();
+  context.translate(Math.round(x), Math.round(y));
+  if (flip) context.scale(-1, 1);
+  context.drawImage(atlasImage, column * cell, row * cell, cell, cell, -size / 2, -size, size, size);
+  context.restore();
 }
-function chooseInterruption(choice) {
-  const event = INTERRUPTIONS[state.interruption];
-  if (!event) return;
-  if (choice === "switch") {
-    state.floorTasks.push({ ...event.task, id: `interrupt-${state.shift}` });
-    messageKey = "switched";
-    messageArgs = [taskName(event.task.type)];
-  } else {
-    state.reputation = Math.max(0, state.reputation - 1);
-    messageKey = "accepted";
-    messageArgs = [];
+
+function redrawTableTop(table) {
+  const { x, y, w, h } = table.cover;
+  context.drawImage(roomImage, x, y, w, h, x, y, w, h);
+}
+
+function drawCustomerBubbles() {
+  for (const customer of state.customers) {
+    if (!["ordering", "waitingFood", "eating", "paying"].includes(customer.state)) continue;
+    const labels = { ordering: "…", waitingFood: "⌛", eating: "●", paying: "$" };
+    const x = customer.x + 28;
+    const y = customer.y - 72;
+    context.fillStyle = "#fff2d3";
+    context.strokeStyle = "#17130f";
+    context.lineWidth = 3;
+    context.fillRect(x - 14, y - 14, 28, 25);
+    context.strokeRect(x - 14, y - 14, 28, 25);
+    context.fillStyle = customer.state === "eating" ? "#8c3f24" : "#245934";
+    context.font = "900 16px monospace";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(labels[customer.state], x, y - 1);
   }
-  state.interruption = null;
-  update();
-}
-function updateTimers() {
-  state.pots.forEach((pot, index) => {
-    const node = $(`[data-pot-time="${index}"]`);
-    if (node && pot) node.textContent = `${((Date.now() - pot.startedAt) / 1000).toFixed(1)}s`;
-  });
 }
 
-function ensureAudio() {
-  if (!audioContext) {
-    audioContext = new AudioContext();
-    musicGain = audioContext.createGain();
-    ambienceGain = audioContext.createGain();
-    musicGain.connect(audioContext.destination);
-    ambienceGain.connect(audioContext.destination);
-    scheduleChord();
-    musicTimer = setInterval(scheduleChord, 2400);
-    const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let index = 0; index < data.length; index += 1) data[index] = (Math.random() * 2 - 1) * .16;
-    ambienceSource = audioContext.createBufferSource();
-    const filter = audioContext.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = 680;
-    ambienceSource.buffer = buffer;
-    ambienceSource.loop = true;
-    ambienceSource.connect(filter).connect(ambienceGain);
-    ambienceSource.start();
+function frame(time) {
+  const delta = Math.min(0.25, (time - previousTime) / 1_000);
+  previousTime = time;
+  accumulator += delta;
+  while (accumulator >= 0.1) {
+    tickGame(state, 0.1);
+    accumulator -= 0.1;
   }
-  audioContext.resume();
-  syncAudio();
+  draw();
+  if (time - lastUiUpdate > 180) {
+    updateUi();
+    lastUiUpdate = time;
+  }
+  requestAnimationFrame(frame);
 }
-function scheduleChord() {
-  if (!audioContext) return;
-  const chords = [[220, 261.63, 329.63], [196, 246.94, 293.66], [174.61, 220, 261.63], [196, 246.94, 329.63]];
-  const chord = chords[Math.floor(audioContext.currentTime / 2.4) % chords.length];
-  chord.forEach((frequency, index) => {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = index === 0 ? "triangle" : "sine";
-    oscillator.frequency.value = frequency * (index === 2 ? 2 : 1);
-    gain.gain.setValueAtTime(0, audioContext.currentTime);
-    gain.gain.linearRampToValueAtTime(.055, audioContext.currentTime + .05);
-    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + 2.1);
-    oscillator.connect(gain).connect(musicGain);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 2.2);
+
+elements.toggle.addEventListener("click", toggleRestaurant);
+elements.reset.addEventListener("click", resetGame);
+elements.upgrades.forEach((button) => button.addEventListener("click", buyUpgrade));
+window.addEventListener("pagehide", saveState);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) saveState();
+});
+setInterval(saveState, 5_000);
+
+Promise.all([images.room, images.atlas])
+  .then(([room, atlas]) => {
+    roomImage = room;
+    atlasImage = atlas;
+    updateUi();
+    requestAnimationFrame(frame);
+  })
+  .catch(() => {
+    state.message = "遊戲圖像載入失敗，請重新整理頁面。";
+    updateUi();
+    requestAnimationFrame(frame);
   });
-}
-function syncAudio() {
-  if (!audioContext) return;
-  musicGain.gain.setTargetAtTime(settings.music ? .07 : 0, audioContext.currentTime, .08);
-  ambienceGain.gain.setTargetAtTime(settings.ambience ? .04 : 0, audioContext.currentTime, .08);
-}
-function toggleSound(kind) {
-  settings[kind] = !settings[kind];
-  saveSettings();
-  ensureAudio();
-  render();
-}
-
-function setSamplePosition(element, [x, y], scene) {
-  placeActor(element, { x: x / 100 * scene.clientWidth, y: y / 100 * scene.clientHeight }, scene);
-}
-
-function resetCharacterSample() {
-  const scene = $("[data-sample-scene]");
-  const rookie = $("[data-sample-rookie]");
-  const coworker = $("[data-sample-coworker]");
-  const male = $("[data-sample-male]");
-  const female = $("[data-sample-female]");
-  rookie.classList.remove("greeting");
-  male.classList.remove("seated");
-  female.classList.remove("seated");
-  setSpriteFrame(rookie, "down", 0, "rookie");
-  setSpriteFrame(coworker, "right", 0, "coworker");
-  setSpriteFrame(male, "right", 0, "male");
-  setSpriteFrame(female, "right", 0, "female");
-  setSamplePosition(rookie, [42, 47], scene);
-  setSamplePosition(coworker, [78, 47], scene);
-  setSamplePosition(male, [8, 62], scene);
-  setSamplePosition(female, [5, 68], scene);
-}
-
-async function playCharacterSample() {
-  const replay = $("[data-sample-replay]");
-  const note = $("[data-sample-note]");
-  const scene = $("[data-sample-scene]");
-  const rookie = $("[data-sample-rookie]");
-  const coworker = $("[data-sample-coworker]");
-  const male = $("[data-sample-male]");
-  const female = $("[data-sample-female]");
-  replay.disabled = true;
-  resetCharacterSample();
-  note.textContent = "菜鳥走到門口迎接客人。";
-
-  const coworkerPass = animateRoute(coworker, [[78, 47], [84, 47], [78, 47]], "coworker", 64, 16, scene);
-  await animateRoute(rookie, [[42, 47], [30, 51], [18, 58], [10, 62]], "rookie", 92, 20, scene);
-  rookie.classList.add("greeting");
-  rookie.style.backgroundPosition = "center";
-  rookie.style.transform = "translate(-50%, -72%)";
-  await wait(reducedMotion() ? 150 : 850);
-  rookie.classList.remove("greeting");
-  setSpriteFrame(rookie, "right", 0, "rookie");
-
-  note.textContent = "菜鳥先走，男客沿同一條通道到沙發席。";
-  await Promise.all([
-    animateRoute(rookie, [[10, 62], [24, 58], [38, 48], [49, 38]], "rookie", 88, 20, scene),
-    (async () => {
-      await wait(reducedMotion() ? 0 : 260);
-      await animateRoute(male, [[8, 62], [22, 59], [36, 49], [48, 39]], "male", 78, 19, scene);
-    })(),
-  ]);
-  male.classList.add("seated");
-  male.style.backgroundPosition = "center";
-  male.style.transform = "translate(-50%, -72%)";
-  setSamplePosition(male, [54.3, 26], scene);
-
-  note.textContent = "菜鳥回門口，再帶女客到一般餐椅。";
-  await animateRoute(rookie, [[49, 38], [38, 49], [23, 60], [9, 66]], "rookie", 92, 20, scene);
-  rookie.classList.add("greeting");
-  rookie.style.backgroundPosition = "center";
-  rookie.style.transform = "translate(-50%, -72%)";
-  await wait(reducedMotion() ? 150 : 700);
-  rookie.classList.remove("greeting");
-  setSpriteFrame(rookie, "right", 0, "rookie");
-  await Promise.all([
-    animateRoute(rookie, [[9, 66], [24, 70], [37, 72], [44, 72]], "rookie", 90, 20, scene),
-    (async () => {
-      await wait(reducedMotion() ? 0 : 260);
-      await animateRoute(female, [[5, 68], [22, 71], [35, 73], [44, 74]], "female", 78, 19, scene);
-    })(),
-  ]);
-  female.classList.add("seated");
-  female.style.backgroundPosition = "center";
-  female.style.transform = "translate(-50%, -105%)";
-  setSamplePosition(female, [48, 67], scene);
-  setSamplePosition(rookie, [38, 72], scene);
-  await coworkerPass;
-  note.textContent = "樣板結束：人物全身、腳步、迎接與兩種坐姿均可重播檢查。";
-  replay.disabled = false;
-}
-
-function startCharacterSample() {
-  document.body.classList.add("character-sample-mode");
-  $("[data-language]").hidden = true;
-  $("[data-intro]").hidden = true;
-  $("[data-play]").hidden = true;
-  const sample = document.createElement("section");
-  sample.className = "character-sample";
-  sample.innerHTML = [
-    '<header class="character-sample-header">',
-    '<div><h2>人物動態樣板</h2><p>只檢查走路、招呼、帶位和坐姿；尚未接訂單玩法。</p></div>',
-    '<button class="primary" type="button" data-sample-replay>重播動作</button>',
-    '</header>',
-    '<div class="restaurant-scene sample-stage" data-sample-scene aria-label="人物動態樣板">',
-    '<div class="coworker sample-coworker" data-sample-coworker aria-hidden="true"></div>',
-    '<div class="rookie sample-rookie" data-sample-rookie role="img" aria-label="菜鳥店員"></div>',
-    '<div class="customer sample-male" data-sample-male role="img" aria-label="男客人"></div>',
-      '<div class="customer sample-female" data-sample-female role="img" aria-label="女客人"></div>',
-      '<div class="sample-occlusion sample-booth-occlusion" aria-hidden="true"></div>',
-      '<div class="sample-occlusion sample-booth-chair-occlusion" aria-hidden="true"></div>',
-      '<div class="sample-occlusion sample-table-occlusion" aria-hidden="true"></div>',
-    '<p class="sample-note" data-sample-note></p>',
-    '</div>',
-  ].join("");
-  $("[data-game]").append(sample);
-  $("[data-sample-replay]").addEventListener("click", playCharacterSample);
-  playCharacterSample();
-}
-
-function start(nextState, key) {
-  state = nextState;
-  messageKey = key;
-  messageArgs = [];
-  $("[data-intro]").hidden = true;
-  $("[data-play]").hidden = false;
-  ensureAudio();
-  update();
-  startCoworkerPatrol();
-}
-
-if (CHARACTER_SAMPLE) {
-  startCharacterSample();
-} else {
-  $("[data-start]").addEventListener("click", () => {
-    try { localStorage.removeItem(SAVE_KEY); } catch {}
-    start(freshState(), "first");
-  });
-  $("[data-continue]").addEventListener("click", () => start(load() || freshState(), "loaded"));
-  $("[data-language]").addEventListener("click", () => {
-    settings.locale = settings.locale === "zh" ? "en" : "zh";
-    saveSettings();
-    render();
-  });
-  $("[data-music]").addEventListener("click", () => toggleSound("music"));
-  $("[data-ambience]").addEventListener("click", () => toggleSound("ambience"));
-  $("[data-close-panel]").addEventListener("click", closePanel);
-  $("[data-game]").addEventListener("click", (event) => {
-    const target = event.target.closest("button");
-    if (!target || target.hasAttribute("disabled")) return;
-    if (target.dataset.destination) openDestination(target.dataset.destination);
-    if (target.dataset.table) visitTable(Number(target.dataset.table));
-    if (target.dataset.action === "accept") accept(Number(target.dataset.order));
-    if (target.dataset.action === "boil") boil(Number(target.dataset.pot));
-    if (target.dataset.action === "lift") lift(Number(target.dataset.pot));
-    if (target.dataset.action === "plate") plate(Number(target.dataset.order));
-    if (target.dataset.plateOption) { state.plate[target.dataset.plateOption] = target.dataset.value; update(); }
-    if (target.dataset.interruptChoice) chooseInterruption(target.dataset.interruptChoice);
-  });
-  addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closePanel();
-  });
-  setInterval(updateTimers, 100);
-
-  $("[data-continue]").hidden = !load();
-  applyLanguage();
-  render();
-}

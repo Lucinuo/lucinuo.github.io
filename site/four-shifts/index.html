@@ -3,103 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#efe6d4">
-  <meta name="description" content="《餐廳菜鳥》是一款餐廳工作模擬遊戲：在活生生的餐廳裡走動、接單、料理、擺盤與送餐。">
-  <title>餐廳菜鳥 — Lucinuo</title>
+  <meta name="theme-color" content="#1b1814">
+  <meta name="description" content="《餐廳菜鳥：像素小館》是一款原創網頁版放置餐廳經營遊戲。升級員工與餐桌，讓小館自動營運。">
+  <title>餐廳菜鳥：像素小館 — Lucinuo</title>
   <link rel="canonical" href="https://lucinuo.github.io/four-shifts/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lucinuo.github.io/four-shifts/">
-  <meta property="og:title" content="餐廳菜鳥 — Lucinuo">
-  <meta property="og:description" content="在忙碌的餐廳裡走動、接單、料理、擺盤與送餐，慢慢找到自己的工作節奏。">
-  <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp">
+  <meta property="og:title" content="餐廳菜鳥：像素小館">
+  <meta property="og:description" content="看著客人入店、點餐、用餐與結帳，將一桌小館慢慢升級。">
+  <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant.png">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=20260822-1">
-  <script type="module" src="./game.js?v=20260822-1"></script>
+  <link rel="stylesheet" href="./styles.css?v=20260823-1">
+  <script type="module" src="./game.js?v=20260823-1"></script>
 </head>
 <body>
   <main class="game-shell" data-game>
     <header class="game-header">
-      <h1 data-i18n="title">餐廳菜鳥</h1>
+      <div>
+        <p class="eyebrow">IDLE RESTAURANT</p>
+        <h1>餐廳菜鳥：像素小館</h1>
+      </div>
       <div class="header-actions">
-        <button class="utility-button" type="button" data-language aria-label="Switch language">中 / EN</button>
-        <a href="/projects/" data-i18n="back">返回作品</a>
+        <button class="start-button" type="button" data-toggle>開始營業</button>
+        <button class="reset-button" type="button" data-reset>重置</button>
+        <a href="/projects/">返回作品</a>
       </div>
     </header>
 
-    <section class="intro" data-intro>
-      <div class="intro-copy">
-        <p class="kicker" data-i18n="genre">餐廳新人模擬遊戲</p>
-        <h2 data-i18n-html="introTitle">先看清楚。<br>再動起來。</h2>
-        <div class="intro-actions">
-          <button class="primary" type="button" data-start data-i18n="start">開始第一班</button>
-          <button class="text-button" type="button" data-continue hidden data-i18n="continue">繼續上次進度</button>
-        </div>
-        <small data-i18n="soundHint">開始後會以低音量播放音樂與餐廳環境聲，可隨時關閉。</small>
-      </div>
+    <section class="hud" aria-label="餐廳營運資料">
+      <p><span aria-hidden="true">●</span><b data-coins>160</b><small>金幣</small></p>
+      <p><b data-served>0</b><small>已服務客人</small></p>
+      <p><b data-level>1</b><small>餐廳等級</small></p>
+      <p class="restaurant-state"><b data-state>休息中</b><small>營運狀態</small></p>
     </section>
 
-    <section class="play" data-play hidden aria-live="polite">
-      <div class="shift-bar">
-        <div><strong data-period>第 1 班</strong><span data-rush>開店準備</span></div>
-        <div class="score">
-          <span><span data-i18n="completed">完成</span> <b data-completed>0</b> <span data-i18n="ordersUnit">單</span></span>
-          <span><span data-i18n="reputation">店內評價</span> <b data-reputation>50</b></span>
-        </div>
-        <div class="sound-controls" aria-label="Sound controls">
-          <button class="utility-button" type="button" data-music aria-pressed="true">♫ <span data-i18n="music">音樂</span></button>
-          <button class="utility-button" type="button" data-ambience aria-pressed="true">◌ <span data-i18n="ambience">環境聲</span></button>
-        </div>
+    <div class="offline-notice" data-offline hidden></div>
+
+    <section class="game-layout">
+      <div class="stage-panel">
+        <canvas data-canvas width="960" height="540" aria-label="像素餐廳營運畫面">
+          你的瀏覽器不支援 Canvas，請更新瀏覽器後再試。
+        </canvas>
+        <p class="event-message" data-message aria-live="polite">按下開始，像素小館就會自動營運。</p>
+        <p class="sr-only" data-live aria-live="polite"></p>
       </div>
 
-      <div class="work-area">
-        <div class="scene-column">
-          <section class="restaurant-scene" data-scene aria-label="餐廳全景">
-            <button class="destination table-destination table-1" type="button" data-table="1" aria-label="前往 1 號桌">1</button>
-            <button class="destination table-destination table-2" type="button" data-table="2" aria-label="前往 2 號桌">2</button>
-            <button class="destination table-destination table-3" type="button" data-table="3" aria-label="前往 3 號桌">3</button>
-            <button class="destination table-destination table-4" type="button" data-table="4" aria-label="前往 4 號桌">4</button>
-            <button class="destination table-destination table-5" type="button" data-table="5" aria-label="前往 5 號桌">5</button>
-
-            <div class="coworker" data-coworker aria-hidden="true"></div>
-            <div class="rookie" data-rookie role="img" aria-label="餐廳新人角色"></div>
-
-            <section class="station-panel" data-panel hidden role="dialog" aria-modal="true" aria-labelledby="station-title">
-              <header><h2 id="station-title" data-panel-title></h2><button type="button" data-close-panel aria-label="關閉">×</button></header>
-              <div data-view></div>
-            </section>
-
-            <section class="interruption" data-interruption hidden role="dialog" aria-modal="true">
-              <div class="coworker-portrait" aria-hidden="true"></div>
-              <div><small data-i18n="coworkerRequest">同事臨時交代</small><p data-interruption-line></p></div>
-              <div class="interruption-actions" data-interruption-actions></div>
-            </section>
-          </section>
-
-          <nav class="work-controls" data-work-controls aria-label="工作地點">
-            <button type="button" data-destination="order"><span data-i18n="orderStation">接單</span></button>
-            <button type="button" data-destination="cook"><span data-i18n="cookStation">料理</span></button>
-            <button type="button" data-destination="plate"><span data-i18n="plateStation">擺盤</span></button>
-          </nav>
+      <aside class="upgrade-panel" aria-label="餐廳升級">
+        <div class="upgrade-heading">
+          <p>SHOP</p>
+          <h2>小館升級</h2>
         </div>
-
-        <aside class="status-rail">
-          <section>
-            <h2 data-i18n="tickets">待辦單</h2>
-            <div class="tickets" data-tickets></div>
-          </section>
-          <section class="counters">
-            <p><span data-i18n="ready">待出餐</span><b data-ready>0</b></p>
-            <p><span data-i18n="floorTasks">店面雜務</span><b data-floor-count>0</b></p>
-          </section>
-          <section class="notebook">
-            <h2><span data-i18n="notes">流程小抄</span> <span data-known-count></span></h2>
-            <ol data-notes></ol>
-          </section>
-        </aside>
-      </div>
-
-      <p class="game-note" data-message>先走到接單櫃台，看看今天的第一張單。</p>
+        <button class="upgrade-card" type="button" data-upgrade="chef">
+          <span class="upgrade-icon" aria-hidden="true">♨</span>
+          <span><strong>廚師速度</strong><small data-effect="chef"></small></span>
+          <span class="upgrade-price"><b data-level="chef">Lv.0</b><small data-cost="chef"></small></span>
+        </button>
+        <button class="upgrade-card" type="button" data-upgrade="waiter">
+          <span class="upgrade-icon" aria-hidden="true">↗</span>
+          <span><strong>服務員速度</strong><small data-effect="waiter"></small></span>
+          <span class="upgrade-price"><b data-level="waiter">Lv.0</b><small data-cost="waiter"></small></span>
+        </button>
+        <button class="upgrade-card" type="button" data-upgrade="tables">
+          <span class="upgrade-icon" aria-hidden="true">▦</span>
+          <span><strong>餐桌數量</strong><small data-effect="tables"></small></span>
+          <span class="upgrade-price"><b data-level="tables">1 桌</b><small data-cost="tables"></small></span>
+        </button>
+        <button class="upgrade-card" type="button" data-upgrade="income">
+          <span class="upgrade-icon" aria-hidden="true">$</span>
+          <span><strong>單客收入</strong><small data-effect="income"></small></span>
+          <span class="upgrade-price"><b data-level="income">Lv.0</b><small data-cost="income"></small></span>
+        </button>
+        <p class="idle-note">不用點客人或員工；營業後，餐廳會自己完成所有工作。關閉頁面後最多累積 4 小時的部分收益。</p>
+      </aside>
     </section>
   </main>
 </body>

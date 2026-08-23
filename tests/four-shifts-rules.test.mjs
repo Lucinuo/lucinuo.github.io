@@ -1,62 +1,72 @@
 import assert from "node:assert/strict";
-import { SCENE_BLOCKERS, SCENE_DESTINATIONS, SHIFTS, advanceMotion, completeDelivery, createMotion, createOrder, freshState, normalizeSave, periodFor, routeBetween, scoreDoneness, scorePlate } from "../site/four-shifts/game-rules.mjs";
+import {
+  calculateOfflineIncome,
+  chefSeconds,
+  freshState,
+  hydrateState,
+  incomePerGuest,
+  normalizeSave,
+  purchaseUpgrade,
+  routeBetween,
+  serializeState,
+  tickGame,
+  upgradeCost,
+  waiterSpeed,
+} from "../site/four-shifts/game-rules.mjs";
 
-assert.equal(SHIFTS.length, 4);
-assert.equal(scoreDoneness(7.8, "normal"), 100);
-assert.equal(scoreDoneness(2, "soft"), 15);
-const order = createOrder(1, 0);
-assert.equal(scorePlate(order, "番茄醬", "起司"), 100);
-assert.equal(scorePlate(order, "白醬", "起司"), 50);
+const state = freshState(1_000);
+assert.equal(state.coins, 160);
+assert.equal(state.upgrades.tables, 1);
+assert.ok(upgradeCost("chef", { ...state.upgrades, chef: 1 }) > upgradeCost("chef", state.upgrades));
+assert.ok(chefSeconds(1) < chefSeconds(0));
+assert.ok(waiterSpeed(1) > waiterSpeed(0));
+assert.ok(incomePerGuest(1) > incomePerGuest(0));
 
-let state = freshState();
-state.orders[0] = { ...state.orders[0], status: "ready", cookScore: 100, plateScore: 100 };
-state = completeDelivery(state, 1);
-assert.equal(state.completed, 1);
-assert.equal(state.shift, 1);
-assert.equal(state.orders.length, 1);
-assert.equal(state.orders[0].status, "waiting");
-for (let id = 2; id <= 4; id += 1) {
-  state.orders[0] = { ...state.orders[0], id, status: "ready", cookScore: 70, plateScore: 100 };
-  state = completeDelivery(state, id);
+const chefCost = upgradeCost("chef", state.upgrades);
+assert.equal(purchaseUpgrade(state, "chef"), true);
+assert.equal(state.coins, 160 - chefCost);
+assert.equal(state.upgrades.chef, 1);
+assert.equal(purchaseUpgrade(state, "tables"), false, "insufficient coins do not unlock a table");
+
+const restaurant = freshState(2_000);
+restaurant.running = true;
+const seen = new Set();
+for (let step = 0; step < 4_000 && restaurant.served === 0; step += 1) {
+  tickGame(restaurant, 0.1);
+  for (const customer of restaurant.customers) seen.add(customer.state);
 }
-assert.match(periodFor(state).label, /日常營運/);
-assert.equal(normalizeSave({ version: 0 }), null);
-assert.equal(normalizeSave({ ...state, station: "wrong" }).station, "order");
+assert.equal(restaurant.served, 1, "a guest completes the full restaurant flow");
+assert.ok(restaurant.coins > 160, "payment increases coins");
+for (const expected of ["entering", "queueing", "seating", "ordering", "waitingFood", "eating", "checkout", "paying", "leaving"]) {
+  assert.ok(seen.has(expected), `customer reaches ${expected}`);
+}
 
-const crossesFurniture = (route) => route.some((point, index) => {
-  if (index === 0) return false;
-  const previous = route[index - 1];
-  return Array.from({ length: 21 }, (_, step) => step / 20).some((ratio) => {
-    const x = previous[0] + (point[0] - previous[0]) * ratio;
-    const y = previous[1] + (point[1] - previous[1]) * ratio;
-    return SCENE_BLOCKERS.some(([left, top, right, bottom]) => x > left && x < right && y > top && y < bottom);
-  });
-});
-const hasDiagonalSegment = (route) => route.some((point, index) => {
-  if (index === 0) return false;
-  const previous = route[index - 1];
-  return point[0] !== previous[0] && point[1] !== previous[1];
-});
-for (const from of ["hub", ...Object.keys(SCENE_DESTINATIONS)]) {
-  for (const to of Object.keys(SCENE_DESTINATIONS)) {
+const paused = freshState();
+tickGame(paused, 30);
+assert.equal(paused.customers.length, 0, "paused restaurant does not spawn guests");
+
+for (const from of ["queue", "pass", "table1", "table2", "table3", "table4", "checkout"]) {
+  for (const to of ["queue", "pass", "table1", "table2", "table3", "table4", "checkout"]) {
     const route = routeBetween(from, to);
-    assert.equal(crossesFurniture(route), false, `${from} -> ${to} crosses furniture`);
-    assert.equal(hasDiagonalSegment(route), false, `${from} -> ${to} makes a four-direction sprite slide diagonally`);
+    route.forEach((point) => {
+      assert.ok(Number.isFinite(point.x) && Number.isFinite(point.y), `${from} -> ${to} has valid waypoints`);
+    });
   }
 }
-let motion = createMotion([[0, 0], [100, 0], [100, 100]]);
-motion = advanceMotion(motion, 0.1, { maxSpeed: 100, acceleration: 200, deceleration: 240, stride: 10 });
-assert.ok(motion.speed > 0 && motion.speed < 100, "actor accelerates instead of jumping to full speed");
-const firstSpeed = motion.speed;
-motion = advanceMotion(motion, 0.1, { maxSpeed: 100, acceleration: 200, deceleration: 240, stride: 10 });
-assert.ok(motion.speed > firstSpeed, "actor continues accelerating");
-while (motion.segment === 0) motion = advanceMotion(motion, 0.05, { maxSpeed: 100, acceleration: 200, deceleration: 240, stride: 10 });
-assert.ok(motion.speed > 0, "actor does not stop at a route corner");
-assert.equal(motion.direction, "down");
-assert.ok(motion.frame >= 1 && motion.frame <= 4, "walking frame follows travelled distance");
-while (!motion.done) motion = advanceMotion(motion, 0.05, { maxSpeed: 100, acceleration: 200, deceleration: 240, stride: 10 });
-assert.deepEqual([motion.x, motion.y], [100, 100]);
-assert.equal(motion.speed, 0);
-assert.equal(motion.frame, 0);
 
-console.log("Restaurant Rookie rules tests passed");
+const saved = serializeState(restaurant, 10_000);
+assert.deepEqual(normalizeSave(saved)?.upgrades, restaurant.upgrades);
+const restored = hydrateState(saved, 11_000);
+assert.equal(restored.coins, Math.floor(restaurant.coins));
+assert.equal(restored.served, restaurant.served);
+assert.equal(restored.running, true);
+assert.equal(normalizeSave({ version: 0 }), null);
+
+const offline = calculateOfflineIncome({ ...saved, running: true, lastSavedAt: 0 }, 60 * 60 * 1_000);
+assert.ok(offline.amount > 0 && offline.seconds === 3_600, "offline income is calculated for a running restaurant");
+assert.equal(calculateOfflineIncome({ ...saved, running: false }, 20_000).amount, 0);
+const capped = calculateOfflineIncome({ ...saved, running: true, lastSavedAt: 0 }, 8 * 60 * 60 * 1_000);
+const fourHours = calculateOfflineIncome({ ...saved, running: true, lastSavedAt: 0 }, 4 * 60 * 60 * 1_000);
+assert.deepEqual(capped, fourHours, "offline income is capped at four hours");
+
+console.log("Restaurant Rookie idle rules tests passed");

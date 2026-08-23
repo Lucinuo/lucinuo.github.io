@@ -68,42 +68,26 @@ check(uaStoryExperienceCss.includes("prefers-reduced-motion"), "Urolithin A stor
 const restaurantRookieCss = fs.readFileSync(path.join(root, "four-shifts/styles.css"), "utf8");
 const restaurantRookieModules = ["game.js", "game-rules.mjs"].map((file) => fs.readFileSync(path.join(root, "four-shifts", file), "utf8"));
 check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Restaurant Rookie has the wrong canonical URL");
-check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/restaurant.webp"'), "Restaurant Rookie is missing its social image");
+check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant.png"'), "Restaurant Rookie is missing its social image");
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
-check(restaurantRookie.includes("data-language") && restaurantRookie.includes("data-music") && restaurantRookie.includes("data-ambience"), "Restaurant Rookie is missing language or sound controls");
-check(restaurantRookie.includes("data-destination=\"order\"") && restaurantRookie.includes("data-rookie"), "Restaurant Rookie is missing click-to-walk destinations or the rookie actor");
-check(!restaurantRookie.includes("點選餐廳裡的工作地點") && !restaurantRookieModules.some((source) => source.includes("點選餐廳裡的工作地點")), "Restaurant Rookie still contains the rejected intro copy");
-check(!restaurantRookieModules.some((source) => source.includes("臨時要求沒有消失")), "Restaurant Rookie still contains the rejected interruption copy");
+check(restaurantRookie.includes('data-canvas width="960" height="540"'), "Restaurant Rookie is missing the fixed-resolution game canvas");
+check(restaurantRookie.includes("data-toggle") && restaurantRookie.includes("data-reset"), "Restaurant Rookie is missing start or reset controls");
+for (const upgrade of ["chef", "waiter", "tables", "income"]) {
+  check(restaurantRookie.includes(`data-upgrade="${upgrade}"`), `Restaurant Rookie is missing the ${upgrade} upgrade`);
+}
 check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie does not respect reduced motion");
-check(restaurantRookieCss.includes("background-size: 500% 400%") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing four-direction frame-timed movement");
-check(!restaurantRookieModules[0].includes("transitionDuration"), "Restaurant Rookie still uses segmented CSS sliding");
-check(restaurantRookie.includes("data-work-controls"), "Restaurant Rookie is missing the separate work control bar");
-const sceneMarkup = restaurantRookie.match(/<section class="restaurant-scene"[\s\S]*?<\/section>\s*<\/div>/)?.[0] || "";
-check(!sceneMarkup.includes("data-destination"), "Restaurant Rookie still places work controls over the actors");
-check(restaurantRookieCss.includes("restaurant-seated.webp") && !restaurantRookie.includes("data-guest="), "Restaurant Rookie does not use the integrated seated-customer scene");
-check(!restaurantRookieCss.includes("customer-seated.webp") && !restaurantRookieModules.some((source) => source.includes("customer-seated.webp")), "Restaurant Rookie still uses the front-facing seated portrait");
-check(restaurantRookie.includes("data-coworker") && restaurantRookieModules[0].includes("startCoworkerPatrol") && !restaurantRookieCss.includes("coworker-patrol"), "Restaurant Rookie coworker still uses unsynchronised CSS sliding");
-check(restaurantRookieModules[0].includes('get("sample") === "characters"') && restaurantRookieModules[0].includes("playCharacterSample"), "Restaurant Rookie is missing the isolated character-motion sample");
-check(restaurantRookieCss.includes(".sample-stage .coworker") && restaurantRookieCss.includes("clip-path: none"), "Character sample still crops the coworker legs");
+check(restaurantRookieCss.includes("image-rendering: pixelated") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing pixel rendering or its render loop");
+check(restaurantRookieCss.includes("@media (max-width: 600px)") && restaurantRookieCss.includes("@media (max-width: 900px)"), "Restaurant Rookie is missing mobile layouts");
+check(restaurantRookieModules[0].includes("localStorage") && restaurantRookieModules[0].includes("calculateOfflineIncome"), "Restaurant Rookie is missing persistence or offline income");
+check(restaurantRookieModules[1].includes("queueing") && restaurantRookieModules[1].includes("waitingFood") && restaurantRookieModules[1].includes("paying"), "Restaurant Rookie is missing the customer state machine");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
-for (const asset of ["restaurant.webp", "restaurant-seated.webp"]) {
+for (const asset of ["pixel-restaurant.png", "pixel-atlas.png"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
-  check(fs.existsSync(assetPath), `Restaurant Rookie is missing scene asset: ${asset}`);
-  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 500 * 1024, `Restaurant Rookie scene asset exceeds 500 KB: ${asset}`);
-}
-for (const asset of ["rookie-sprites.webp", "rookie-wipe.webp", "coworker-sprites.webp"]) {
-  const assetPath = path.join(root, "four-shifts/assets", asset);
-  check(fs.existsSync(assetPath), `Restaurant Rookie is missing animated asset: ${asset}`);
-  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 200 * 1024, `Restaurant Rookie animated asset exceeds 200 KB: ${asset}`);
-}
-
-for (const asset of ["rookie-greeting-v2.webp", "customer-male-seated-v2.webp", "customer-female-seated-v2.webp"]) {
-  const assetPath = path.join(root, "four-shifts/assets", asset);
-  check(fs.existsSync(assetPath), "Restaurant Rookie is missing character sample asset: " + asset);
-  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 100 * 1024, "Restaurant Rookie character sample asset exceeds 100 KB: " + asset);
+  check(fs.existsSync(assetPath), `Restaurant Rookie is missing production asset: ${asset}`);
+  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 2 * 1024 * 1024, `Restaurant Rookie production asset exceeds 2 MB: ${asset}`);
 }
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
