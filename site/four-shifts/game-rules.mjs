@@ -1,32 +1,73 @@
 export const SAVE_VERSION = 1;
 export const SAVE_KEY = "restaurant-rookie-idle-v1";
 export const WORLD = { width: 960, height: 540 };
+export const GRID_SIZE = 20;
 
 export const POINTS = {
-  entrance: { x: 150, y: 510 },
-  queue: { x: 150, y: 420 },
-  hub: { x: 450, y: 420 },
-  pass: { x: 410, y: 300 },
-  checkout: { x: 330, y: 420 },
+  entrance: { x: 120, y: 530 },
+  exit: { x: 120, y: 552 },
+  pickup: { x: 460, y: 280 },
+  checkoutCustomer: { x: 300, y: 480 },
+  cashierService: { x: 380, y: 480 },
+  drinksBar: { x: 400, y: 430 },
+};
+
+export const KITCHEN_POINTS = {
+  stove: { x: 200, y: 150 },
+  prep: { x: 300, y: 245 },
+  pickup: { x: 430, y: 270 },
 };
 
 export const TABLES = [
-  { id: 1, seat: { x: 548, y: 171 }, service: { x: 535, y: 230 }, cover: { x: 555, y: 105, w: 74, h: 60 } },
-  { id: 2, seat: { x: 748, y: 171 }, service: { x: 740, y: 230 }, cover: { x: 755, y: 105, w: 74, h: 60 } },
-  { id: 3, seat: { x: 538, y: 371 }, service: { x: 530, y: 410 }, cover: { x: 545, y: 312, w: 74, h: 62 } },
-  { id: 4, seat: { x: 748, y: 371 }, service: { x: 740, y: 410 }, cover: { x: 755, y: 314, w: 74, h: 62 } },
+  {
+    id: 1,
+    seatPoints: [{ x: 568, y: 200, direction: "right" }],
+    servicePoint: { x: 600, y: 220 },
+    cover: { x: 575, y: 118, w: 54, h: 47 },
+    lockRect: { x: 530, y: 90, w: 120, h: 120 },
+  },
+  {
+    id: 2,
+    seatPoints: [{ x: 768, y: 200, direction: "right" }],
+    servicePoint: { x: 800, y: 220 },
+    cover: { x: 775, y: 118, w: 54, h: 47 },
+    lockRect: { x: 730, y: 90, w: 120, h: 120 },
+  },
+  {
+    id: 3,
+    seatPoints: [{ x: 558, y: 405, direction: "right" }],
+    servicePoint: { x: 580, y: 430 },
+    cover: { x: 565, y: 325, w: 54, h: 48 },
+    lockRect: { x: 520, y: 295, w: 120, h: 120 },
+  },
+  {
+    id: 4,
+    seatPoints: [{ x: 768, y: 405, direction: "right" }],
+    servicePoint: { x: 790, y: 430 },
+    cover: { x: 775, y: 327, w: 54, h: 48 },
+    lockRect: { x: 730, y: 295, w: 120, h: 120 },
+  },
 ];
 
-const LOCATION_PATHS = {
-  queue: [{ x: 320, y: 420 }, POINTS.queue],
-  pass: [{ x: 450, y: 330 }, { x: 410, y: 330 }, POINTS.pass],
-  table1: [{ x: 500, y: 420 }, { x: 500, y: 230 }, TABLES[0].service],
-  table2: [{ x: 690, y: 420 }, { x: 690, y: 230 }, TABLES[1].service],
-  table3: [{ x: 500, y: 420 }, TABLES[2].service],
-  table4: [{ x: 690, y: 420 }, TABLES[3].service],
-  checkout: [{ x: 380, y: 420 }, POINTS.checkout],
-};
+export const BLOCKED_RECTS = [
+  { name: "kitchen", left: 20, top: 0, right: 440, bottom: 292 },
+  { name: "cashier", left: 220, top: 330, right: 362, bottom: 455 },
+  { name: "drinks-bar", left: 362, top: 330, right: 440, bottom: 415 },
+  { name: "table-1", left: 530, top: 100, right: 650, bottom: 205 },
+  { name: "table-2", left: 730, top: 100, right: 850, bottom: 205 },
+  { name: "table-3", left: 520, top: 300, right: 640, bottom: 410 },
+  { name: "table-4", left: 730, top: 300, right: 850, bottom: 410 },
+  { name: "left-plant", left: 20, top: 365, right: 75, bottom: 470 },
+  { name: "right-shelf", left: 900, top: 190, right: 950, bottom: 300 },
+  { name: "right-plant", left: 880, top: 430, right: 950, bottom: 510 },
+];
 
+const QUEUE_SPOTS = [
+  { x: 170, y: 420 },
+  { x: 125, y: 440 },
+  { x: 170, y: 475 },
+  { x: 125, y: 505 },
+];
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -49,7 +90,108 @@ export function incomePerGuest(level) {
 }
 
 export function restaurantLevel(upgrades) {
-  return 1 + upgrades.chef + upgrades.waiter + upgrades.income + upgrades.tables - 1;
+  return upgrades.chef + upgrades.waiter + upgrades.income + upgrades.tables;
+}
+
+export function pointBlocked(point) {
+  if (!inWalkableBounds(point)) return true;
+  return BLOCKED_RECTS.some((rect) => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom);
+}
+
+function inWalkableBounds(point) {
+  const diningFloor = point.x >= 60 && point.x <= 920 && point.y >= 80 && point.y <= 500;
+  const entranceLane = point.x >= 80 && point.x <= 180 && point.y > 500 && point.y <= 540;
+  return diningFloor || entranceLane;
+}
+
+export function findPath(start, end) {
+  const startCell = nearestWalkableCell(start);
+  const endCell = nearestWalkableCell(end);
+  if (!startCell || !endCell) return [];
+  const startKey = cellKey(startCell);
+  const endKey = cellKey(endCell);
+  const queue = [startCell];
+  const previous = new Map([[startKey, null]]);
+
+  for (let index = 0; index < queue.length && !previous.has(endKey); index += 1) {
+    const cell = queue[index];
+    for (const next of [
+      { x: cell.x + 1, y: cell.y },
+      { x: cell.x - 1, y: cell.y },
+      { x: cell.x, y: cell.y + 1 },
+      { x: cell.x, y: cell.y - 1 },
+    ]) {
+      const key = cellKey(next);
+      if (previous.has(key) || pointBlocked(cellPoint(next))) continue;
+      previous.set(key, cell);
+      queue.push(next);
+    }
+  }
+
+  if (!previous.has(endKey)) return [];
+  const cells = [];
+  for (let cell = endCell; cell; cell = previous.get(cellKey(cell))) cells.push(cell);
+  cells.reverse();
+  const points = compressGridPath(cells.map(cellPoint));
+  const route = [];
+  if (distance(start, points[0]) > 1) route.push(points[0]);
+  route.push(...points.slice(1));
+  if (distance(route.at(-1) || start, end) > 1) route.push({ ...end });
+  return route;
+}
+
+function nearestWalkableCell(point) {
+  const origin = { x: Math.round(point.x / GRID_SIZE), y: Math.round(point.y / GRID_SIZE) };
+  for (let radius = 0; radius <= 6; radius += 1) {
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      const dy = radius - Math.abs(dx);
+      for (const signedY of dy ? [dy, -dy] : [0]) {
+        const cell = { x: origin.x + dx, y: origin.y + signedY };
+        if (!pointBlocked(cellPoint(cell))) return cell;
+      }
+    }
+  }
+  return null;
+}
+
+function compressGridPath(points) {
+  if (points.length < 3) return points;
+  const compressed = [points[0]];
+  let previousDirection = directionBetween(points[0], points[1]);
+  for (let index = 2; index < points.length; index += 1) {
+    const direction = directionBetween(points[index - 1], points[index]);
+    if (direction !== previousDirection) compressed.push(points[index - 1]);
+    previousDirection = direction;
+  }
+  compressed.push(points.at(-1));
+  return compressed;
+}
+
+function directionBetween(first, second) {
+  return first.x === second.x ? "vertical" : "horizontal";
+}
+
+function cellPoint(cell) {
+  return { x: cell.x * GRID_SIZE, y: cell.y * GRID_SIZE };
+}
+
+function cellKey(cell) {
+  return cell.x + "," + cell.y;
+}
+
+function distance(first, second) {
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+export function routeBetween(from, to) {
+  const locations = {
+    queue: QUEUE_SPOTS[0],
+    pass: POINTS.pickup,
+    checkout: POINTS.checkoutCustomer,
+    drinksBar: POINTS.drinksBar,
+  };
+  for (const table of TABLES) locations["table" + table.id] = table.servicePoint;
+  return findPath(locations[from] || from, locations[to] || to);
 }
 
 export function freshState(now = Date.now()) {
@@ -64,9 +206,19 @@ export function freshState(now = Date.now()) {
     spawnTimer: 0.8,
     elapsed: 0,
     customers: [],
-    tables: TABLES.map((table) => ({ id: table.id, occupiedBy: null })),
-    kitchen: { queue: [], active: null, timer: 0, ready: [] },
-    waiter: { x: POINTS.checkout.x + 35, y: POINTS.checkout.y, path: [], task: null, location: "checkout", walking: false },
+    tables: TABLES.map((table) => ({ id: table.id, occupiedBy: null, dirty: false })),
+    kitchen: {
+      queue: [],
+      active: null,
+      timer: 0,
+      ready: [],
+      phase: "idle",
+      chef: { x: KITCHEN_POINTS.prep.x, y: KITCHEN_POINTS.prep.y, path: [], walking: false },
+    },
+    waiters: {
+      male: { x: 470, y: 460, path: [], task: null, walking: false },
+      female: { x: POINTS.cashierService.x, y: POINTS.cashierService.y, path: [], task: null, walking: false },
+    },
     message: "按下開始，像素小館就會自動營運。",
     lastIncome: 0,
   };
@@ -78,7 +230,9 @@ export function purchaseUpgrade(state, type) {
   if (cost === null || state.coins < cost) return false;
   state.coins -= cost;
   state.upgrades[type] += 1;
-  state.message = type === "tables" ? `解鎖第 ${state.upgrades.tables} 張餐桌。` : `${upgradeLabel(type)}升到 Lv.${state.upgrades[type]}。`;
+  state.message = type === "tables"
+    ? "解鎖第 " + state.upgrades.tables + " 張餐桌。"
+    : upgradeLabel(type) + "升到 Lv." + state.upgrades[type] + "。";
   return true;
 }
 
@@ -91,33 +245,41 @@ export function tickGame(state, dt) {
   const step = Math.min(0.25, dt);
   state.elapsed += step;
   state.spawnTimer -= step;
-  if (state.spawnTimer <= 0 && state.customers.length < MAX_CUSTOMERS) {
+  const guestLimit = Math.min(MAX_CUSTOMERS, state.upgrades.tables + 3);
+  if (state.spawnTimer <= 0 && state.customers.length < guestLimit) {
     spawnCustomer(state);
     state.spawnTimer = 3.8;
   }
 
   updateCustomers(state, step);
   updateKitchen(state, step);
-  updateWaiter(state, step);
-  assignWaiterTask(state);
+  updateMaleWaiter(state, step);
+  updateFemaleWaiter(state, step);
+  assignMaleTask(state);
+  assignFemaleTask(state);
   removeFinishedCustomers(state);
   return state;
 }
 
 function spawnCustomer(state) {
   const id = state.nextCustomerId++;
-  const queueOffset = state.customers.filter((customer) => customer.state === "queueing" || customer.state === "entering").length * 26;
+  const queueIndex = state.customers.filter((customer) => customer.state === "entering" || customer.state === "queueing").length;
+  const queueSpot = QUEUE_SPOTS[Math.min(queueIndex, QUEUE_SPOTS.length - 1)];
   state.customers.push({
     id,
     variant: id % 2,
     state: "entering",
     x: POINTS.entrance.x,
-    y: POINTS.entrance.y + 28,
-    path: [{ x: POINTS.entrance.x, y: POINTS.entrance.y }, { x: POINTS.queue.x, y: POINTS.queue.y + queueOffset }],
+    y: POINTS.exit.y,
+    path: findPath(POINTS.entrance, queueSpot),
+    queueSpot: { ...queueSpot },
     timer: 0,
     tableId: null,
+    direction: "up",
     walking: true,
     walkFrame: 0,
+    foodDelivered: false,
+    drinkDelivered: false,
     paid: false,
   });
   state.message = "新客人進店，正在門口等候。";
@@ -126,143 +288,265 @@ function spawnCustomer(state) {
 function updateCustomers(state, dt) {
   for (const customer of state.customers) {
     customer.walking = false;
-    if (["entering", "seating", "checkout", "leaving"].includes(customer.state)) {
+    if (["entering", "seating", "toCheckout", "leaving"].includes(customer.state)) {
       customer.walking = customer.path.length > 0;
       const reached = moveAlongPath(customer, waiterSpeed(state.upgrades.waiter) * 0.82, dt);
       customer.walkFrame = Math.floor(state.elapsed * 6) % 2;
       if (!reached) continue;
       if (customer.state === "entering") customer.state = "queueing";
-      else if (customer.state === "seating") beginOrdering(state, customer);
-      else if (customer.state === "checkout") beginPayment(customer);
+      else if (customer.state === "seating") seatCustomer(state, customer);
+      else if (customer.state === "toCheckout") customer.state = "waitingPayment";
       else customer.state = "done";
       continue;
     }
 
-    if (customer.state === "ordering") {
-      customer.timer -= dt;
-      if (customer.timer <= 0) {
-        customer.state = "waitingFood";
-        state.kitchen.queue.push(customer.id);
-        state.message = `第 ${customer.tableId} 桌已點餐。`;
-      }
-    } else if (customer.state === "eating") {
+    if (customer.state === "eating") {
       customer.timer -= dt;
       if (customer.timer <= 0) sendToCheckout(customer);
-    } else if (customer.state === "paying") {
-      customer.timer -= dt;
-      if (customer.timer <= 0) payAndLeave(state, customer);
     }
   }
 }
 
-function beginOrdering(state, customer) {
-  const table = TABLES[customer.tableId - 1];
-  customer.x = table.seat.x;
-  customer.y = table.seat.y;
-  customer.state = "ordering";
-  customer.timer = 1.4;
+function seatCustomer(state, customer) {
+  const seat = TABLES[customer.tableId - 1].seatPoints[0];
+  customer.x = seat.x;
+  customer.y = seat.y;
+  customer.direction = seat.direction;
+  customer.state = "waitingOrder";
   customer.walking = false;
-  state.message = `第 ${customer.tableId} 桌正在點餐。`;
+  state.message = "第 " + customer.tableId + " 桌已入座，等待點餐。";
 }
 
 function sendToCheckout(customer) {
-  customer.state = "checkout";
-  customer.path = routeBetween(`table${customer.tableId}`, "checkout");
+  const table = TABLES[customer.tableId - 1];
+  customer.state = "toCheckout";
+  customer.path = [{ ...table.servicePoint }, ...findPath(table.servicePoint, POINTS.checkoutCustomer)];
   customer.walking = true;
 }
 
-function beginPayment(customer) {
-  customer.state = "paying";
-  customer.timer = 0.9;
+function beginEatingIfReady(state, customer) {
+  if (customer.state !== "waitingFood" || !customer.foodDelivered || !customer.drinkDelivered) return;
+  customer.state = "eating";
+  customer.timer = 4.2;
+  state.message = "第 " + customer.tableId + " 桌的餐點與飲料到齊，開始用餐。";
 }
 
 function payAndLeave(state, customer) {
   const income = incomePerGuest(state.upgrades.income);
   customer.paid = true;
   customer.state = "leaving";
-  customer.path = [{ x: 220, y: 420 }, POINTS.queue, POINTS.entrance, { x: POINTS.entrance.x, y: POINTS.entrance.y + 35 }];
+  customer.path = [...findPath(POINTS.checkoutCustomer, POINTS.entrance), { ...POINTS.exit }];
   state.coins += income;
   state.served += 1;
   state.lastIncome = income;
-  state.message = `客人結帳，獲得 ${income} 金幣。`;
+  state.message = "客人結帳，獲得 " + income + " 金幣。";
 }
 
 function updateKitchen(state, dt) {
-  if (!state.kitchen.active && state.kitchen.queue.length) {
-    state.kitchen.active = state.kitchen.queue.shift();
-    state.kitchen.timer = chefSeconds(state.upgrades.chef);
-    state.message = "廚師開始製作餐點。";
-  }
-  if (!state.kitchen.active) return;
-  state.kitchen.timer -= dt;
-  if (state.kitchen.timer > 0) return;
-  state.kitchen.ready.push(state.kitchen.active);
-  state.kitchen.active = null;
-  state.kitchen.timer = 0;
-  state.message = "餐點完成，等待服務員送餐。";
-}
+  const kitchen = state.kitchen;
+  kitchen.chef.walking = kitchen.chef.path.length > 0;
+  if (!kitchen.active && kitchen.queue.length) startKitchenOrder(state);
+  if (!kitchen.active) return;
 
-function updateWaiter(state, dt) {
-  state.waiter.walking = state.waiter.path.length > 0;
-  if (!state.waiter.task) return;
-  const reached = moveAlongPath(state.waiter, waiterSpeed(state.upgrades.waiter), dt);
-  if (!reached) return;
-  const { type, phase, customerId, destination } = state.waiter.task;
-  if (type === "escort" && phase === "pickup") {
-    const customer = findCustomer(state, customerId);
-    if (!customer || customer.state !== "queueing") return finishWaiterTask(state, "queue");
-    customer.state = "seating";
-    customer.path = routeBetween("queue", destination);
-    state.waiter.task.phase = "lead";
-    state.waiter.path = routeBetween("queue", destination);
-    state.message = `服務員帶客人前往第 ${customer.tableId} 桌。`;
-  } else if (type === "escort") {
-    finishWaiterTask(state, destination);
-  } else if (type === "deliver" && phase === "pickup") {
-    state.waiter.task.phase = "table";
-    state.waiter.path = routeBetween("pass", destination);
-  } else if (type === "deliver") {
-    const customer = findCustomer(state, customerId);
-    if (customer && customer.state === "waitingFood") {
-      customer.state = "eating";
-      customer.timer = 4.2;
-      state.message = `第 ${customer.tableId} 桌開始用餐。`;
+  if (kitchen.chef.path.length) {
+    if (!moveAlongPath(kitchen.chef, 85, dt)) return;
+    kitchen.chef.walking = false;
+    if (kitchen.phase === "toStove") {
+      kitchen.phase = "cooking";
+      kitchen.timer = chefSeconds(state.upgrades.chef) * 0.6;
+      state.message = "廚師在爐台烹飪主餐。";
+    } else if (kitchen.phase === "toPrep") {
+      kitchen.phase = "prepping";
+      kitchen.timer = chefSeconds(state.upgrades.chef) * 0.4;
+      state.message = "廚師在備餐台組合餐點。";
+    } else if (kitchen.phase === "toPickup") {
+      kitchen.ready.push(kitchen.active);
+      kitchen.active = null;
+      kitchen.phase = "idle";
+      kitchen.timer = 0;
+      state.message = "主餐放到出餐口，等待男服務生送餐。";
     }
-    finishWaiterTask(state, destination);
-  }
-}
-
-function assignWaiterTask(state) {
-  if (state.waiter.task) return;
-  const freeTable = state.tables.find((table) => table.id <= state.upgrades.tables && table.occupiedBy === null);
-  const queuedCustomer = state.customers.find((customer) => customer.state === "queueing" && customer.tableId === null);
-  if (freeTable && queuedCustomer) {
-    freeTable.occupiedBy = queuedCustomer.id;
-    queuedCustomer.tableId = freeTable.id;
-    state.waiter.task = { type: "escort", phase: "pickup", customerId: queuedCustomer.id, destination: `table${freeTable.id}` };
-    state.waiter.path = routeBetween(state.waiter.location, "queue");
     return;
   }
-  const readyId = state.kitchen.ready.shift();
-  if (!readyId) return;
-  const customer = findCustomer(state, readyId);
-  if (!customer || customer.state !== "waitingFood") return;
-  state.waiter.task = { type: "deliver", phase: "pickup", customerId: readyId, destination: `table${customer.tableId}` };
-  state.waiter.path = routeBetween(state.waiter.location, "pass");
+
+  if (!["cooking", "prepping"].includes(kitchen.phase)) return;
+  kitchen.timer -= dt;
+  if (kitchen.timer > 0) return;
+  if (kitchen.phase === "cooking") {
+    kitchen.phase = "toPrep";
+    kitchen.chef.path = kitchenPath(kitchen.chef, KITCHEN_POINTS.prep);
+  } else {
+    kitchen.phase = "toPickup";
+    kitchen.chef.path = kitchenPath(kitchen.chef, KITCHEN_POINTS.pickup);
+  }
 }
 
-function finishWaiterTask(state, location) {
-  state.waiter.location = location;
-  state.waiter.task = null;
-  state.waiter.path = [];
-  state.waiter.walking = false;
+function startKitchenOrder(state) {
+  state.kitchen.active = state.kitchen.queue.shift();
+  state.kitchen.phase = "toStove";
+  state.kitchen.chef.path = kitchenPath(state.kitchen.chef, KITCHEN_POINTS.stove);
+}
+
+function kitchenPath(start, end) {
+  if (end === KITCHEN_POINTS.stove) {
+    return [{ x: start.x, y: 245 }, { x: 180, y: 245 }, { x: 180, y: 150 }, { ...end }];
+  }
+  if (end === KITCHEN_POINTS.prep) {
+    return [{ x: 180, y: start.y }, { x: 180, y: 245 }, { ...end }];
+  }
+  return [{ x: start.x, y: 245 }, { x: 430, y: 245 }, { ...end }];
+}
+
+function updateMaleWaiter(state, dt) {
+  const waiter = state.waiters.male;
+  waiter.walking = waiter.path.length > 0;
+  if (!waiter.task) return;
+  if (!moveAlongPath(waiter, waiterSpeed(state.upgrades.waiter), dt)) return;
+  const task = waiter.task;
+  if (task.type === "escort" && task.phase === "pickup") {
+    const customer = findCustomer(state, task.customerId);
+    if (!customer || customer.state !== "queueing") return finishTask(waiter);
+    const table = TABLES[customer.tableId - 1];
+    customer.state = "seating";
+    customer.path = [...findPath(customer, table.servicePoint), { ...table.seatPoints[0] }];
+    task.phase = "lead";
+    waiter.path = findPath(waiter, table.servicePoint);
+    state.message = "男服務生帶客人前往第 " + customer.tableId + " 桌。";
+  } else if (task.type === "escort") {
+    finishTask(waiter);
+  } else if (task.type === "deliver" && task.phase === "pickup") {
+    task.phase = "table";
+    waiter.path = findPath(waiter, TABLES[task.tableId - 1].servicePoint);
+  } else if (task.type === "deliver") {
+    const customer = findCustomer(state, task.customerId);
+    if (customer && customer.state === "waitingFood") {
+      customer.foodDelivered = true;
+      state.message = "男服務生把主餐送到第 " + customer.tableId + " 桌。";
+      beginEatingIfReady(state, customer);
+    }
+    finishTask(waiter);
+  }
+}
+
+function assignMaleTask(state) {
+  const waiter = state.waiters.male;
+  if (waiter.task) return;
+  const freeTable = state.tables.find((table) => table.id <= state.upgrades.tables && table.occupiedBy === null && !table.dirty);
+  const customer = state.customers.find((item) => item.state === "queueing" && item.tableId === null);
+  if (freeTable && customer) {
+    freeTable.occupiedBy = customer.id;
+    customer.tableId = freeTable.id;
+    waiter.task = { type: "escort", phase: "pickup", customerId: customer.id, tableId: freeTable.id };
+    waiter.path = findPath(waiter, customer.queueSpot);
+    return;
+  }
+
+  const readyId = state.kitchen.ready.find((id) => {
+    const item = findCustomer(state, id);
+    return item && item.state === "waitingFood" && !item.foodDelivered;
+  });
+  if (!readyId) return;
+  state.kitchen.ready = state.kitchen.ready.filter((id) => id !== readyId);
+  const readyCustomer = findCustomer(state, readyId);
+  waiter.task = { type: "deliver", phase: "pickup", customerId: readyId, tableId: readyCustomer.tableId };
+  waiter.path = findPath(waiter, POINTS.pickup);
+}
+
+function updateFemaleWaiter(state, dt) {
+  const waiter = state.waiters.female;
+  waiter.walking = waiter.path.length > 0;
+  if (!waiter.task) return;
+  const task = waiter.task;
+  if (task.phase === "working" || task.phase === "mixing") {
+    task.timer -= dt;
+    if (task.timer > 0) return;
+    completeFemaleWork(state, waiter, task);
+    return;
+  }
+  if (!moveAlongPath(waiter, waiterSpeed(state.upgrades.waiter) * 0.94, dt)) return;
+
+  if (task.type === "order") {
+    task.phase = "working";
+    task.timer = 0.8;
+  } else if (task.type === "drink" && task.phase === "toBar") {
+    task.phase = "mixing";
+    task.timer = 1.2;
+    state.message = "女服務生在飲料吧製作飲品。";
+  } else if (task.type === "drink") {
+    const customer = findCustomer(state, task.customerId);
+    if (customer && customer.state === "waitingFood") {
+      customer.drinkDelivered = true;
+      state.message = "女服務生把飲料送到第 " + customer.tableId + " 桌。";
+      beginEatingIfReady(state, customer);
+    }
+    finishTask(waiter);
+  } else {
+    task.phase = "working";
+    task.timer = task.type === "clear" ? 1.1 : 0.8;
+  }
+}
+
+function completeFemaleWork(state, waiter, task) {
+  if (task.type === "order") {
+    const customer = findCustomer(state, task.customerId);
+    if (!customer) return finishTask(waiter);
+    customer.state = "waitingFood";
+    state.kitchen.queue.push(customer.id);
+    waiter.task = { type: "drink", phase: "toBar", customerId: customer.id, tableId: customer.tableId };
+    waiter.path = findPath(waiter, POINTS.drinksBar);
+    state.message = "第 " + customer.tableId + " 桌完成點餐，主餐與飲料分流製作。";
+  } else if (task.type === "drink") {
+    task.phase = "toTable";
+    waiter.path = findPath(waiter, TABLES[task.tableId - 1].servicePoint);
+  } else if (task.type === "checkout") {
+    const customer = findCustomer(state, task.customerId);
+    if (customer && customer.state === "waitingPayment") payAndLeave(state, customer);
+    finishTask(waiter);
+  } else if (task.type === "clear") {
+    const table = state.tables.find((item) => item.id === task.tableId);
+    if (table) table.dirty = false;
+    state.message = "女服務生完成第 " + task.tableId + " 桌收桌。";
+    finishTask(waiter);
+  }
+}
+
+function assignFemaleTask(state) {
+  const waiter = state.waiters.female;
+  if (waiter.task) return;
+  const checkout = state.customers.find((customer) => customer.state === "waitingPayment");
+  if (checkout) {
+    waiter.task = { type: "checkout", phase: "moving", customerId: checkout.id };
+    waiter.path = findPath(waiter, POINTS.cashierService);
+    return;
+  }
+  const order = state.customers.find((customer) => customer.state === "waitingOrder");
+  if (order) {
+    order.state = "ordering";
+    waiter.task = { type: "order", phase: "moving", customerId: order.id, tableId: order.tableId };
+    waiter.path = findPath(waiter, TABLES[order.tableId - 1].servicePoint);
+    return;
+  }
+  const dirty = state.tables.find((table) => table.dirty);
+  if (dirty) {
+    waiter.task = { type: "clear", phase: "moving", tableId: dirty.id };
+    waiter.path = findPath(waiter, TABLES[dirty.id - 1].servicePoint);
+  }
+}
+
+function finishTask(waiter) {
+  waiter.task = null;
+  waiter.path = [];
+  waiter.walking = false;
 }
 
 function removeFinishedCustomers(state) {
   const finished = state.customers.filter((customer) => customer.state === "done");
   for (const customer of finished) {
     const table = state.tables.find((item) => item.id === customer.tableId);
-    if (table) table.occupiedBy = null;
+    if (table) {
+      table.occupiedBy = null;
+      table.dirty = true;
+    }
   }
   state.customers = state.customers.filter((customer) => customer.state !== "done");
 }
@@ -277,26 +561,19 @@ function moveAlongPath(actor, speed, dt) {
     const target = actor.path[0];
     const dx = target.x - actor.x;
     const dy = target.y - actor.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance <= remaining + 0.001) {
+    const length = Math.hypot(dx, dy);
+    if (length <= remaining + 0.001) {
       actor.x = target.x;
       actor.y = target.y;
       actor.path.shift();
-      remaining -= distance;
+      remaining -= length;
     } else {
-      actor.x += dx / distance * remaining;
-      actor.y += dy / distance * remaining;
+      actor.x += dx / length * remaining;
+      actor.y += dy / length * remaining;
       remaining = 0;
     }
   }
   return actor.path.length === 0;
-}
-
-export function routeBetween(from, to) {
-  if (from === to) return [];
-  const fromPath = LOCATION_PATHS[from] || [];
-  const toPath = LOCATION_PATHS[to] || [];
-  return [...fromPath].reverse().concat([POINTS.hub], toPath).filter((point, index, list) => index === 0 || point.x !== list[index - 1].x || point.y !== list[index - 1].y);
 }
 
 export function serializeState(state, now = Date.now()) {
@@ -345,9 +622,9 @@ export function calculateOfflineIncome(save, now = Date.now()) {
   const normalized = normalizeSave(save);
   if (!normalized || !normalized.running) return { seconds: 0, amount: 0 };
   const seconds = Math.max(0, Math.min(4 * 60 * 60, (now - normalized.lastSavedAt) / 1000));
-  const tableRate = normalized.upgrades.tables / 8;
+  const tableRate = normalized.upgrades.tables / 10;
   const chefRate = 1 / chefSeconds(normalized.upgrades.chef);
-  const waiterRate = waiterSpeed(normalized.upgrades.waiter) / 900;
+  const waiterRate = waiterSpeed(normalized.upgrades.waiter) / 1_000;
   const ordersPerSecond = Math.min(tableRate, chefRate, waiterRate);
   const amount = Math.floor(seconds * ordersPerSecond * incomePerGuest(normalized.upgrades.income) * 0.25);
   return { seconds: Math.floor(seconds), amount };

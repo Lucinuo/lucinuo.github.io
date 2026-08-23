@@ -34,11 +34,13 @@ const elements = {
 const images = {
   room: loadImage("./assets/pixel-restaurant.png"),
   atlas: loadImage("./assets/pixel-atlas.png"),
+  femaleWaiter: loadImage("./assets/female-waiter.png"),
 };
 
 let state = loadState();
 let roomImage;
 let atlasImage;
+let femaleWaiterImage;
 let previousTime = performance.now();
 let accumulator = 0;
 let lastUiUpdate = 0;
@@ -147,7 +149,7 @@ function updateUi() {
   }
 
   const queue = state.customers.filter((customer) => customer.state === "queueing" || customer.state === "entering").length;
-  const dining = state.customers.filter((customer) => ["ordering", "waitingFood", "eating"].includes(customer.state)).length;
+  const dining = state.customers.filter((customer) => ["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)).length;
   elements.live.textContent = `店內 ${state.customers.length} 位客人，${queue} 位等候，${dining} 位入座，已完成 ${state.served} 單。`;
 }
 
@@ -163,18 +165,49 @@ function draw() {
   }
 
   context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
+  drawDrinksBar();
   drawLockedTables();
   drawKitchenStatus();
 
   const actors = [
-    { kind: "chef", x: 325, y: 270 },
-    { kind: "waiter", ...state.waiter },
+    { kind: "chef", ...state.kitchen.chef },
+    { kind: "maleWaiter", ...state.waiters.male },
+    { kind: "femaleWaiter", ...state.waiters.female },
     ...state.customers.map((customer) => ({ kind: "customer", ...customer })),
   ].sort((first, second) => first.y - second.y);
 
   for (const actor of actors) drawActor(actor);
   for (const table of TABLES.slice(0, state.upgrades.tables)) redrawTableTop(table);
+  drawDirtyTables();
   drawCustomerBubbles();
+}
+
+function drawDrinksBar() {
+  context.save();
+  context.fillStyle = "#17130f";
+  context.fillRect(360, 326, 82, 92);
+  context.fillStyle = "#274b35";
+  context.fillRect(364, 330, 74, 84);
+  context.fillStyle = "#d19a51";
+  context.fillRect(360, 330, 82, 14);
+  context.fillStyle = "#86512e";
+  context.fillRect(368, 348, 66, 58);
+  context.fillStyle = "#f3dfb5";
+  context.fillRect(374, 355, 20, 20);
+  context.fillStyle = "#30241d";
+  context.fillRect(378, 359, 12, 12);
+  context.fillStyle = "#d9e5dd";
+  context.fillRect(405, 352, 8, 13);
+  context.fillRect(418, 352, 8, 13);
+  context.fillStyle = "#f0c85c";
+  context.font = "900 10px monospace";
+  context.textAlign = "center";
+  context.fillText("DRINKS", 401, 397);
+  context.fillStyle = "#fff2d3";
+  context.fillRect(442, 254, 36, 18);
+  context.fillStyle = "#245934";
+  context.fillText("取餐", 460, 267);
+  context.restore();
 }
 
 function drawLockedTables() {
@@ -183,28 +216,32 @@ function drawLockedTables() {
   context.textBaseline = "middle";
   context.font = "900 14px monospace";
   for (const table of TABLES.slice(state.upgrades.tables)) {
+    const lock = table.lockRect;
     context.fillStyle = "rgba(18, 15, 12, .72)";
-    context.fillRect(table.cover.x - 38, table.cover.y - 16, table.cover.w + 76, table.cover.h + 96);
+    context.fillRect(lock.x, lock.y, lock.w, lock.h);
     context.fillStyle = "#f3dfb5";
-    context.fillText("LOCKED", table.cover.x + table.cover.w / 2, table.cover.y + table.cover.h / 2 + 25);
+    context.fillText("LOCKED", lock.x + lock.w / 2, lock.y + lock.h / 2);
   }
   context.restore();
 }
 
 function drawKitchenStatus() {
-  if (!state.kitchen.active) return;
-  const total = chefSeconds(state.upgrades.chef);
+  if (!state.kitchen.active || !["cooking", "prepping"].includes(state.kitchen.phase)) return;
+  const ratio = state.kitchen.phase === "cooking" ? 0.6 : 0.4;
+  const total = chefSeconds(state.upgrades.chef) * ratio;
   const progress = Math.max(0, 1 - state.kitchen.timer / total);
   context.fillStyle = "#17130f";
-  context.fillRect(242, 202, 142, 15);
+  context.fillRect(236, 286, 150, 15);
   context.fillStyle = "#e6b43c";
-  context.fillRect(245, 205, 136 * progress, 9);
+  context.fillRect(239, 289, 144 * Math.min(1, progress), 9);
 }
 
 function drawActor(actor) {
   if (actor.kind === "chef") {
-    const frame = state.kitchen.active ? 1 + Math.floor(state.elapsed * 4) % 2 : 0;
-    drawAtlas(frame, 1, actor.x, actor.y, 94, state.kitchen.active);
+    const frames = { cooking: 2, prepping: 1, toPickup: 3 };
+    const frame = frames[state.kitchen.phase] ?? 0;
+    const next = actor.path?.[0];
+    drawAtlas(frame, 1, actor.x, actor.y, 88, next ? next.x < actor.x : false);
     return;
   }
 
@@ -213,16 +250,33 @@ function drawActor(actor) {
   const moving = Boolean(actor.walking && actor.path?.length);
   const bob = moving ? Math.sin(state.elapsed * 12) * 2 : 0;
 
-  if (actor.kind === "waiter") {
+  if (actor.kind === "maleWaiter") {
     const carrying = actor.task?.type === "deliver" && actor.task.phase === "table";
     const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
-    drawAtlas(frame, 0, actor.x, actor.y + bob, 92, facingLeft);
+    drawAtlas(frame, 0, actor.x, actor.y + bob, 86, facingLeft);
     return;
   }
 
-  const seated = ["ordering", "waitingFood", "eating"].includes(actor.state);
+  if (actor.kind === "femaleWaiter") {
+    const carrying = actor.task?.type === "drink" && actor.task.phase === "toTable";
+    const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
+    drawFemaleWaiter(frame, actor.x, actor.y + bob, 80, facingLeft);
+    return;
+  }
+
+  const seated = ["waitingOrder", "ordering", "waitingFood", "eating"].includes(actor.state);
   const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
-  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 94 : 88, facingLeft);
+  const seatFacingLeft = seated && actor.direction === "left";
+  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
+}
+
+function drawFemaleWaiter(column, x, y, size, flip) {
+  const cell = 256;
+  context.save();
+  context.translate(Math.round(x), Math.round(y));
+  if (flip) context.scale(-1, 1);
+  context.drawImage(femaleWaiterImage, column * cell, 0, cell, cell, -size / 2, -size, size, size);
+  context.restore();
 }
 
 function drawAtlas(column, row, x, y, size, flip = false) {
@@ -239,10 +293,21 @@ function redrawTableTop(table) {
   context.drawImage(roomImage, x, y, w, h, x, y, w, h);
 }
 
+function drawDirtyTables() {
+  context.save();
+  context.fillStyle = "#8c3f24";
+  for (const tableState of state.tables.filter((table) => table.dirty)) {
+    const table = TABLES[tableState.id - 1];
+    context.fillRect(table.cover.x + 18, table.cover.y + 24, 5, 3);
+    context.fillRect(table.cover.x + 43, table.cover.y + 35, 4, 3);
+  }
+  context.restore();
+}
+
 function drawCustomerBubbles() {
   for (const customer of state.customers) {
-    if (!["ordering", "waitingFood", "eating", "paying"].includes(customer.state)) continue;
-    const labels = { ordering: "…", waitingFood: "⌛", eating: "●", paying: "$" };
+    if (!["waitingOrder", "ordering", "waitingFood", "eating", "waitingPayment"].includes(customer.state)) continue;
+    const labels = { waitingOrder: "?", ordering: "…", waitingFood: "⌛", eating: "●", waitingPayment: "$" };
     const x = customer.x + 28;
     const y = customer.y - 72;
     context.fillStyle = "#fff2d3";
@@ -283,10 +348,11 @@ document.addEventListener("visibilitychange", () => {
 });
 setInterval(saveState, 5_000);
 
-Promise.all([images.room, images.atlas])
-  .then(([room, atlas]) => {
+Promise.all([images.room, images.atlas, images.femaleWaiter])
+  .then(([room, atlas, femaleWaiter]) => {
     roomImage = room;
     atlasImage = atlas;
+    femaleWaiterImage = femaleWaiter;
     updateUi();
     requestAnimationFrame(frame);
   })

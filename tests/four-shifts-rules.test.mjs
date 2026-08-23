@@ -1,12 +1,18 @@
 import assert from "node:assert/strict";
 import {
+  BLOCKED_RECTS,
+  KITCHEN_POINTS,
+  POINTS,
+  TABLES,
   calculateOfflineIncome,
   chefSeconds,
+  findPath,
   freshState,
   hydrateState,
   incomePerGuest,
   normalizeSave,
   purchaseUpgrade,
+  pointBlocked,
   routeBetween,
   serializeState,
   tickGame,
@@ -31,15 +37,42 @@ assert.equal(purchaseUpgrade(state, "tables"), false, "insufficient coins do not
 const restaurant = freshState(2_000);
 restaurant.running = true;
 const seen = new Set();
-for (let step = 0; step < 4_000 && restaurant.served === 0; step += 1) {
+const maleTasks = new Set();
+const femaleTasks = new Set();
+const kitchenPhases = new Set();
+let seatAligned = false;
+for (let step = 0; step < 8_000; step += 1) {
   tickGame(restaurant, 0.1);
-  for (const customer of restaurant.customers) seen.add(customer.state);
+  for (const customer of restaurant.customers) {
+    seen.add(customer.state);
+    if (["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)) {
+      const seat = TABLES[customer.tableId - 1].seatPoints[0];
+      seatAligned ||= customer.x === seat.x && customer.y === seat.y;
+    }
+  }
+  if (restaurant.waiters.male.task) maleTasks.add(restaurant.waiters.male.task.type);
+  if (restaurant.waiters.female.task) femaleTasks.add(restaurant.waiters.female.task.type);
+  kitchenPhases.add(restaurant.kitchen.phase);
+  assert.equal(pointBlocked(restaurant.waiters.male), false, "male waiter stays on walkable tiles");
+  assert.equal(pointBlocked(restaurant.waiters.female), false, "female waiter stays on walkable tiles");
+  if (restaurant.served >= 1 && femaleTasks.has("clear") && restaurant.tables[0].dirty === false) break;
 }
 assert.equal(restaurant.served, 1, "a guest completes the full restaurant flow");
 assert.ok(restaurant.coins > 160, "payment increases coins");
-for (const expected of ["entering", "queueing", "seating", "ordering", "waitingFood", "eating", "checkout", "paying", "leaving"]) {
+for (const expected of ["entering", "queueing", "seating", "ordering", "waitingFood", "eating", "toCheckout", "waitingPayment", "leaving"]) {
   assert.ok(seen.has(expected), `customer reaches ${expected}`);
 }
+assert.equal(seatAligned, true, "seated customer foot anchor matches the table seat point");
+assert.deepEqual([...maleTasks].sort(), ["deliver", "escort"]);
+assert.deepEqual([...femaleTasks].sort(), ["checkout", "clear", "drink", "order"]);
+for (const phase of ["toStove", "cooking", "toPrep", "prepping", "toPickup"]) {
+  assert.ok(kitchenPhases.has(phase), `chef reaches ${phase}`);
+}
+assert.deepEqual(KITCHEN_POINTS, {
+  stove: { x: 200, y: 150 },
+  prep: { x: 300, y: 245 },
+  pickup: { x: 430, y: 270 },
+});
 
 const paused = freshState();
 tickGame(paused, 30);
@@ -51,8 +84,25 @@ for (const from of ["queue", "pass", "table1", "table2", "table3", "table4", "ch
     route.forEach((point) => {
       assert.ok(Number.isFinite(point.x) && Number.isFinite(point.y), `${from} -> ${to} has valid waypoints`);
     });
+    for (let index = 1; index < route.length; index += 1) {
+      const previous = route[index - 1];
+      const next = route[index];
+      for (let sample = 0; sample <= 20; sample += 1) {
+        const ratio = sample / 20;
+        const point = {
+          x: previous.x + (next.x - previous.x) * ratio,
+          y: previous.y + (next.y - previous.y) * ratio,
+        };
+        assert.equal(pointBlocked(point), false, `${from} -> ${to} crosses a blocked object`);
+      }
+    }
   }
 }
+assert.equal(pointBlocked({ x: 590, y: 150 }), true, "table center is blocked");
+assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point is walkable");
+assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter is blocked");
+assert.ok(findPath(POINTS.entrance, TABLES[0].servicePoint).length > 2, "grid finds a route from entrance to table");
+assert.ok(BLOCKED_RECTS.length >= 8, "collision map includes furniture and fixtures");
 
 const saved = serializeState(restaurant, 10_000);
 assert.deepEqual(normalizeSave(saved)?.upgrades, restaurant.upgrades);

@@ -79,12 +79,16 @@ check(restaurantRookieCss.includes("prefers-reduced-motion"), "Restaurant Rookie
 check(restaurantRookieCss.includes("image-rendering: pixelated") && restaurantRookieModules[0].includes("requestAnimationFrame"), "Restaurant Rookie is missing pixel rendering or its render loop");
 check(restaurantRookieCss.includes("@media (max-width: 600px)") && restaurantRookieCss.includes("@media (max-width: 900px)"), "Restaurant Rookie is missing mobile layouts");
 check(restaurantRookieModules[0].includes("localStorage") && restaurantRookieModules[0].includes("calculateOfflineIncome"), "Restaurant Rookie is missing persistence or offline income");
-check(restaurantRookieModules[1].includes("queueing") && restaurantRookieModules[1].includes("waitingFood") && restaurantRookieModules[1].includes("paying"), "Restaurant Rookie is missing the customer state machine");
+check(restaurantRookieModules[1].includes("queueing") && restaurantRookieModules[1].includes("waitingFood") && restaurantRookieModules[1].includes("waitingPayment"), "Restaurant Rookie is missing the customer state machine");
+check(restaurantRookieModules[1].includes("BLOCKED_RECTS") && restaurantRookieModules[1].includes("findPath"), "Restaurant Rookie is missing its collision map or grid pathfinding");
+check(restaurantRookieModules[1].includes("seatPoints") && restaurantRookieModules[1].includes("servicePoint"), "Restaurant Rookie is missing seat or table service points");
+check(restaurantRookieModules[1].includes("male:") && restaurantRookieModules[1].includes("female:"), "Restaurant Rookie is missing the two waiter roles");
+check(restaurantRookieModules[0].includes("drawDrinksBar") && restaurantRookieModules[1].includes("drinksBar"), "Restaurant Rookie is missing the functional drinks bar");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
-for (const asset of ["pixel-restaurant.png", "pixel-atlas.png"]) {
+for (const asset of ["pixel-restaurant.png", "pixel-atlas.png", "female-waiter.png"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing production asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 2 * 1024 * 1024, `Restaurant Rookie production asset exceeds 2 MB: ${asset}`);
