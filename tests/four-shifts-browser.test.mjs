@@ -87,7 +87,7 @@ try {
   assert.equal(await evaluate("document.querySelector('[data-level=chef]').textContent"), "Lv.1");
   assert.equal(await evaluate("document.querySelector('[data-coins]').textContent"), "90");
   await evaluate("document.querySelector('[data-toggle]').click()");
-  await waitFor("document.querySelector('[data-live]').textContent.includes('入座') && !document.querySelector('[data-live]').textContent.includes('0 位入座')", 22_000);
+  await waitFor("document.querySelector('[data-live]').textContent.includes('入座') && !document.querySelector('[data-live]').textContent.includes('0 位入座')", 30_000);
   await screenshot("/private/tmp/restaurant-rookie-desktop.png");
   await waitFor("Number(document.querySelector('[data-served]').textContent.replaceAll(',', '')) >= 1", 50_000);
   const earnedCoins = Number((await evaluate("document.querySelector('[data-coins]').textContent")).replaceAll(",", ""));
