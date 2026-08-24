@@ -168,7 +168,6 @@ function draw() {
   drawOpenEntrance();
   drawKitchenDrinkBar();
   drawLockedTables();
-  drawKitchenStatus();
 
   const actors = [
     { kind: "chef", ...state.kitchen.chef },
@@ -186,13 +185,11 @@ function draw() {
 
 function drawOpenEntrance() {
   context.save();
-  context.fillStyle = "#17130f";
-  context.fillRect(91, 461, 58, 20);
   context.fillStyle = "#294837";
-  context.fillRect(91, 481, 58, 38);
+  context.fillRect(91, 459, 58, 60);
   context.fillStyle = "#b38a45";
-  context.fillRect(98, 481, 3, 38);
-  context.fillRect(139, 481, 3, 38);
+  context.fillRect(98, 459, 3, 60);
+  context.fillRect(139, 459, 3, 60);
   context.fillStyle = "#5f3924";
   context.fillRect(84, 459, 8, 62);
   context.fillRect(148, 459, 8, 62);
@@ -210,26 +207,29 @@ function drawOpenEntrance() {
 function drawKitchenDrinkBar() {
   context.save();
   context.fillStyle = "#17130f";
-  context.fillRect(372, 70, 38, 31);
+  context.fillRect(360, 62, 76, 45);
+  context.fillStyle = "#274b35";
+  context.fillRect(363, 65, 70, 37);
   context.fillStyle = "#86512e";
-  context.fillRect(375, 73, 32, 25);
+  context.fillRect(367, 68, 31, 30);
   context.fillStyle = "#c67b3c";
-  context.fillRect(379, 77, 24, 5);
-  context.fillRect(382, 84, 4, 10);
-  context.fillRect(396, 84, 4, 10);
+  context.fillRect(370, 71, 25, 6);
   context.fillStyle = "#30241d";
-  context.fillRect(387, 75, 8, 4);
-  context.fillStyle = "#f3dfb5";
-  context.fillRect(413, 85, 9, 10);
-  context.fillRect(425, 88, 8, 8);
+  context.fillRect(375, 79, 15, 11);
   context.fillStyle = "#d19a51";
-  context.fillRect(368, 101, 60, 5);
-  context.fillStyle = "#fff2d3";
-  context.fillRect(438, 254, 42, 18);
-  context.fillStyle = "#245934";
-  context.font = "900 10px monospace";
-  context.textAlign = "center";
-  context.fillText("出餐", 459, 267);
+  context.fillRect(378, 82, 9, 3);
+  context.fillRect(381, 88, 3, 6);
+  context.fillStyle = "#f3dfb5";
+  context.fillRect(376, 94, 12, 5);
+  context.fillRect(403, 75, 11, 16);
+  context.fillRect(417, 78, 11, 13);
+  context.fillStyle = "#c67b3c";
+  context.fillRect(405, 72, 7, 3);
+  context.fillRect(419, 75, 7, 3);
+  context.fillStyle = "#30241d";
+  context.fillRect(402, 93, 28, 5);
+  context.fillStyle = "#d19a51";
+  context.fillRect(357, 102, 82, 6);
   context.restore();
 }
 
@@ -246,17 +246,6 @@ function drawLockedTables() {
     context.fillText("LOCKED", lock.x + lock.w / 2, lock.y + lock.h / 2);
   }
   context.restore();
-}
-
-function drawKitchenStatus() {
-  if (!state.kitchen.active || !["cooking", "prepping"].includes(state.kitchen.phase)) return;
-  const ratio = state.kitchen.phase === "cooking" ? 0.6 : 0.4;
-  const total = chefSeconds(state.upgrades.chef) * ratio;
-  const progress = Math.max(0, 1 - state.kitchen.timer / total);
-  context.fillStyle = "#17130f";
-  context.fillRect(236, 286, 150, 15);
-  context.fillStyle = "#e6b43c";
-  context.fillRect(239, 289, 144 * Math.min(1, progress), 9);
 }
 
 function drawActor(actor) {
@@ -298,9 +287,7 @@ function drawActor(actor) {
   const seated = ["waitingOrder", "ordering", "waitingFood", "eating"].includes(actor.state);
   const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
   const seatFacingLeft = seated && actor.direction === "left";
-  const seat = seated ? TABLES[actor.tableId - 1].seatPoints[0] : null;
-  const offset = seat?.spriteOffset || { x: 0, y: 0 };
-  drawAtlas(frame, actor.variant ? 3 : 2, actor.x + offset.x, actor.y + offset.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
+  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
 }
 
 function drawFemaleWaiter(column, x, y, size, flip) {
@@ -339,24 +326,9 @@ function drawDirtyTables() {
 
 function drawCustomerBubbles() {
   for (const customer of state.customers) {
-    if (customer.state === "queueing" && customer.mood !== "normal") {
+    if (customer.state === "queueing" && !customer.walking && customer.path.length === 0 && customer.mood !== "normal") {
       drawWaitingMood(customer);
-      continue;
     }
-    if (!["waitingOrder", "ordering", "waitingFood", "eating", "waitingPayment"].includes(customer.state)) continue;
-    const labels = { waitingOrder: "?", ordering: "…", waitingFood: "⌛", eating: "●", waitingPayment: "$" };
-    const x = customer.x + 28;
-    const y = customer.y - 72;
-    context.fillStyle = "#fff2d3";
-    context.strokeStyle = "#17130f";
-    context.lineWidth = 3;
-    context.fillRect(x - 14, y - 14, 28, 25);
-    context.strokeRect(x - 14, y - 14, 28, 25);
-    context.fillStyle = customer.state === "eating" ? "#8c3f24" : "#245934";
-    context.font = "900 16px monospace";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(labels[customer.state], x, y - 1);
   }
 }
 

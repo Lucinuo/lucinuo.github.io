@@ -82,6 +82,7 @@ try {
   };
 
   await waitFor("document.readyState === 'complete' && document.querySelector('[data-toggle]') && document.querySelector('[data-canvas]').clientWidth > 500");
+  assert.deepEqual(await evaluate("(() => { const canvas = document.querySelector('[data-canvas]'); return { width: canvas.width, height: canvas.height }; })()"), { width: 960, height: 540 }, "canvas keeps 960 x 540 internal coordinates");
   assert.equal(await evaluate("document.querySelector('[data-coins]').textContent"), "160");
   await evaluate("document.querySelector('[data-upgrade=chef]').click()");
   assert.equal(await evaluate("document.querySelector('[data-level=chef]').textContent"), "Lv.1");
@@ -92,6 +93,7 @@ try {
   await waitFor("Number(document.querySelector('[data-served]').textContent.replaceAll(',', '')) >= 1", 50_000);
   const earnedCoins = Number((await evaluate("document.querySelector('[data-coins]').textContent")).replaceAll(",", ""));
   assert.ok(earnedCoins > 90, "browser flow increases coins");
+  await screenshot("/private/tmp/restaurant-rookie-flow.png");
 
   await command("Page.reload", { ignoreCache: true }, sessionId);
   await waitFor("document.readyState === 'complete' && document.querySelector('[data-level=chef]')?.textContent === 'Lv.1'");
@@ -110,7 +112,7 @@ try {
 
   assert.deepEqual(browserErrors, [], `browser has no console errors: ${browserErrors.join("; ")}`);
   console.log("Restaurant Rookie browser tests passed");
-  console.log("Screenshots: /private/tmp/restaurant-rookie-desktop.png, /private/tmp/restaurant-rookie-mobile.png");
+  console.log("Screenshots: /private/tmp/restaurant-rookie-desktop.png, /private/tmp/restaurant-rookie-flow.png, /private/tmp/restaurant-rookie-mobile.png");
 } finally {
   socket?.close();
   chrome.kill("SIGTERM");
