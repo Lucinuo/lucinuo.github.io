@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   BLOCKED_RECTS,
+  CASHIER_STAFF_ZONE,
   KITCHEN_BLOCKED_RECTS,
   KITCHEN_POINTS,
   POINTS,
@@ -81,7 +82,7 @@ for (let step = 0; step < 8_000; step += 1) {
   ];
   const collisionSpace = (point) => point.x <= 459 && point.y <= 299
     ? "kitchen"
-    : point.x >= 240 && point.x <= 360 && point.y >= 300 && point.y < 330
+    : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
       ? "cashier"
       : "public";
   for (let first = 0; first < actors.length; first += 1) {
@@ -109,8 +110,9 @@ for (const phase of ["mixing", "toPickup", "toIdle"]) {
 assert.deepEqual(KITCHEN_POINTS, {
   stove: { x: 200, y: 140 },
   prep: { x: 300, y: 250 },
-  drinkBar: { x: 400, y: 140 },
-  pickup: { x: 440, y: 270 },
+  drinkBar: { x: 440, y: 140 },
+  pickup: { x: 400, y: 270 },
+  drinkPickup: { x: 440, y: 270 },
 });
 for (const orderState of ["available", "seating", "ordering", "waitingFood", "eating", "checkout", "dirty"]) {
   assert.ok(tableOrderStates.has(orderState), `table reaches ${orderState}`);
@@ -146,6 +148,7 @@ assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point i
 assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter is blocked");
 assert.equal(pointBlocked({ x: 300, y: 290 }), true, "white kitchen wall is blocked");
 assert.equal(pointBlocked(POINTS.pickupWaiter), false, "waiter pickup stays on the dining-room floor");
+assert.equal(pointBlocked(POINTS.drinkPickupWaiter, { allowCashier: true }), false, "drink pickup stays on staff-accessible dining floor");
 assert.equal(pointBlocked(KITCHEN_POINTS.pickup), true, "kitchen-side pickup is not public floor");
 assert.equal(kitchenPointBlocked(KITCHEN_POINTS.pickup), false, "kitchen-side pickup remains reachable by chefs");
 assert.ok(findPath(POINTS.entranceInside, TABLES[0].servicePoint).length > 2, "grid finds a route from entrance to table");
@@ -178,6 +181,60 @@ for (const from of Object.values(KITCHEN_POINTS)) {
   }
 }
 assert.ok(KITCHEN_BLOCKED_RECTS.length >= 3, "kitchen equipment has collision areas");
+
+for (const table of TABLES) {
+  assert.equal(pointBlocked(table.servicePoint), false, `table ${table.id} service point stays outside all furniture collision`);
+  const head = { left: table.servicePoint.x - 24, right: table.servicePoint.x + 24, top: table.servicePoint.y - 80, bottom: table.servicePoint.y - 35 };
+  const cover = { left: table.cover.x, right: table.cover.x + table.cover.w, top: table.cover.y, bottom: table.cover.y + table.cover.h };
+  const overlaps = head.left < cover.right && head.right > cover.left && head.top < cover.bottom && head.bottom > cover.top;
+  assert.equal(overlaps, false, `table ${table.id} service point keeps the waiter's head outside the tabletop foreground`);
+  const lock = { left: table.lockRect.x, right: table.lockRect.x + table.lockRect.w, top: table.lockRect.y, bottom: table.lockRect.y + table.lockRect.h };
+  assert.equal(table.servicePoint.x >= lock.left && table.servicePoint.x <= lock.right && table.servicePoint.y >= lock.top && table.servicePoint.y <= lock.bottom, false, `table ${table.id} service point is outside its locked overlay`);
+}
+
+const stress = freshState();
+stress.running = true;
+stress.upgrades.tables = 4;
+stress.upgrades.chef = 4;
+stress.upgrades.waiter = 4;
+let maxGuests = 0;
+const stressStates = new Set();
+for (let step = 0; step < 12_000; step += 1) {
+  tickGame(stress, 0.1);
+  maxGuests = Math.max(maxGuests, stress.customers.length);
+  stress.customers.forEach((customer) => stressStates.add(customer.state));
+  for (const customer of stress.customers.filter((item) => !item.seated)) {
+    const allowQueue = ["entering", "queueing", "waitingEscort", "seating", "waitingQueueExit", "leaving"].includes(customer.state);
+    assert.equal(pointBlocked(customer, { allowQueue }), false, `stress customer ${customer.id} keeps its foot anchor on legal floor`);
+  }
+  assert.equal(pointBlocked(stress.waiters.male), false, "stress male waiter stays outside blocked areas");
+  assert.equal(pointBlocked(stress.waiters.female, { allowCashier: true }), false, "stress female waiter stays outside blocked areas");
+  assert.equal(kitchenPointBlocked(stress.kitchen.chef), false, "stress main chef stays outside equipment");
+  assert.equal(kitchenPointBlocked(stress.kitchen.drinkChef), false, "stress drink chef stays outside equipment");
+  const movingActors = [
+    stress.kitchen.chef,
+    stress.kitchen.drinkChef,
+    stress.waiters.male,
+    stress.waiters.female,
+    ...stress.customers.filter((customer) => !customer.seated),
+  ];
+  const stressSpace = (point) => point.x <= 459 && point.y <= 299
+    ? "kitchen"
+    : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
+      ? "cashier"
+      : "public";
+  for (let first = 0; first < movingActors.length; first += 1) {
+    for (let second = first + 1; second < movingActors.length; second += 1) {
+      if (stressSpace(movingActors[first]) !== stressSpace(movingActors[second])) continue;
+      assert.ok(Math.hypot(movingActors[first].x - movingActors[second].x, movingActors[first].y - movingActors[second].y) >= 33.9, "six-guest stress actors never interpenetrate");
+    }
+  }
+}
+assert.ok(maxGuests >= 6, "stress run holds at least six simultaneous guests");
+assert.ok(stress.served >= 8, "stress run keeps completing orders instead of deadlocking");
+for (const expected of ["queueing", "seatingTransition", "waitingFood", "eating", "waitingPayment", "leaving"]) {
+  assert.ok(stressStates.has(expected), `stress run reaches ${expected}`);
+}
 
 const waitingRestaurant = freshState();
 waitingRestaurant.running = true;

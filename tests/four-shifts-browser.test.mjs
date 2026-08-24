@@ -90,6 +90,10 @@ try {
   await evaluate("document.querySelector('[data-toggle]').click()");
   await waitFor("document.querySelector('[data-live]').textContent.includes('入座') && !document.querySelector('[data-live]').textContent.includes('0 位入座')", 30_000);
   await screenshot("/private/tmp/restaurant-rookie-desktop.png");
+  await evaluate("document.querySelector('[data-debug]').click()");
+  assert.equal(await evaluate("document.querySelector('[data-debug]').getAttribute('aria-pressed')"), "true", "scene debug overlay can be enabled");
+  await screenshot("/private/tmp/restaurant-rookie-debug.png");
+  await evaluate("document.querySelector('[data-debug]').click()");
   await waitFor("Number(document.querySelector('[data-served]').textContent.replaceAll(',', '')) >= 1", 50_000);
   const earnedCoins = Number((await evaluate("document.querySelector('[data-coins]').textContent")).replaceAll(",", ""));
   assert.ok(earnedCoins > 90, "browser flow increases coins");
@@ -112,7 +116,7 @@ try {
 
   assert.deepEqual(browserErrors, [], `browser has no console errors: ${browserErrors.join("; ")}`);
   console.log("Restaurant Rookie browser tests passed");
-  console.log("Screenshots: /private/tmp/restaurant-rookie-desktop.png, /private/tmp/restaurant-rookie-flow.png, /private/tmp/restaurant-rookie-mobile.png");
+  console.log("Screenshots: /private/tmp/restaurant-rookie-desktop.png, /private/tmp/restaurant-rookie-debug.png, /private/tmp/restaurant-rookie-flow.png, /private/tmp/restaurant-rookie-mobile.png");
 } finally {
   socket?.close();
   chrome.kill("SIGTERM");

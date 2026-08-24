@@ -27,6 +27,7 @@ h1 { margin: 0; font: 900 clamp(1.35rem, 3vw, 2.35rem)/1.15 Georgia, "Noto Serif
 .header-actions { display: flex; align-items: center; gap: .5rem; }
 .header-actions button, .header-actions a { min-height: 2.75rem; border: 3px solid var(--ink); padding: .5rem .75rem; color: var(--ink); background: var(--cream); font-weight: 900; text-decoration: none; box-shadow: 2px 2px 0 #090807; }
 .header-actions .start-button { color: #fff8da; background: var(--green-light); }
+.header-actions .debug-button[aria-pressed="true"] { color: #fff8da; background: #356a80; }
 .header-actions .reset-button { background: #dca54c; }
 .header-actions button:active { transform: translate(2px, 2px); box-shadow: none; }
 
@@ -70,7 +71,7 @@ canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; backgr
 
 @media (max-width: 600px) {
   .game-header { align-items: stretch; flex-direction: column; }
-  .header-actions { display: grid; grid-template-columns: 1fr 1fr auto; }
+  .header-actions { display: grid; grid-template-columns: 1fr 1fr 1fr auto; }
   .header-actions button, .header-actions a { min-height: 2.55rem; padding-inline: .55rem; font-size: .78rem; }
   .hud { grid-template-columns: 1fr 1fr; }
   .hud p:nth-child(2) { border-right: 0; }

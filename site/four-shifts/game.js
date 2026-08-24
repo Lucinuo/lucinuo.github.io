@@ -1,6 +1,15 @@
 import {
+  BLOCKED_RECTS,
+  CASHIER_STAFF_ZONE,
+  KITCHEN_BLOCKED_RECTS,
+  KITCHEN_POINTS,
+  KITCHEN_WALKABLE_AREA,
+  POINTS,
+  QUEUE_PROTECTED_ZONE,
   SAVE_KEY,
   TABLES,
+  WAITING_QUEUE_POINTS,
+  WALKABLE_AREAS,
   calculateOfflineIncome,
   chefSeconds,
   freshState,
@@ -12,7 +21,7 @@ import {
   tickGame,
   upgradeCost,
   waiterSpeed,
-} from "./game-rules.mjs";
+} from "./game-rules.mjs?v=20260824-3";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -27,6 +36,7 @@ const elements = {
   live: document.querySelector("[data-live]"),
   offline: document.querySelector("[data-offline]"),
   toggle: document.querySelector("[data-toggle]"),
+  debug: document.querySelector("[data-debug]"),
   reset: document.querySelector("[data-reset]"),
   upgrades: [...document.querySelectorAll("[data-upgrade]")],
 };
@@ -46,6 +56,7 @@ let accumulator = 0;
 let lastUiUpdate = 0;
 let resetArmed = false;
 let resetTimer;
+let debugVisible = false;
 saveState();
 
 function loadImage(source) {
@@ -125,6 +136,12 @@ function buyUpgrade(event) {
   updateUi();
 }
 
+function toggleDebugOverlay() {
+  debugVisible = !debugVisible;
+  elements.debug.setAttribute("aria-pressed", String(debugVisible));
+  elements.debug.textContent = debugVisible ? "關閉檢查" : "場景檢查";
+}
+
 function updateUi() {
   elements.coins.textContent = Math.floor(state.coins).toLocaleString("zh-TW");
   elements.served.textContent = state.served.toLocaleString("zh-TW");
@@ -165,72 +182,34 @@ function draw() {
   }
 
   context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
-  drawOpenEntrance();
-  drawKitchenDrinkBar();
   drawLockedTables();
 
-  const actors = [
+  for (const actor of [
     { kind: "chef", ...state.kitchen.chef },
     { kind: "drinkChef", ...state.kitchen.drinkChef },
-    { kind: "maleWaiter", ...state.waiters.male },
-    { kind: "femaleWaiter", ...state.waiters.female },
-    ...state.customers.map((customer) => ({ kind: "customer", ...customer })),
-  ].sort((first, second) => first.y - second.y);
+  ].sort((first, second) => first.y - second.y)) drawActor(actor);
+  redrawKitchenFront();
 
-  for (const actor of actors) drawActor(actor);
+  for (const customer of state.customers.filter((item) => item.seated).sort((first, second) => first.y - second.y)) {
+    drawActor({ kind: "customer", ...customer });
+  }
   for (const table of TABLES.slice(0, state.upgrades.tables)) redrawTableTop(table);
+
+  const femaleAtCashier = inside(state.waiters.female, CASHIER_STAFF_ZONE);
+  if (femaleAtCashier) {
+    drawActor({ kind: "femaleWaiter", ...state.waiters.female });
+    redrawCashierFront();
+  }
+
+  const publicActors = [
+    { kind: "maleWaiter", ...state.waiters.male },
+    ...(!femaleAtCashier ? [{ kind: "femaleWaiter", ...state.waiters.female }] : []),
+    ...state.customers.filter((customer) => !customer.seated).map((customer) => ({ kind: "customer", ...customer })),
+  ].sort((first, second) => first.y - second.y);
+  for (const actor of publicActors) drawActor(actor);
   drawDirtyTables();
   drawCustomerBubbles();
-}
-
-function drawOpenEntrance() {
-  context.save();
-  context.fillStyle = "#294837";
-  context.fillRect(91, 459, 58, 60);
-  context.fillStyle = "#b38a45";
-  context.fillRect(98, 459, 3, 60);
-  context.fillRect(139, 459, 3, 60);
-  context.fillStyle = "#5f3924";
-  context.fillRect(84, 459, 8, 62);
-  context.fillRect(148, 459, 8, 62);
-  context.fillStyle = "#274b35";
-  context.fillRect(84, 466, 8, 48);
-  context.fillRect(148, 466, 8, 48);
-  context.fillStyle = "#d19a51";
-  context.fillRect(87, 487, 3, 3);
-  context.fillRect(150, 487, 3, 3);
-  context.fillStyle = "#8a8175";
-  context.fillRect(86, 516, 68, 5);
-  context.restore();
-}
-
-function drawKitchenDrinkBar() {
-  context.save();
-  context.fillStyle = "#17130f";
-  context.fillRect(360, 62, 76, 45);
-  context.fillStyle = "#274b35";
-  context.fillRect(363, 65, 70, 37);
-  context.fillStyle = "#86512e";
-  context.fillRect(367, 68, 31, 30);
-  context.fillStyle = "#c67b3c";
-  context.fillRect(370, 71, 25, 6);
-  context.fillStyle = "#30241d";
-  context.fillRect(375, 79, 15, 11);
-  context.fillStyle = "#d19a51";
-  context.fillRect(378, 82, 9, 3);
-  context.fillRect(381, 88, 3, 6);
-  context.fillStyle = "#f3dfb5";
-  context.fillRect(376, 94, 12, 5);
-  context.fillRect(403, 75, 11, 16);
-  context.fillRect(417, 78, 11, 13);
-  context.fillStyle = "#c67b3c";
-  context.fillRect(405, 72, 7, 3);
-  context.fillRect(419, 75, 7, 3);
-  context.fillStyle = "#30241d";
-  context.fillRect(402, 93, 28, 5);
-  context.fillStyle = "#d19a51";
-  context.fillRect(357, 102, 82, 6);
-  context.restore();
+  if (debugVisible) drawDebugOverlay();
 }
 
 function drawLockedTables() {
@@ -273,7 +252,7 @@ function drawActor(actor) {
   if (actor.kind === "maleWaiter") {
     const carrying = actor.task?.type === "deliver" && actor.task.phase === "table";
     const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
-    drawAtlas(frame, 0, actor.x, actor.y + bob, 86, facingLeft);
+    drawAtlas(frame, 0, actor.x, actor.y + bob, 80, facingLeft);
     return;
   }
 
@@ -284,7 +263,7 @@ function drawActor(actor) {
     return;
   }
 
-  const seated = ["waitingOrder", "ordering", "waitingFood", "eating"].includes(actor.state);
+  const seated = Boolean(actor.seated);
   const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
   const seatFacingLeft = seated && actor.direction === "left";
   drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
@@ -311,6 +290,90 @@ function drawAtlas(column, row, x, y, size, flip = false) {
 function redrawTableTop(table) {
   const { x, y, w, h } = table.cover;
   context.drawImage(roomImage, x, y, w, h, x, y, w, h);
+}
+
+function redrawKitchenFront() {
+  context.drawImage(roomImage, 0, 281, 460, 34, 0, 281, 460, 34);
+}
+
+function redrawCashierFront() {
+  context.drawImage(roomImage, 220, 390, 145, 66, 220, 390, 145, 66);
+}
+
+function drawDebugOverlay() {
+  context.save();
+  context.font = "700 9px monospace";
+  context.textBaseline = "bottom";
+  fillDebugRects(WALKABLE_AREAS, "rgba(44, 190, 91, .18)", "#50df7d");
+  fillDebugRects(BLOCKED_RECTS, "rgba(221, 55, 55, .22)", "#ff6666");
+  fillDebugRects([KITCHEN_WALKABLE_AREA], "rgba(36, 174, 210, .24)", "#48d9f2");
+  fillDebugRects([QUEUE_PROTECTED_ZONE], "rgba(199, 171, 48, .25)", "#f2d251");
+  fillDebugRects([CASHIER_STAFF_ZONE], "rgba(82, 119, 228, .28)", "#8ba5ff");
+  fillDebugRects(KITCHEN_BLOCKED_RECTS, "rgba(221, 55, 55, .28)", "#ff6666");
+
+  for (const table of TABLES) {
+    drawDebugPoint(table.seatApproachPoint, `T${table.id} approach`, "#ffe46a");
+    drawDebugPoint(table.seatPoints[0], `T${table.id} seat`, "#62e7ff");
+    drawDebugPoint(table.servicePoint, `T${table.id} service`, "#ff9ef2");
+  }
+  for (const [label, point, color] of [
+    ["cashier customer", POINTS.checkoutCustomer, "#ffe46a"],
+    ["cashier staff", POINTS.cashierService, "#8ba5ff"],
+    ["food kitchen", KITCHEN_POINTS.pickup, "#48d9f2"],
+    ["food waiter", POINTS.pickupWaiter, "#ff9ef2"],
+    ["drink kitchen", KITCHEN_POINTS.drinkPickup, "#48d9f2"],
+    ["drink waiter", POINTS.drinkPickupWaiter, "#ff9ef2"],
+    ["drink bar", KITCHEN_POINTS.drinkBar, "#62e7ff"],
+  ]) drawDebugPoint(point, label, color);
+  WAITING_QUEUE_POINTS.forEach((point, index) => drawDebugPoint(point, `queue ${index + 1}`, "#f2d251"));
+
+  for (const actor of [
+    [state.kitchen.chef, "chef"],
+    [state.kitchen.drinkChef, "drink chef"],
+    [state.waiters.male, "male"],
+    [state.waiters.female, "female"],
+    ...state.customers.map((customer) => [customer, `C${customer.id}`]),
+  ]) drawDebugAnchor(actor[0], actor[1]);
+  context.restore();
+}
+
+function fillDebugRects(rects, fill, stroke) {
+  context.fillStyle = fill;
+  context.strokeStyle = stroke;
+  context.lineWidth = 1;
+  for (const rect of rects) {
+    const width = (rect.right ?? rect.left) - rect.left;
+    const height = (rect.bottom ?? rect.top) - rect.top;
+    context.fillRect(rect.left, rect.top, width, height);
+    context.strokeRect(rect.left + 0.5, rect.top + 0.5, width - 1, height - 1);
+  }
+}
+
+function drawDebugPoint(point, label, color) {
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = 2;
+  context.beginPath();
+  context.arc(point.x, point.y, 5, 0, Math.PI * 2);
+  context.stroke();
+  context.fillText(label, point.x + 7, point.y - 5);
+}
+
+function drawDebugAnchor(actor, label) {
+  context.strokeStyle = "#ffffff";
+  context.fillStyle = "#ffffff";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(actor.x - 6, actor.y);
+  context.lineTo(actor.x + 6, actor.y);
+  context.moveTo(actor.x, actor.y - 6);
+  context.lineTo(actor.x, actor.y + 6);
+  context.stroke();
+  context.fillText(label, actor.x + 7, actor.y + 1);
+}
+
+function inside(point, rect) {
+  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
 }
 
 function drawDirtyTables() {
@@ -368,6 +431,7 @@ function frame(time) {
 }
 
 elements.toggle.addEventListener("click", toggleRestaurant);
+elements.debug.addEventListener("click", toggleDebugOverlay);
 elements.reset.addEventListener("click", resetGame);
 elements.upgrades.forEach((button) => button.addEventListener("click", buyUpgrade));
 window.addEventListener("pagehide", saveState);
