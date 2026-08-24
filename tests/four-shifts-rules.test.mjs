@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import {
   BLOCKED_RECTS,
+  KITCHEN_BLOCKED_RECTS,
   KITCHEN_POINTS,
   POINTS,
   TABLES,
+  WAITING_QUEUE_POINTS,
   calculateOfflineIncome,
   chefSeconds,
   findPath,
   freshState,
   hydrateState,
   incomePerGuest,
+  kitchenPointBlocked,
   normalizeSave,
   purchaseUpgrade,
   pointBlocked,
@@ -40,6 +43,8 @@ const seen = new Set();
 const maleTasks = new Set();
 const femaleTasks = new Set();
 const kitchenPhases = new Set();
+const drinkPhases = new Set();
+const tableOrderStates = new Set();
 let seatAligned = false;
 for (let step = 0; step < 8_000; step += 1) {
   tickGame(restaurant, 0.1);
@@ -53,8 +58,17 @@ for (let step = 0; step < 8_000; step += 1) {
   if (restaurant.waiters.male.task) maleTasks.add(restaurant.waiters.male.task.type);
   if (restaurant.waiters.female.task) femaleTasks.add(restaurant.waiters.female.task.type);
   kitchenPhases.add(restaurant.kitchen.phase);
+  drinkPhases.add(restaurant.kitchen.drinkPhase);
+  restaurant.tables.forEach((table) => tableOrderStates.add(table.orderState));
   assert.equal(pointBlocked(restaurant.waiters.male), false, "male waiter stays on walkable tiles");
   assert.equal(pointBlocked(restaurant.waiters.female), false, "female waiter stays on walkable tiles");
+  assert.equal(kitchenPointBlocked(restaurant.kitchen.chef), false, "main chef stays in kitchen walkable tiles");
+  assert.equal(kitchenPointBlocked(restaurant.kitchen.drinkChef), false, "drink chef stays in kitchen walkable tiles");
+  assert.notDeepEqual(
+    { x: restaurant.kitchen.chef.x, y: restaurant.kitchen.chef.y },
+    { x: restaurant.kitchen.drinkChef.x, y: restaurant.kitchen.drinkChef.y },
+    "two chefs do not occupy the same work point"
+  );
   if (restaurant.served >= 1 && femaleTasks.has("clear") && restaurant.tables[0].dirty === false) break;
 }
 assert.equal(restaurant.served, 1, "a guest completes the full restaurant flow");
@@ -68,11 +82,19 @@ assert.deepEqual([...femaleTasks].sort(), ["checkout", "clear", "drink", "order"
 for (const phase of ["toStove", "cooking", "toPrep", "prepping", "toPickup"]) {
   assert.ok(kitchenPhases.has(phase), `chef reaches ${phase}`);
 }
+for (const phase of ["mixing", "toPickup", "toIdle"]) {
+  assert.ok(drinkPhases.has(phase), `drink chef reaches ${phase}`);
+}
 assert.deepEqual(KITCHEN_POINTS, {
-  stove: { x: 200, y: 150 },
-  prep: { x: 300, y: 245 },
-  pickup: { x: 430, y: 270 },
+  stove: { x: 200, y: 140 },
+  prep: { x: 300, y: 240 },
+  drinkBar: { x: 400, y: 140 },
+  pickup: { x: 380, y: 260 },
+  drinkPickup: { x: 440, y: 260 },
 });
+for (const orderState of ["available", "seating", "ordering", "waitingFood", "eating", "checkout", "dirty"]) {
+  assert.ok(tableOrderStates.has(orderState), `table reaches ${orderState}`);
+}
 
 const paused = freshState();
 tickGame(paused, 30);
@@ -101,8 +123,46 @@ for (const from of ["queue", "pass", "table1", "table2", "table3", "table4", "ch
 assert.equal(pointBlocked({ x: 590, y: 150 }), true, "table center is blocked");
 assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point is walkable");
 assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter is blocked");
-assert.ok(findPath(POINTS.entrance, TABLES[0].servicePoint).length > 2, "grid finds a route from entrance to table");
+assert.ok(findPath(POINTS.entranceInside, TABLES[0].servicePoint).length > 2, "grid finds a route from entrance to table");
 assert.ok(BLOCKED_RECTS.length >= 8, "collision map includes furniture and fixtures");
+assert.equal(WAITING_QUEUE_POINTS.length, 3, "rug queue has three fixed positions");
+assert.equal(new Set(WAITING_QUEUE_POINTS.map((point) => `${point.x},${point.y}`)).size, 3, "queue positions do not overlap");
+assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 120 && point.y >= 370 && point.y <= 450), "queue stays on the entrance rug");
+for (const point of Object.values(KITCHEN_POINTS)) assert.equal(kitchenPointBlocked(point), false, "kitchen work point is walkable");
+for (const from of Object.values(KITCHEN_POINTS)) {
+  for (const to of Object.values(KITCHEN_POINTS)) {
+    const route = findPath(from, to, "kitchen");
+    route.forEach((point) => assert.equal(kitchenPointBlocked(point), false, "chef route avoids kitchen equipment"));
+    for (let index = 1; index < route.length; index += 1) {
+      const previous = route[index - 1];
+      const next = route[index];
+      for (let sample = 0; sample <= 20; sample += 1) {
+        const ratio = sample / 20;
+        assert.equal(kitchenPointBlocked({
+          x: previous.x + (next.x - previous.x) * ratio,
+          y: previous.y + (next.y - previous.y) * ratio,
+        }), false, "chef path segment crosses kitchen equipment");
+      }
+    }
+  }
+}
+assert.ok(KITCHEN_BLOCKED_RECTS.length >= 3, "kitchen equipment has collision areas");
+
+const waitingRestaurant = freshState();
+waitingRestaurant.running = true;
+waitingRestaurant.tables[0].occupiedBy = 999;
+let sawImpatient = false;
+let sawAngry = false;
+let sawAbandon = false;
+for (let step = 0; step < 380; step += 1) {
+  tickGame(waitingRestaurant, 0.1);
+  sawImpatient ||= waitingRestaurant.customers.some((customer) => customer.mood === "impatient");
+  sawAngry ||= waitingRestaurant.customers.some((customer) => customer.mood === "angry");
+  sawAbandon ||= waitingRestaurant.customers.some((customer) => customer.abandoned && customer.state === "leaving");
+}
+assert.equal(sawImpatient, true, "waiting guest shows an impatient mood after 10 seconds");
+assert.equal(sawAngry, true, "waiting guest shows an angry mood after 20 seconds");
+assert.equal(sawAbandon, true, "guest waiting over 30 seconds walks back out");
 
 const saved = serializeState(restaurant, 10_000);
 assert.deepEqual(normalizeSave(saved)?.upgrades, restaurant.upgrades);

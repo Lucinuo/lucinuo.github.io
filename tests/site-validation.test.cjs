@@ -83,7 +83,9 @@ check(restaurantRookieModules[1].includes("queueing") && restaurantRookieModules
 check(restaurantRookieModules[1].includes("BLOCKED_RECTS") && restaurantRookieModules[1].includes("findPath"), "Restaurant Rookie is missing its collision map or grid pathfinding");
 check(restaurantRookieModules[1].includes("seatPoints") && restaurantRookieModules[1].includes("servicePoint"), "Restaurant Rookie is missing seat or table service points");
 check(restaurantRookieModules[1].includes("male:") && restaurantRookieModules[1].includes("female:"), "Restaurant Rookie is missing the two waiter roles");
-check(restaurantRookieModules[0].includes("drawDrinksBar") && restaurantRookieModules[1].includes("drinksBar"), "Restaurant Rookie is missing the functional drinks bar");
+check(restaurantRookieModules[0].includes("drawKitchenDrinkBar") && restaurantRookieModules[1].includes("drinkBar"), "Restaurant Rookie is missing the kitchen drinks bar");
+check(restaurantRookieModules[0].includes("drawOpenEntrance") && restaurantRookieModules[1].includes("WAITING_QUEUE_POINTS"), "Restaurant Rookie is missing its open entrance or rug queue");
+check(restaurantRookieModules[1].includes("drinkChef") && restaurantRookieModules[1].includes("KITCHEN_BLOCKED_RECTS"), "Restaurant Rookie is missing its second chef or kitchen collision map");
 check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie loads a third-party script");
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);

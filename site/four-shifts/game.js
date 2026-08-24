@@ -165,12 +165,14 @@ function draw() {
   }
 
   context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
-  drawDrinksBar();
+  drawOpenEntrance();
+  drawKitchenDrinkBar();
   drawLockedTables();
   drawKitchenStatus();
 
   const actors = [
     { kind: "chef", ...state.kitchen.chef },
+    { kind: "drinkChef", ...state.kitchen.drinkChef },
     { kind: "maleWaiter", ...state.waiters.male },
     { kind: "femaleWaiter", ...state.waiters.female },
     ...state.customers.map((customer) => ({ kind: "customer", ...customer })),
@@ -182,31 +184,52 @@ function draw() {
   drawCustomerBubbles();
 }
 
-function drawDrinksBar() {
+function drawOpenEntrance() {
   context.save();
   context.fillStyle = "#17130f";
-  context.fillRect(360, 326, 82, 92);
+  context.fillRect(91, 461, 58, 20);
+  context.fillStyle = "#294837";
+  context.fillRect(91, 481, 58, 38);
+  context.fillStyle = "#b38a45";
+  context.fillRect(98, 481, 3, 38);
+  context.fillRect(139, 481, 3, 38);
+  context.fillStyle = "#5f3924";
+  context.fillRect(84, 459, 8, 62);
+  context.fillRect(148, 459, 8, 62);
   context.fillStyle = "#274b35";
-  context.fillRect(364, 330, 74, 84);
+  context.fillRect(84, 466, 8, 48);
+  context.fillRect(148, 466, 8, 48);
   context.fillStyle = "#d19a51";
-  context.fillRect(360, 330, 82, 14);
+  context.fillRect(87, 487, 3, 3);
+  context.fillRect(150, 487, 3, 3);
+  context.fillStyle = "#8a8175";
+  context.fillRect(86, 516, 68, 5);
+  context.restore();
+}
+
+function drawKitchenDrinkBar() {
+  context.save();
+  context.fillStyle = "#17130f";
+  context.fillRect(372, 70, 38, 31);
   context.fillStyle = "#86512e";
-  context.fillRect(368, 348, 66, 58);
-  context.fillStyle = "#f3dfb5";
-  context.fillRect(374, 355, 20, 20);
+  context.fillRect(375, 73, 32, 25);
+  context.fillStyle = "#c67b3c";
+  context.fillRect(379, 77, 24, 5);
+  context.fillRect(382, 84, 4, 10);
+  context.fillRect(396, 84, 4, 10);
   context.fillStyle = "#30241d";
-  context.fillRect(378, 359, 12, 12);
-  context.fillStyle = "#d9e5dd";
-  context.fillRect(405, 352, 8, 13);
-  context.fillRect(418, 352, 8, 13);
-  context.fillStyle = "#f0c85c";
+  context.fillRect(387, 75, 8, 4);
+  context.fillStyle = "#f3dfb5";
+  context.fillRect(413, 85, 9, 10);
+  context.fillRect(425, 88, 8, 8);
+  context.fillStyle = "#d19a51";
+  context.fillRect(368, 101, 60, 5);
+  context.fillStyle = "#fff2d3";
+  context.fillRect(438, 254, 42, 18);
+  context.fillStyle = "#245934";
   context.font = "900 10px monospace";
   context.textAlign = "center";
-  context.fillText("DRINKS", 401, 397);
-  context.fillStyle = "#fff2d3";
-  context.fillRect(442, 254, 36, 18);
-  context.fillStyle = "#245934";
-  context.fillText("取餐", 460, 267);
+  context.fillText("出餐", 459, 267);
   context.restore();
 }
 
@@ -245,6 +268,14 @@ function drawActor(actor) {
     return;
   }
 
+  if (actor.kind === "drinkChef") {
+    const frames = { mixing: 2, toPickup: 3 };
+    const frame = frames[state.kitchen.drinkPhase] ?? 0;
+    const next = actor.path?.[0];
+    drawAtlas(frame, 1, actor.x, actor.y, 82, next ? next.x < actor.x : true);
+    return;
+  }
+
   const next = actor.path?.[0];
   const facingLeft = next ? next.x < actor.x : false;
   const moving = Boolean(actor.walking && actor.path?.length);
@@ -267,7 +298,9 @@ function drawActor(actor) {
   const seated = ["waitingOrder", "ordering", "waitingFood", "eating"].includes(actor.state);
   const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
   const seatFacingLeft = seated && actor.direction === "left";
-  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
+  const seat = seated ? TABLES[actor.tableId - 1].seatPoints[0] : null;
+  const offset = seat?.spriteOffset || { x: 0, y: 0 };
+  drawAtlas(frame, actor.variant ? 3 : 2, actor.x + offset.x, actor.y + offset.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
 }
 
 function drawFemaleWaiter(column, x, y, size, flip) {
@@ -306,6 +339,10 @@ function drawDirtyTables() {
 
 function drawCustomerBubbles() {
   for (const customer of state.customers) {
+    if (customer.state === "queueing" && customer.mood !== "normal") {
+      drawWaitingMood(customer);
+      continue;
+    }
     if (!["waitingOrder", "ordering", "waitingFood", "eating", "waitingPayment"].includes(customer.state)) continue;
     const labels = { waitingOrder: "?", ordering: "…", waitingFood: "⌛", eating: "●", waitingPayment: "$" };
     const x = customer.x + 28;
@@ -320,6 +357,25 @@ function drawCustomerBubbles() {
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillText(labels[customer.state], x, y - 1);
+  }
+}
+
+function drawWaitingMood(customer) {
+  const x = customer.x + 24;
+  const y = customer.y - 70;
+  context.fillStyle = "#fff2d3";
+  context.strokeStyle = "#17130f";
+  context.lineWidth = 3;
+  context.fillRect(x - 12, y - 12, 24, 21);
+  context.strokeRect(x - 12, y - 12, 24, 21);
+  if (customer.mood === "impatient") {
+    context.fillStyle = "#628ca0";
+    context.fillRect(x - 3, y - 5, 6, 9);
+    context.fillRect(x - 1, y - 8, 2, 3);
+  } else {
+    context.fillStyle = "#a63e32";
+    context.fillRect(x - 2, y - 7, 4, 9);
+    context.fillRect(x - 2, y + 4, 4, 4);
   }
 }
 
