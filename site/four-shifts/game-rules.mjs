@@ -1,116 +1,133 @@
 export const SAVE_VERSION = 1;
 export const SAVE_KEY = "restaurant-rookie-idle-v1";
 export const WORLD = { width: 960, height: 540 };
-export const GRID_SIZE = 20;
+// 走道最窄處（收銀台後方員工區）只有 20px，格子必須比它細，否則尋路只剩一排格點、一被佔就無解。
+export const GRID_SIZE = 10;
 
 // Every world position is measured in the canvas's internal 960 x 540 space.
 // Actor x/y values are always the bottom-centre foot anchor, never CSS pixels.
+// 座位是唯一的例外：seatPoints 對齊椅子的落地線，見 TABLES 的註解。
 
 export const POINTS = {
-  customerSpawn: { x: 120, y: 540 },
-  entranceDoor: { x: 120, y: 520 },
-  entranceInside: { x: 120, y: 490 },
-  entranceMerge: { x: 140, y: 500 },
-  queueHost: { x: 180, y: 340 },
-  guestAisleStart: { x: 200, y: 460 },
-  guestAisleEnd: { x: 480, y: 460 },
-  exit: { x: 120, y: 540 },
-  pickupWaiter: { x: 420, y: 320 },
-  drinkPickupWaiter: { x: 440, y: 320 },
-  checkoutCustomer: { x: 420, y: 360 },
-  checkoutQueue: { x: 460, y: 440 },
-  checkoutExitApproach: { x: 420, y: 440 },
-  cashierService: { x: 300, y: 410 },
-  cashierApproach: { x: 380, y: 320 },
+  // 入口分成兩條車道：排隊走 x=96，離場走 x=136，只在門口那一格交會。
+  customerSpawn: { x: 136, y: 524 },
+  entranceDoor: { x: 136, y: 472 },
+  entranceInside: { x: 120, y: 440 },
+  queueEntry: { x: 96, y: 440 },
+  exitBypass: { x: 136, y: 440 },
+  queueHost: { x: 150, y: 350 },
+  guestAisleStart: { x: 200, y: 440 },
+  guestAisleEnd: { x: 480, y: 440 },
+  exit: { x: 136, y: 524 },
+  pickupWaiter: { x: 400, y: 330 },
+  drinkPickupWaiter: { x: 430, y: 330 },
+  // 客人站櫃台「前面」，員工站櫃台「後面」，中間隔著櫃體 222–364 × 337–446。
+  checkoutCustomer: { x: 300, y: 456 },
+  // 等待結帳的人要停在「客人來的那一側」(東側)，
+  // 放到西側的話後面的人得穿過正在結帳的人，兩邊互相等成死鎖。
+  checkoutQueue: { x: 392, y: 452 },
+  checkoutExitApproach: { x: 190, y: 452 },
+  cashierService: { x: 300, y: 330 },
+  cashierApproach: { x: 376, y: 330 },
 };
 
 export const KITCHEN_POINTS = {
-  stove: { x: 200, y: 140 },
-  prep: { x: 300, y: 250 },
-  drinkBar: { x: 420, y: 140 },
-  pickup: { x: 400, y: 270 },
-  drinkPickup: { x: 440, y: 270 },
+  stove: { x: 200, y: 145 },
+  prep: { x: 300, y: 240 },
+  drinkBar: { x: 400, y: 145 },
+  pickup: { x: 356, y: 236 },
+  drinkPickup: { x: 412, y: 236 },
 };
 
+// 每張桌子的數字都是從 pixel-restaurant.png 量出來的家具實際範圍，不是估的。
+// seatPoint = 右椅的視覺中心 x + 椅腳落地線 y；坐姿影格一樣是底部對齊，
+// 所以只要這兩個數字對得上椅子，人就會坐在椅子上而不是飄在旁邊。
 export const TABLES = [
   {
     id: 1,
-    seatApproachPoint: { x: 660, y: 240 },
-    seatPoints: [{ x: 638, y: 202, facing: "left" }],
-    servicePoint: { x: 600, y: 260 },
-    tableBodyArea: { left: 566, top: 105, right: 630, bottom: 180 },
-    chairBlockedArea: { left: 620, top: 130, right: 650, bottom: 205 },
-    cover: { x: 575, y: 118, w: 54, h: 47 },
-    lockRect: { x: 530, y: 90, w: 120, h: 120 },
+    seatApproachPoint: { x: 627, y: 218 },
+    seatPoints: [{ x: 627, y: 185, facing: "left" }],
+    servicePoint: { x: 590, y: 246 },
+    tableBodyArea: { left: 566, top: 112, right: 616, bottom: 198 },
+    chairBlockedArea: { left: 616, top: 122, right: 638, bottom: 188 },
+    cover: { x: 567, y: 113, w: 48, h: 50 },
+    lockRect: { x: 543, y: 112, w: 95, h: 86 },
   },
   {
     id: 2,
-    seatApproachPoint: { x: 860, y: 240 },
-    seatPoints: [{ x: 838, y: 202, facing: "left" }],
-    servicePoint: { x: 680, y: 260 },
-    tableBodyArea: { left: 766, top: 105, right: 830, bottom: 180 },
-    chairBlockedArea: { left: 820, top: 130, right: 850, bottom: 205 },
-    cover: { x: 775, y: 118, w: 54, h: 47 },
-    lockRect: { x: 730, y: 90, w: 120, h: 120 },
+    seatApproachPoint: { x: 830, y: 218 },
+    seatPoints: [{ x: 830, y: 185, facing: "left" }],
+    servicePoint: { x: 793, y: 246 },
+    tableBodyArea: { left: 768, top: 112, right: 818, bottom: 198 },
+    chairBlockedArea: { left: 818, top: 122, right: 842, bottom: 190 },
+    cover: { x: 769, y: 113, w: 48, h: 50 },
+    lockRect: { x: 745, y: 112, w: 97, h: 86 },
   },
   {
     id: 3,
-    seatApproachPoint: { x: 660, y: 440 },
-    seatPoints: [{ x: 628, y: 407, facing: "left" }],
-    servicePoint: { x: 680, y: 360 },
-    tableBodyArea: { left: 556, top: 312, right: 620, bottom: 385 },
-    chairBlockedArea: { left: 610, top: 335, right: 640, bottom: 410 },
-    cover: { x: 565, y: 325, w: 54, h: 48 },
-    lockRect: { x: 520, y: 295, w: 120, h: 120 },
+    seatApproachPoint: { x: 618, y: 420 },
+    seatPoints: [{ x: 618, y: 386, facing: "left" }],
+    servicePoint: { x: 580, y: 445 },
+    tableBodyArea: { left: 553, top: 308, right: 606, bottom: 400 },
+    chairBlockedArea: { left: 605, top: 318, right: 630, bottom: 390 },
+    cover: { x: 554, y: 309, w: 51, h: 50 },
+    lockRect: { x: 530, y: 308, w: 100, h: 92 },
   },
   {
     id: 4,
-    seatApproachPoint: { x: 860, y: 440 },
-    seatPoints: [{ x: 838, y: 407, facing: "left" }],
-    servicePoint: { x: 680, y: 440 },
-    tableBodyArea: { left: 766, top: 312, right: 830, bottom: 385 },
-    chairBlockedArea: { left: 820, top: 335, right: 850, bottom: 410 },
-    cover: { x: 775, y: 327, w: 54, h: 48 },
-    lockRect: { x: 730, y: 295, w: 120, h: 120 },
+    seatApproachPoint: { x: 833, y: 425 },
+    seatPoints: [{ x: 833, y: 400, facing: "left" }],
+    servicePoint: { x: 795, y: 448 },
+    tableBodyArea: { left: 768, top: 312, right: 820, bottom: 405 },
+    chairBlockedArea: { left: 820, top: 322, right: 846, bottom: 404 },
+    cover: { x: 769, y: 313, w: 50, h: 50 },
+    lockRect: { x: 745, y: 312, w: 101, h: 93 },
   },
 ];
 
+// 碰撞矩形一律貼齊背景圖上真正畫出來的家具；寬鬆的大方塊會讓互動點落在空地上。
 export const BLOCKED_RECTS = [
-  { name: "kitchen-and-front-wall", left: 20, top: 0, right: 459, bottom: 299 },
-  { name: "cashier", left: 220, top: 330, right: 362, bottom: 455 },
-  { name: "table-1", left: 530, top: 100, right: 650, bottom: 205 },
-  { name: "table-2", left: 730, top: 100, right: 850, bottom: 205 },
-  { name: "table-3", left: 520, top: 300, right: 640, bottom: 410 },
-  { name: "table-4", left: 730, top: 300, right: 850, bottom: 410 },
+  { name: "kitchen-and-front-wall", left: 20, top: 0, right: 459, bottom: 300 },
+  { name: "cashier-counter", left: 222, top: 337, right: 364, bottom: 446 },
+  { name: "table-1", left: 543, top: 112, right: 638, bottom: 198 },
+  { name: "table-2", left: 745, top: 112, right: 842, bottom: 198 },
+  { name: "table-3", left: 530, top: 308, right: 630, bottom: 400 },
+  { name: "table-4", left: 745, top: 312, right: 846, bottom: 405 },
   { name: "left-plant", left: 20, top: 365, right: 75, bottom: 470 },
-  { name: "right-shelf", left: 900, top: 190, right: 950, bottom: 300 },
-  { name: "right-plant", left: 880, top: 430, right: 950, bottom: 510 },
+  { name: "right-plant", left: 880, top: 424, right: 906, bottom: 470 },
 ];
 
 export const WALKABLE_AREAS = [
-  { name: "dining-floor", left: 460, top: 100, right: 920, bottom: 460 },
-  { name: "front-floor", left: 150, top: 315, right: 460, bottom: 460 },
-  { name: "cashier-side", left: 360, top: 300, right: 460, bottom: 460 },
-  { name: "entrance-lane", left: 100, top: 340, right: 150, bottom: 540 },
-  { name: "entrance-merge", left: 140, top: 440, right: 200, bottom: 500 },
+  { name: "dining-floor", left: 460, top: 100, right: 906, bottom: 460 },
+  { name: "front-floor", left: 150, top: 304, right: 460, bottom: 460 },
+  { name: "entrance-hall", left: 82, top: 340, right: 150, bottom: 460 },
+  { name: "door-lane", left: 86, top: 460, right: 146, bottom: 530 },
 ];
 
-export const KITCHEN_WALKABLE_AREA = { name: "kitchen-floor", left: 110, top: 130, right: 450, bottom: 280 };
+// 廚房灰地磚實測 x 92–443、y 121–253，走動範圍留一格邊。
+export const KITCHEN_WALKABLE_AREA = { name: "kitchen-floor", left: 100, top: 132, right: 436, bottom: 248 };
 
 export const KITCHEN_BLOCKED_RECTS = [
-  { name: "back-counter", left: 20, top: 20, right: 440, bottom: 125 },
-  { name: "left-storage", left: 20, top: 125, right: 105, bottom: 270 },
-  { name: "prep-island", left: 215, top: 140, right: 355, bottom: 225 },
+  { name: "back-counter", left: 20, top: 20, right: 443, bottom: 122 },
+  { name: "left-storage", left: 20, top: 122, right: 90, bottom: 270 },
+  { name: "prep-island", left: 218, top: 138, right: 348, bottom: 228 },
+  { name: "kitchen-plant-left", left: 144, top: 236, right: 168, bottom: 258 },
+  { name: "kitchen-plant-right", left: 368, top: 236, right: 393, bottom: 258 },
 ];
 
+// 排隊往上排（背對門），離場走另一條車道往下，兩者方向相反不對撞。
+// index 0 是隊伍最前面，必須是「離門最遠」的那一格：
+// 反過來的話，後到的客人得穿過前面的人才排得進去，會卡死。
+// 間距必須大於角色互不重疊的 34px，否則後面的人永遠走不到自己的格子。
 export const WAITING_QUEUE_POINTS = [
-  { x: 120, y: 370 },
-  { x: 120, y: 410 },
-  { x: 120, y: 450 },
+  { x: 96, y: 348 },
+  { x: 96, y: 400 },
+  { x: 96, y: 452 },
 ];
 
-export const QUEUE_PROTECTED_ZONE = { left: 100, top: 350, right: 150, bottom: 470 };
-export const CASHIER_STAFF_ZONE = { left: 240, top: 300, right: 400, bottom: 425 };
+export const QUEUE_PROTECTED_ZONE = { left: 82, top: 330, right: 116, bottom: 452 };
+// 櫃台「後方」那條員工專用地板：上緣是廚房前牆的下緣，下緣是櫃體的上緣。
+export const CASHIER_STAFF_ZONE = { left: 224, top: 304, right: 362, bottom: 336 };
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -140,7 +157,8 @@ export function pointBlocked(point, { allowQueue = false, allowCashier = false }
   if (!inWalkableBounds(point)) return true;
   if (!allowQueue && insideRect(point, QUEUE_PROTECTED_ZONE)) return true;
   if (!allowCashier && insideRect(point, CASHIER_STAFF_ZONE)) return true;
-  return BLOCKED_RECTS.some((rect) => !(allowCashier && rect.name === "cashier" && insideRect(point, CASHIER_STAFF_ZONE)) && insideRect(point, rect));
+  // 櫃體本身擋所有人，包含員工——員工是繞到櫃台「後方」，不是穿過櫃台。
+  return BLOCKED_RECTS.some((rect) => insideRect(point, rect));
 }
 
 export function pointBlockedForZone(point, zone = "dining") {
@@ -294,7 +312,7 @@ export function freshState(now = Date.now()) {
       drinkChef: { key: "chef-drink", x: KITCHEN_POINTS.drinkBar.x, y: KITCHEN_POINTS.drinkBar.y, path: [], walking: false, navigationZone: "kitchen" },
     },
     waiters: {
-      male: { key: "waiter-male", x: 900, y: 340, path: [], task: null, walking: false, idlePoint: { x: 900, y: 340 }, navigationZone: "dining" },
+      male: { key: "waiter-male", x: 880, y: 340, path: [], task: null, walking: false, idlePoint: { x: 880, y: 340 }, navigationZone: "dining" },
       female: {
         key: "waiter-female",
         x: POINTS.cashierService.x,
@@ -363,7 +381,7 @@ function spawnCustomer(state) {
     state: "entering",
     x: POINTS.customerSpawn.x,
     y: POINTS.customerSpawn.y,
-    path: entrancePath(queueSpot),
+    path: findPath(POINTS.customerSpawn, queueSpot, "queue"),
     queueSpot: { ...queueSpot },
     timer: 0,
     waitTime: 0,
@@ -524,14 +542,6 @@ function updateTransitionPosition(customer, dt) {
   if (ratio >= 1) customer.transition = null;
 }
 
-function entrancePath(queueSpot) {
-  return [
-    { ...POINTS.entranceDoor },
-    { ...POINTS.entranceInside },
-    ...findPath(POINTS.entranceInside, queueSpot, "queue"),
-  ];
-}
-
 function leaveQueue(state, customer) {
   customer.abandoned = true;
   customer.mood = "normal";
@@ -549,7 +559,9 @@ function compactQueue(state) {
     if (!target || customer.queueSpot.x === target.x && customer.queueSpot.y === target.y) return;
     customer.queueSpot = { ...target };
     if (!["waitingEscort", "waitingQueueExit"].includes(customer.state)) {
-      customer.path = customer.state === "entering" ? entrancePath(target) : findPath(customer, target, "queue");
+      // 一律從「目前位置」重新規劃：舊版對 entering 的客人重掛門口起點，
+      // 已經走進來的人會被指回門口，跟後面的人互相擋死。
+      customer.path = findPath(customer, target, "queue");
     }
   });
 }
@@ -577,8 +589,14 @@ function checkoutBusy(state, customer) {
   return state.customers.some((item) => item !== customer && ["toCheckout", "waitingPayment", "toExitApproach"].includes(item.state));
 }
 
+// 排隊與離場已經是兩條分開的車道，只有門口那一格會重疊；
+// 舊版把整個入口當成一把鎖，進場與離場會互相等成死鎖。
 function entranceBusy(state, customer = null) {
-  return state.customers.some((item) => item !== customer && ["entering", "leaving"].includes(item.state));
+  // 佔用判斷的範圍是「整條門道」（門檻到店外生成點），不是只有門那一格：
+  // 只看門的話，新客人會生成在剛走出去的人身上。
+  return state.customers.some((item) => item !== customer
+    && ["entering", "leaving"].includes(item.state)
+    && item.y > 452);
 }
 
 function requestDoorExit(state, customer, fromQueue) {
@@ -592,18 +610,13 @@ function requestDoorExit(state, customer, fromQueue) {
 }
 
 function startDoorExit(state, customer, fromQueue) {
-  const queueSide = { x: 180, y: customer.y };
-  const queueSideBottom = { x: 180, y: 480 };
-  const routeToMerge = fromQueue
-    ? [
-        ...findPath(customer, queueSide, "queue"),
-        queueSideBottom,
-        ...findPath(queueSideBottom, POINTS.entranceMerge),
-      ]
-    : findPath(customer, POINTS.entranceMerge);
+  // 離場一律走 exitBypass 那條車道，不從排隊車道穿出去。
+  const routeToLane = fromQueue
+    ? [{ x: POINTS.exitBypass.x, y: customer.y }, { ...POINTS.exitBypass }]
+    : [...findPath(customer, POINTS.exitBypass, "queue")];
   customer.state = "leaving";
   customer.navigationZone = "queue";
-  customer.path = [...routeToMerge, { ...POINTS.entranceDoor }, { ...POINTS.exit }];
+  customer.path = [...routeToLane, { ...POINTS.entranceDoor }, { ...POINTS.exit }];
   customer.walking = true;
 }
 
@@ -965,7 +978,7 @@ function positionOccupied(state, actor, point) {
 }
 
 function collisionSpace(point) {
-  if (point.x <= 459 && point.y <= 299) return "kitchen";
+  if (point.x <= 459 && point.y <= 300) return "kitchen";
   if (insideRect(point, CASHIER_STAFF_ZONE)) return "cashier";
   return "public";
 }
@@ -1009,7 +1022,8 @@ export function validateScene(state = null) {
       suggestion: "把 seatPoint 對齊椅面腳底位置並留在椅子 blocked area 內",
     });
     const head = { left: table.servicePoint.x - 24, right: table.servicePoint.x + 24, top: table.servicePoint.y - 80, bottom: table.servicePoint.y - 35 };
-    record(`T${table.id} servicePoint 不壓桌面`, !rectsOverlap(head, table.tableBodyArea), {
+    const cover = { left: table.cover.x, top: table.cover.y, right: table.cover.x + table.cover.w, bottom: table.cover.y + table.cover.h };
+    record(`T${table.id} servicePoint 不壓桌面`, !rectsOverlap(head, cover), {
       coordinate: table.servicePoint,
       object: `table-${table.id}`,
       suggestion: "把 servicePoint 往合法走道外移",
@@ -1036,11 +1050,13 @@ export function validateScene(state = null) {
     object: "cashier staff side",
     suggestion: "把員工點留在 staff-only 區域",
   });
-  record("收銀台本體隔開客人與店員", BLOCKED_RECTS.some((rect) => rect.name === "cashier"
-    && POINTS.cashierService.x < rect.right && POINTS.checkoutCustomer.x > rect.right), {
+  const counter = BLOCKED_RECTS.find((rect) => rect.name === "cashier-counter");
+  record("收銀台本體隔開客人與店員", Boolean(counter)
+    && POINTS.cashierService.y < counter.top
+    && POINTS.checkoutCustomer.y > counter.bottom, {
     coordinate: POINTS.checkoutCustomer,
-    object: "cashier",
-    suggestion: "讓 staffPoint 與 customerPoint 分居櫃檯兩側",
+    object: "cashier-counter",
+    suggestion: "員工站櫃體上緣之上、客人站下緣之下，中間隔著櫃體",
   });
 
   for (const [name, point] of Object.entries(KITCHEN_POINTS)) legal(`kitchen ${name}`, point, "kitchen", "kitchen");

@@ -22,7 +22,7 @@ import {
   upgradeCost,
   validateScene,
   waiterSpeed,
-} from "./game-rules.mjs?v=20260825-4";
+} from "./game-rules.mjs?v=20260825-5";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -218,15 +218,11 @@ function draw() {
   }
   for (const table of TABLES.slice(0, state.upgrades.tables)) redrawTableTop(table);
 
-  const femaleAtCashier = inside(state.waiters.female, CASHIER_STAFF_ZONE);
-  if (femaleAtCashier) {
-    drawActor({ kind: "femaleWaiter", ...state.waiters.female });
-    redrawCashierFront();
-  }
-
+  // 女服務生現在真的站在櫃台「後方」的地板上（y 比櫃體上緣小），
+  // 靠 y 排序自然被櫃體擋住，不需要再把櫃台重畫一次蓋住她。
   const publicActors = [
     { kind: "maleWaiter", ...state.waiters.male },
-    ...(!femaleAtCashier ? [{ kind: "femaleWaiter", ...state.waiters.female }] : []),
+    { kind: "femaleWaiter", ...state.waiters.female },
     ...state.customers.filter((customer) => !customer.seated).map((customer) => ({ kind: "customer", ...customer })),
   ].sort((first, second) => first.y - second.y);
   for (const actor of publicActors) drawActor(actor);
@@ -236,16 +232,17 @@ function draw() {
 }
 
 function drawLockedTables() {
+  // 未解鎖的桌子用「暖色調的暗部」融進地板，不是蓋一塊黑色遮罩。
   context.save();
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.font = "900 14px monospace";
+  context.font = "700 11px monospace";
   for (const table of TABLES.slice(state.upgrades.tables)) {
     const lock = table.lockRect;
-    context.fillStyle = "rgba(18, 15, 12, .72)";
+    context.fillStyle = "rgba(48, 26, 14, .34)";
     context.fillRect(lock.x, lock.y, lock.w, lock.h);
-    context.fillStyle = "#f3dfb5";
-    context.fillText("LOCKED", lock.x + lock.w / 2, lock.y + lock.h / 2);
+    context.fillStyle = "rgba(243, 223, 181, .62)";
+    context.fillText("尚未開放", lock.x + lock.w / 2, lock.y + lock.h - 10);
   }
   context.restore();
 }
@@ -342,11 +339,8 @@ function redrawTableTop(table) {
 }
 
 function redrawKitchenFront() {
-  context.drawImage(roomImage, 0, 281, 460, 34, 0, 281, 460, 34);
-}
-
-function redrawCashierFront() {
-  context.drawImage(roomImage, 220, 390, 145, 66, 220, 390, 145, 66);
+  // 只重畫廚房前牆本身（前場地板從 y=302 起），舊版多蓋 13px 會把站在牆前的人腳砍掉。
+  context.drawImage(roomImage, 0, 281, 460, 21, 0, 281, 460, 21);
 }
 
 function drawDebugOverlay() {
@@ -377,6 +371,9 @@ function drawDebugOverlay() {
     ["drink kitchen", KITCHEN_POINTS.drinkPickup, "#48d9f2"],
     ["drink waiter", POINTS.drinkPickupWaiter, "#ff9ef2"],
     ["drink bar", KITCHEN_POINTS.drinkBar, "#62e7ff"],
+    ["door", POINTS.entranceDoor, "#ffe46a"],
+    ["queue entry", POINTS.queueEntry, "#f2d251"],
+    ["exit bypass", POINTS.exitBypass, "#7dffb0"],
   ]) drawDebugPoint(point, label, color);
   WAITING_QUEUE_POINTS.forEach((point, index) => drawDebugPoint(point, `queue ${index + 1}`, "#f2d251"));
 
@@ -432,10 +429,6 @@ function drawDebugAnchor(actor, label) {
   context.lineTo(actor.x, actor.y + 6);
   context.stroke();
   context.fillText(label, actor.x + 7, actor.y + 1);
-}
-
-function inside(point, rect) {
-  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
 }
 
 function drawDirtyTables() {
