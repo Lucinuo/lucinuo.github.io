@@ -20,8 +20,9 @@ import {
   serializeState,
   tickGame,
   upgradeCost,
+  validateScene,
   waiterSpeed,
-} from "./game-rules.mjs?v=20260824-3";
+} from "./game-rules.mjs?v=20260825-4";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -37,6 +38,8 @@ const elements = {
   offline: document.querySelector("[data-offline]"),
   toggle: document.querySelector("[data-toggle]"),
   debug: document.querySelector("[data-debug]"),
+  sceneReport: document.querySelector("[data-scene-report]"),
+  sceneReportOutput: document.querySelector("[data-scene-report-output]"),
   reset: document.querySelector("[data-reset]"),
   upgrades: [...document.querySelectorAll("[data-upgrade]")],
 };
@@ -57,6 +60,9 @@ let lastUiUpdate = 0;
 let resetArmed = false;
 let resetTimer;
 let debugVisible = false;
+const spriteMetrics = new Map();
+const metricCanvas = document.createElement("canvas");
+const metricContext = metricCanvas.getContext("2d", { willReadFrequently: true });
 saveState();
 
 function loadImage(source) {
@@ -140,6 +146,8 @@ function toggleDebugOverlay() {
   debugVisible = !debugVisible;
   elements.debug.setAttribute("aria-pressed", String(debugVisible));
   elements.debug.textContent = debugVisible ? "關閉檢查" : "場景檢查";
+  elements.sceneReport.hidden = !debugVisible;
+  if (debugVisible) updateSceneReport();
 }
 
 function updateUi() {
@@ -168,6 +176,21 @@ function updateUi() {
   const queue = state.customers.filter((customer) => customer.state === "queueing" || customer.state === "entering").length;
   const dining = state.customers.filter((customer) => ["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)).length;
   elements.live.textContent = `店內 ${state.customers.length} 位客人，${queue} 位等候，${dining} 位入座，已完成 ${state.served} 單。`;
+  if (debugVisible) updateSceneReport();
+}
+
+function updateSceneReport() {
+  const report = validateScene(state);
+  elements.sceneReport.dataset.result = report.status;
+  const lines = [
+    `${report.status} — ${report.passed}/${report.total} 項通過`,
+    report.failures.length ? "" : "所有互動點、腳底座標、路徑與下一格預約均合法。",
+  ];
+  for (const failure of report.failures) {
+    const coordinate = failure.coordinate ? `(${Math.round(failure.coordinate.x)}, ${Math.round(failure.coordinate.y)})` : "—";
+    lines.push(`FAIL｜${failure.name}｜座標 ${coordinate}｜角色 ${failure.actor}｜物件 ${failure.object}｜建議 ${failure.suggestion}`);
+  }
+  elements.sceneReportOutput.textContent = lines.filter((line, index) => line || index === 1).join("\n");
 }
 
 function draw() {
@@ -270,21 +293,47 @@ function drawActor(actor) {
 }
 
 function drawFemaleWaiter(column, x, y, size, flip) {
-  const cell = 256;
-  context.save();
-  context.translate(Math.round(x), Math.round(y));
-  if (flip) context.scale(-1, 1);
-  context.drawImage(femaleWaiterImage, column * cell, 0, cell, cell, -size / 2, -size, size, size);
-  context.restore();
+  drawSpriteFrame(femaleWaiterImage, column, 0, x, y, size, flip);
 }
 
 function drawAtlas(column, row, x, y, size, flip = false) {
+  drawSpriteFrame(atlasImage, column, row, x, y, size, flip);
+}
+
+function drawSpriteFrame(image, column, row, x, y, size, flip) {
   const cell = 256;
+  const metric = spriteMetric(image, column, row);
+  const scale = size / cell;
   context.save();
   context.translate(Math.round(x), Math.round(y));
   if (flip) context.scale(-1, 1);
-  context.drawImage(atlasImage, column * cell, row * cell, cell, cell, -size / 2, -size, size, size);
+  context.drawImage(image, column * cell, row * cell, cell, cell, -metric.centerX * scale, -metric.bottom * scale, size, size);
   context.restore();
+}
+
+function spriteMetric(image, column, row) {
+  const key = `${image.src}:${column}:${row}`;
+  if (spriteMetrics.has(key)) return spriteMetrics.get(key);
+  const cell = 256;
+  metricCanvas.width = cell;
+  metricCanvas.height = cell;
+  metricContext.clearRect(0, 0, cell, cell);
+  metricContext.drawImage(image, column * cell, row * cell, cell, cell, 0, 0, cell, cell);
+  const pixels = metricContext.getImageData(0, 0, cell, cell).data;
+  let left = cell;
+  let right = 0;
+  let bottom = 0;
+  for (let pixel = 0; pixel < cell * cell; pixel += 1) {
+    if (pixels[pixel * 4 + 3] < 10) continue;
+    const px = pixel % cell;
+    const py = Math.floor(pixel / cell);
+    left = Math.min(left, px);
+    right = Math.max(right, px + 1);
+    bottom = Math.max(bottom, py + 1);
+  }
+  const metric = { centerX: left < cell ? (left + right) / 2 : cell / 2, bottom: bottom || cell };
+  spriteMetrics.set(key, metric);
+  return metric;
 }
 
 function redrawTableTop(table) {
@@ -312,13 +361,17 @@ function drawDebugOverlay() {
   fillDebugRects(KITCHEN_BLOCKED_RECTS, "rgba(221, 55, 55, .28)", "#ff6666");
 
   for (const table of TABLES) {
+    fillDebugRects([table.tableBodyArea], "rgba(255, 79, 79, .3)", "#ff6666");
+    fillDebugRects([table.chairBlockedArea], "rgba(255, 153, 58, .32)", "#ffad5c");
     drawDebugPoint(table.seatApproachPoint, `T${table.id} approach`, "#ffe46a");
     drawDebugPoint(table.seatPoints[0], `T${table.id} seat`, "#62e7ff");
     drawDebugPoint(table.servicePoint, `T${table.id} service`, "#ff9ef2");
   }
   for (const [label, point, color] of [
     ["cashier customer", POINTS.checkoutCustomer, "#ffe46a"],
+    ["cashier customer queue", POINTS.checkoutQueue, "#f2d251"],
     ["cashier staff", POINTS.cashierService, "#8ba5ff"],
+    ["cashier staff entry", POINTS.cashierApproach, "#b6c5ff"],
     ["food kitchen", KITCHEN_POINTS.pickup, "#48d9f2"],
     ["food waiter", POINTS.pickupWaiter, "#ff9ef2"],
     ["drink kitchen", KITCHEN_POINTS.drinkPickup, "#48d9f2"],
@@ -327,12 +380,21 @@ function drawDebugOverlay() {
   ]) drawDebugPoint(point, label, color);
   WAITING_QUEUE_POINTS.forEach((point, index) => drawDebugPoint(point, `queue ${index + 1}`, "#f2d251"));
 
+  for (const reservation of state.reservations.values()) {
+    context.fillStyle = "rgba(255, 255, 255, .25)";
+    context.strokeStyle = "#ffffff";
+    context.fillRect(reservation.x - 9, reservation.y - 9, 18, 18);
+    context.strokeRect(reservation.x - 9, reservation.y - 9, 18, 18);
+    context.fillStyle = "#ffffff";
+    context.fillText(`next ${reservation.owner}`, reservation.x + 11, reservation.y - 3);
+  }
+
   for (const actor of [
-    [state.kitchen.chef, "chef"],
-    [state.kitchen.drinkChef, "drink chef"],
-    [state.waiters.male, "male"],
-    [state.waiters.female, "female"],
-    ...state.customers.map((customer) => [customer, `C${customer.id}`]),
+    [state.kitchen.chef, `chef ${state.kitchen.phase}`],
+    [state.kitchen.drinkChef, `drink chef ${state.kitchen.drinkPhase}`],
+    [state.waiters.male, `male ${state.waiters.male.task?.type || "idle"}`],
+    [state.waiters.female, `female ${state.waiters.female.task?.type || "idle"}`],
+    ...state.customers.map((customer) => [customer, `C${customer.id} ${customer.state}`]),
   ]) drawDebugAnchor(actor[0], actor[1]);
   context.restore();
 }

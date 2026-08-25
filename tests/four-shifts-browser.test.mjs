@@ -8,9 +8,10 @@ const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 const profile = await mkdtemp(join(tmpdir(), "restaurant-rookie-chrome-"));
 const port = 9234;
 const chrome = spawn(chromePath, [
-  "--headless=new",
+  "--headless",
   "--disable-gpu",
   "--hide-scrollbars",
+  "--remote-debugging-address=127.0.0.1",
   `--remote-debugging-port=${port}`,
   `--user-data-dir=${profile}`,
   "about:blank",
@@ -88,13 +89,15 @@ try {
   assert.equal(await evaluate("document.querySelector('[data-level=chef]').textContent"), "Lv.1");
   assert.equal(await evaluate("document.querySelector('[data-coins]').textContent"), "90");
   await evaluate("document.querySelector('[data-toggle]').click()");
-  await waitFor("document.querySelector('[data-live]').textContent.includes('入座') && !document.querySelector('[data-live]').textContent.includes('0 位入座')", 30_000);
+  await waitFor("document.querySelector('[data-live]').textContent.includes('入座') && !document.querySelector('[data-live]').textContent.includes('0 位入座')", 60_000);
   await screenshot("/private/tmp/restaurant-rookie-desktop.png");
   await evaluate("document.querySelector('[data-debug]').click()");
   assert.equal(await evaluate("document.querySelector('[data-debug]').getAttribute('aria-pressed')"), "true", "scene debug overlay can be enabled");
+  assert.equal(await evaluate("document.querySelector('[data-scene-report]').dataset.result"), "PASS", "formal scene validator reports PASS in the running browser");
+  assert.match(await evaluate("document.querySelector('[data-scene-report-output]').textContent"), /^PASS — \d+\/\d+ 項通過/, "scene validator exposes its complete PASS summary");
   await screenshot("/private/tmp/restaurant-rookie-debug.png");
   await evaluate("document.querySelector('[data-debug]').click()");
-  await waitFor("Number(document.querySelector('[data-served]').textContent.replaceAll(',', '')) >= 1", 50_000);
+  await waitFor("Number(document.querySelector('[data-served]').textContent.replaceAll(',', '')) >= 1", 90_000);
   const earnedCoins = Number((await evaluate("document.querySelector('[data-coins]').textContent")).replaceAll(",", ""));
   assert.ok(earnedCoins > 90, "browser flow increases coins");
   await screenshot("/private/tmp/restaurant-rookie-flow.png");

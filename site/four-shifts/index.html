@@ -14,8 +14,8 @@
   <meta property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant.png">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=20260824-3">
-  <script type="module" src="./game.js?v=20260824-3"></script>
+  <link rel="stylesheet" href="./styles.css?v=20260825-4">
+  <script type="module" src="./game.js?v=20260825-4"></script>
 </head>
 <body>
   <main class="game-shell" data-game>
@@ -47,6 +47,10 @@
           你的瀏覽器不支援 Canvas，請更新瀏覽器後再試。
         </canvas>
         <p class="event-message" data-message aria-live="polite">按下開始，像素小館就會自動營運。</p>
+        <section class="scene-report" data-scene-report data-result="PASS" aria-live="polite" hidden>
+          <h2>場景檢查結果</h2>
+          <pre data-scene-report-output></pre>
+        </section>
         <p class="sr-only" data-live aria-live="polite"></p>
       </div>
 

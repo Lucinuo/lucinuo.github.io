@@ -44,6 +44,10 @@ h1 { margin: 0; font: 900 clamp(1.35rem, 3vw, 2.35rem)/1.15 Georgia, "Noto Serif
 .stage-panel, .upgrade-panel { border: 4px solid var(--ink); background: #211914; box-shadow: 0 5px 0 #090807; }
 canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #35251c; image-rendering: pixelated; image-rendering: crisp-edges; }
 .event-message { min-height: 3.1rem; margin: 0; border-top: 4px solid var(--ink); padding: .65rem .8rem; color: #2c2118; background: var(--paper); font-weight: 900; line-height: 1.45; }
+.scene-report { border-top: 4px solid var(--ink); padding: .7rem .8rem; color: #e8f7e8; background: #18321f; }
+.scene-report[data-result="FAIL"] { color: #ffe1dc; background: #4c211c; }
+.scene-report h2 { margin: 0 0 .45rem; font-size: .95rem; }
+.scene-report pre { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font: 700 .72rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 .upgrade-panel { display: grid; align-content: start; gap: .55rem; padding: .7rem; background: #2a1e16; }
 .upgrade-heading { border: 3px solid var(--ink); padding: .65rem .7rem; background: linear-gradient(#874426, #69321c); }

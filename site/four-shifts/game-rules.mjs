@@ -7,27 +7,27 @@ export const GRID_SIZE = 20;
 // Actor x/y values are always the bottom-centre foot anchor, never CSS pixels.
 
 export const POINTS = {
-  customerSpawn: { x: 120, y: 558 },
+  customerSpawn: { x: 120, y: 540 },
   entranceDoor: { x: 120, y: 520 },
   entranceInside: { x: 120, y: 490 },
   entranceMerge: { x: 140, y: 500 },
   queueHost: { x: 180, y: 340 },
   guestAisleStart: { x: 200, y: 460 },
   guestAisleEnd: { x: 480, y: 460 },
-  exit: { x: 120, y: 558 },
-  pickupWaiter: { x: 400, y: 320 },
+  exit: { x: 120, y: 540 },
+  pickupWaiter: { x: 420, y: 320 },
   drinkPickupWaiter: { x: 440, y: 320 },
-  checkoutCustomer: { x: 300, y: 460 },
-  checkoutQueue: { x: 390, y: 460 },
-  checkoutExitApproach: { x: 220, y: 460 },
+  checkoutCustomer: { x: 420, y: 360 },
+  checkoutQueue: { x: 460, y: 440 },
+  checkoutExitApproach: { x: 420, y: 440 },
   cashierService: { x: 300, y: 410 },
-  cashierApproach: { x: 390, y: 410 },
+  cashierApproach: { x: 380, y: 320 },
 };
 
 export const KITCHEN_POINTS = {
   stove: { x: 200, y: 140 },
   prep: { x: 300, y: 250 },
-  drinkBar: { x: 440, y: 140 },
+  drinkBar: { x: 420, y: 140 },
   pickup: { x: 400, y: 270 },
   drinkPickup: { x: 440, y: 270 },
 };
@@ -35,33 +35,41 @@ export const KITCHEN_POINTS = {
 export const TABLES = [
   {
     id: 1,
-    seatApproachPoint: { x: 500, y: 220 },
-    seatPoints: [{ x: 548, y: 202, facing: "right" }],
+    seatApproachPoint: { x: 660, y: 240 },
+    seatPoints: [{ x: 638, y: 202, facing: "left" }],
     servicePoint: { x: 600, y: 260 },
+    tableBodyArea: { left: 566, top: 105, right: 630, bottom: 180 },
+    chairBlockedArea: { left: 620, top: 130, right: 650, bottom: 205 },
     cover: { x: 575, y: 118, w: 54, h: 47 },
     lockRect: { x: 530, y: 90, w: 120, h: 120 },
   },
   {
     id: 2,
-    seatApproachPoint: { x: 700, y: 220 },
-    seatPoints: [{ x: 748, y: 202, facing: "right" }],
+    seatApproachPoint: { x: 860, y: 240 },
+    seatPoints: [{ x: 838, y: 202, facing: "left" }],
     servicePoint: { x: 680, y: 260 },
+    tableBodyArea: { left: 766, top: 105, right: 830, bottom: 180 },
+    chairBlockedArea: { left: 820, top: 130, right: 850, bottom: 205 },
     cover: { x: 775, y: 118, w: 54, h: 47 },
     lockRect: { x: 730, y: 90, w: 120, h: 120 },
   },
   {
     id: 3,
-    seatApproachPoint: { x: 500, y: 430 },
-    seatPoints: [{ x: 538, y: 407, facing: "right" }],
+    seatApproachPoint: { x: 660, y: 440 },
+    seatPoints: [{ x: 628, y: 407, facing: "left" }],
     servicePoint: { x: 680, y: 360 },
+    tableBodyArea: { left: 556, top: 312, right: 620, bottom: 385 },
+    chairBlockedArea: { left: 610, top: 335, right: 640, bottom: 410 },
     cover: { x: 565, y: 325, w: 54, h: 48 },
     lockRect: { x: 520, y: 295, w: 120, h: 120 },
   },
   {
     id: 4,
-    seatApproachPoint: { x: 700, y: 430 },
-    seatPoints: [{ x: 748, y: 407, facing: "right" }],
+    seatApproachPoint: { x: 860, y: 440 },
+    seatPoints: [{ x: 838, y: 407, facing: "left" }],
     servicePoint: { x: 680, y: 440 },
+    tableBodyArea: { left: 766, top: 312, right: 830, bottom: 385 },
+    chairBlockedArea: { left: 820, top: 335, right: 850, bottom: 410 },
     cover: { x: 775, y: 327, w: 54, h: 48 },
     lockRect: { x: 730, y: 295, w: 120, h: 120 },
   },
@@ -83,7 +91,7 @@ export const WALKABLE_AREAS = [
   { name: "dining-floor", left: 460, top: 100, right: 920, bottom: 460 },
   { name: "front-floor", left: 150, top: 315, right: 460, bottom: 460 },
   { name: "cashier-side", left: 360, top: 300, right: 460, bottom: 460 },
-  { name: "entrance-rug", left: 100, top: 340, right: 150, bottom: 558 },
+  { name: "entrance-lane", left: 100, top: 340, right: 150, bottom: 540 },
   { name: "entrance-merge", left: 140, top: 440, right: 200, bottom: 500 },
 ];
 
@@ -102,7 +110,7 @@ export const WAITING_QUEUE_POINTS = [
 ];
 
 export const QUEUE_PROTECTED_ZONE = { left: 100, top: 350, right: 150, bottom: 470 };
-export const CASHIER_STAFF_ZONE = { left: 240, top: 380, right: 390, bottom: 425 };
+export const CASHIER_STAFF_ZONE = { left: 240, top: 300, right: 400, bottom: 425 };
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -135,6 +143,11 @@ export function pointBlocked(point, { allowQueue = false, allowCashier = false }
   return BLOCKED_RECTS.some((rect) => !(allowCashier && rect.name === "cashier" && insideRect(point, CASHIER_STAFF_ZONE)) && insideRect(point, rect));
 }
 
+export function pointBlockedForZone(point, zone = "dining") {
+  if (zone === "kitchen") return kitchenPointBlocked(point);
+  return pointBlocked(point, { allowQueue: zone === "queue", allowCashier: zone === "staff" });
+}
+
 export function kitchenPointBlocked(point) {
   const inKitchen = insideRect(point, KITCHEN_WALKABLE_AREA);
   if (!inKitchen) return true;
@@ -146,13 +159,11 @@ function inWalkableBounds(point) {
 }
 
 export function findPath(start, end, zone = "dining") {
-  const isBlocked = zone === "kitchen"
-    ? kitchenPointBlocked
-    : (point) => pointBlocked(point, { allowQueue: zone === "queue", allowCashier: zone === "staff" });
+  const isBlocked = (point) => pointBlockedForZone(point, zone);
   if (isBlocked(end)) return [];
   const startCell = nearestWalkableCell(start, isBlocked);
-  const endCell = nearestWalkableCell(end, isBlocked);
-  if (!startCell || !endCell) return [];
+  const endCell = { x: Math.round(end.x / GRID_SIZE), y: Math.round(end.y / GRID_SIZE) };
+  if (!startCell || isBlocked(cellPoint(endCell))) return [];
   const startKey = cellKey(startCell);
   const endKey = cellKey(endCell);
   const queue = [startCell];
@@ -179,8 +190,21 @@ export function findPath(start, end, zone = "dining") {
   cells.reverse();
   const points = compressGridPath(cells.map(cellPoint));
   const route = points.slice(1);
-  if (distance(route.at(-1) || start, end) > 1) route.push({ ...end });
+  const last = route.at(-1) || start;
+  if (distance(last, end) > 1) {
+    if (!segmentIsLegal(last, end, isBlocked)) return [];
+    route.push({ ...end });
+  }
   return route;
+}
+
+function segmentIsLegal(start, end, isBlocked) {
+  const steps = Math.max(1, Math.ceil(distance(start, end) / 4));
+  for (let step = 0; step <= steps; step += 1) {
+    const ratio = step / steps;
+    if (isBlocked({ x: start.x + (end.x - start.x) * ratio, y: start.y + (end.y - start.y) * ratio })) return false;
+  }
+  return true;
 }
 
 function nearestWalkableCell(point, isBlocked) {
@@ -261,16 +285,16 @@ export function freshState(now = Date.now()) {
       timer: 0,
       ready: [],
       phase: "idle",
-      chef: { key: "chef-main", x: KITCHEN_POINTS.prep.x, y: KITCHEN_POINTS.prep.y, path: [], walking: false },
+      chef: { key: "chef-main", x: KITCHEN_POINTS.prep.x, y: KITCHEN_POINTS.prep.y, path: [], walking: false, navigationZone: "kitchen" },
       drinkQueue: [],
       activeDrink: null,
       drinkTimer: 0,
       drinkReady: [],
       drinkPhase: "idle",
-      drinkChef: { key: "chef-drink", x: KITCHEN_POINTS.drinkBar.x, y: KITCHEN_POINTS.drinkBar.y, path: [], walking: false },
+      drinkChef: { key: "chef-drink", x: KITCHEN_POINTS.drinkBar.x, y: KITCHEN_POINTS.drinkBar.y, path: [], walking: false, navigationZone: "kitchen" },
     },
     waiters: {
-      male: { key: "waiter-male", x: 890, y: 340, path: [], task: null, walking: false, idlePoint: { x: 890, y: 340 }, navigationZone: "dining" },
+      male: { key: "waiter-male", x: 900, y: 340, path: [], task: null, walking: false, idlePoint: { x: 900, y: 340 }, navigationZone: "dining" },
       female: {
         key: "waiter-female",
         x: POINTS.cashierService.x,
@@ -313,7 +337,7 @@ export function tickGame(state, dt) {
   const waitingCount = state.customers.filter((customer) => ["entering", "queueing", "waitingEscort", "waitingQueueExit"].includes(customer.state)).length;
   if (state.spawnTimer <= 0 && state.customers.length < guestLimit && waitingCount < WAITING_QUEUE_POINTS.length && !entranceBusy(state)) {
     spawnCustomer(state);
-    state.spawnTimer = 3.8;
+    state.spawnTimer = 2.8;
   } else if (state.spawnTimer <= 0) {
     state.spawnTimer = 1;
   }
@@ -347,6 +371,7 @@ function spawnCustomer(state) {
     tableId: null,
     direction: "up",
     walking: true,
+    navigationZone: "queue",
     walkFrame: 0,
     foodDelivered: false,
     drinkDelivered: false,
@@ -440,6 +465,12 @@ function seatCustomer(state, customer) {
 function updateSeatTransition(state, customer, dt) {
   updateTransitionPosition(customer, dt);
   if (customer.transition) return;
+  if (customer.afterSeatState) {
+    customer.state = customer.afterSeatState;
+    customer.afterSeatState = null;
+    customer.timer = 0.6;
+    return;
+  }
   customer.state = "waitingOrder";
   state.tables[customer.tableId - 1].orderState = "waitingOrder";
   state.message = "第 " + customer.tableId + " 桌已入座，等待點餐。";
@@ -466,12 +497,20 @@ function updateStandingTransition(state, customer, dt) {
   const cashierOccupied = checkoutBusy(state, customer);
   const queueOccupied = state.customers.some((item) => item !== customer && ["toCheckoutQueue", "waitingCheckoutSlot"].includes(item.state));
   if (cashierOccupied && queueOccupied) {
-    customer.state = "eating";
-    customer.timer = 0;
+    const seat = TABLES[customer.tableId - 1].seatPoints[0];
+    customer.state = "seatingTransition";
+    customer.afterSeatState = "eating";
+    customer.transition = {
+      elapsed: 0,
+      duration: 0.22,
+      from: { x: customer.x, y: customer.y },
+      to: { ...seat },
+    };
     return;
   }
   customer.seated = false;
   customer.state = cashierOccupied ? "toCheckoutQueue" : "toCheckout";
+  customer.navigationZone = "dining";
   customer.path = findPath(customer, cashierOccupied ? POINTS.checkoutQueue : POINTS.checkoutCustomer);
   customer.walking = true;
 }
@@ -535,7 +574,7 @@ function payAndLeave(state, customer) {
 }
 
 function checkoutBusy(state, customer) {
-  return state.customers.some((item) => item !== customer && ["toCheckout", "waitingPayment"].includes(item.state));
+  return state.customers.some((item) => item !== customer && ["toCheckout", "waitingPayment", "toExitApproach"].includes(item.state));
 }
 
 function entranceBusy(state, customer = null) {
@@ -563,6 +602,7 @@ function startDoorExit(state, customer, fromQueue) {
       ]
     : findPath(customer, POINTS.entranceMerge);
   customer.state = "leaving";
+  customer.navigationZone = "queue";
   customer.path = [...routeToMerge, { ...POINTS.entranceDoor }, { ...POINTS.exit }];
   customer.walking = true;
 }
@@ -882,6 +922,12 @@ function moveAlongPath(actor, speed, dt, state = null) {
     const candidate = length
       ? { x: actor.x + dx / length * travel, y: actor.y + dy / length * travel }
       : { x: target.x, y: target.y };
+    const zone = actor.navigationZone || "dining";
+    if (pointBlockedForZone(candidate, zone)) {
+      actor.walking = false;
+      actor.navigationError = { x: candidate.x, y: candidate.y, zone };
+      return false;
+    }
     if (state && (!reserveFootCell(state, actor, candidate) || positionOccupied(state, actor, candidate))) {
       actor.walking = false;
       return false;
@@ -901,10 +947,15 @@ function moveAlongPath(actor, speed, dt, state = null) {
 }
 
 function reserveFootCell(state, actor, point) {
-  const key = Math.round(point.x / GRID_SIZE) + "," + Math.round(point.y / GRID_SIZE) + ":" + collisionSpace(point);
+  const key = Math.round(point.x / GRID_SIZE) + "," + Math.round(point.y / GRID_SIZE);
   const owner = state.reservations.get(key);
-  if (owner && owner !== actor.key) return false;
-  state.reservations.set(key, actor.key);
+  if (owner && owner.owner !== actor.key) return false;
+  state.reservations.set(key, {
+    owner: actor.key,
+    x: Math.round(point.x / GRID_SIZE) * GRID_SIZE,
+    y: Math.round(point.y / GRID_SIZE) * GRID_SIZE,
+    zone: actor.navigationZone || "dining",
+  });
   return true;
 }
 
@@ -927,6 +978,164 @@ function allActors(state) {
     state.waiters.female,
     ...state.customers.filter((customer) => customer.state !== "done" && !customer.seated),
   ];
+}
+
+export function validateScene(state = null) {
+  const checks = [];
+  const failures = [];
+  const record = (name, passed, detail = {}) => {
+    checks.push({ name, passed });
+    if (!passed) failures.push({
+      name,
+      coordinate: detail.coordinate || null,
+      actor: detail.actor || "—",
+      object: detail.object || "—",
+      suggestion: detail.suggestion || "修正互動點或碰撞區域",
+    });
+  };
+  const legal = (name, point, zone, object = name) => record(name, !pointBlockedForZone(point, zone), {
+    coordinate: point,
+    object,
+    suggestion: `將 ${name} 移到 ${zone} 合法地板`,
+  });
+
+  for (const table of TABLES) {
+    const seat = table.seatPoints[0];
+    legal(`T${table.id} approachPoint`, table.seatApproachPoint, "dining", `table-${table.id}`);
+    legal(`T${table.id} servicePoint`, table.servicePoint, "dining", `table-${table.id}`);
+    record(`T${table.id} seatPoint 為 seated-only`, pointBlocked(seat) && insideRect(seat, table.chairBlockedArea), {
+      coordinate: seat,
+      object: `table-${table.id} chair`,
+      suggestion: "把 seatPoint 對齊椅面腳底位置並留在椅子 blocked area 內",
+    });
+    const head = { left: table.servicePoint.x - 24, right: table.servicePoint.x + 24, top: table.servicePoint.y - 80, bottom: table.servicePoint.y - 35 };
+    record(`T${table.id} servicePoint 不壓桌面`, !rectsOverlap(head, table.tableBodyArea), {
+      coordinate: table.servicePoint,
+      object: `table-${table.id}`,
+      suggestion: "把 servicePoint 往合法走道外移",
+    });
+    record(`T${table.id} servicePoint 不在鎖定遮罩`, !insideRect(table.servicePoint, {
+      left: table.lockRect.x,
+      top: table.lockRect.y,
+      right: table.lockRect.x + table.lockRect.w,
+      bottom: table.lockRect.y + table.lockRect.h,
+    }), {
+      coordinate: table.servicePoint,
+      object: `table-${table.id} locked overlay`,
+      suggestion: "把 servicePoint 移到鎖定桌區之外",
+    });
+  }
+
+  WAITING_QUEUE_POINTS.forEach((point, index) => legal(`waitingQueuePoint ${index + 1}`, point, "queue", "entrance queue"));
+  legal("cashierCustomerPoint", POINTS.checkoutCustomer, "dining", "cashier customer side");
+  legal("cashierCustomerQueuePoint", POINTS.checkoutQueue, "dining", "cashier customer queue");
+  legal("cashierStaffPoint", POINTS.cashierService, "staff", "cashier staff side");
+  legal("cashierStaffEntryPoint", POINTS.cashierApproach, "staff", "cashier staff entry");
+  record("cashierStaffPoint 僅限員工", pointBlocked(POINTS.cashierService), {
+    coordinate: POINTS.cashierService,
+    object: "cashier staff side",
+    suggestion: "把員工點留在 staff-only 區域",
+  });
+  record("收銀台本體隔開客人與店員", BLOCKED_RECTS.some((rect) => rect.name === "cashier"
+    && POINTS.cashierService.x < rect.right && POINTS.checkoutCustomer.x > rect.right), {
+    coordinate: POINTS.checkoutCustomer,
+    object: "cashier",
+    suggestion: "讓 staffPoint 與 customerPoint 分居櫃檯兩側",
+  });
+
+  for (const [name, point] of Object.entries(KITCHEN_POINTS)) legal(`kitchen ${name}`, point, "kitchen", "kitchen");
+  legal("pickupWaiterPoint", POINTS.pickupWaiter, "dining", "food pass");
+  legal("drinkPickupPoint", POINTS.drinkPickupWaiter, "staff", "drink pass");
+
+  if (state) {
+    for (const actor of sceneActors(state)) {
+      const seatedException = actor.kind === "customer" && actor.value.seated;
+      const validAnchor = seatedException
+        ? validSeatedAnchor(actor.value)
+        : !pointBlockedForZone(actor.value, actor.value.navigationZone || actor.zone);
+      record(`${actor.label} 腳底 anchor 合法`, validAnchor, {
+        coordinate: { x: actor.value.x, y: actor.value.y },
+        actor: actor.label,
+        object: actor.value.state || actor.value.task?.type || actor.value.navigationZone || actor.zone,
+        suggestion: seatedException ? "修正 seatPoint 或坐姿腳底 anchor" : "修正路徑或角色合法區域",
+      });
+      record(`${actor.label} 路徑不穿 blocked tile`, pathIsLegal(actor.value, actor.value.navigationZone || actor.zone), {
+        coordinate: actor.value.path?.[0] || { x: actor.value.x, y: actor.value.y },
+        actor: actor.label,
+        object: "current path",
+        suggestion: "重新計算路徑或修正目的 interaction point",
+      });
+    }
+
+    const reservationOwners = new Set();
+    for (const reservation of state.reservations.values()) {
+      const unique = !reservationOwners.has(`${reservation.x},${reservation.y}`);
+      reservationOwners.add(`${reservation.x},${reservation.y}`);
+      record(`預約格 ${reservation.x},${reservation.y} 唯一`, unique, {
+        coordinate: reservation,
+        actor: reservation.owner,
+        object: "next reservation",
+        suggestion: "讓後到角色停下等待",
+      });
+      record(`預約格 ${reservation.x},${reservation.y} 合法`, !pointBlockedForZone(reservation, reservation.zone), {
+        coordinate: reservation,
+        actor: reservation.owner,
+        object: "next reservation",
+        suggestion: "拒絕此移動並重算合法路徑",
+      });
+    }
+  }
+
+  return {
+    status: failures.length ? "FAIL" : "PASS",
+    passed: checks.length - failures.length,
+    total: checks.length,
+    checks,
+    failures,
+  };
+}
+
+function sceneActors(state) {
+  return [
+    { kind: "chef", label: "主餐廚師", value: state.kitchen.chef, zone: "kitchen" },
+    { kind: "chef", label: "飲料廚師", value: state.kitchen.drinkChef, zone: "kitchen" },
+    { kind: "waiter", label: "男服務生", value: state.waiters.male, zone: "dining" },
+    { kind: "waiter", label: "女服務生", value: state.waiters.female, zone: "staff" },
+    ...state.customers.filter((customer) => customer.state !== "done").map((customer) => ({
+      kind: "customer",
+      label: `客人 ${customer.id}`,
+      value: customer,
+      zone: customer.navigationZone || "dining",
+    })),
+  ];
+}
+
+function validSeatedAnchor(customer) {
+  const table = TABLES[customer.tableId - 1];
+  if (!table) return false;
+  const seat = table.seatPoints[0];
+  if (!customer.transition) return distance(customer, seat) < 0.5;
+  const approach = table.seatApproachPoint;
+  const corridor = {
+    left: Math.min(seat.x, approach.x) - 4,
+    right: Math.max(seat.x, approach.x) + 4,
+    top: Math.min(seat.y, approach.y) - 4,
+    bottom: Math.max(seat.y, approach.y) + 4,
+  };
+  return insideRect(customer, corridor);
+}
+
+function pathIsLegal(actor, zone) {
+  let previous = { x: actor.x, y: actor.y };
+  for (const point of actor.path || []) {
+    if (pointBlockedForZone(point, zone) || !segmentIsLegal(previous, point, (sample) => pointBlockedForZone(sample, zone))) return false;
+    previous = point;
+  }
+  return true;
+}
+
+function rectsOverlap(first, second) {
+  return first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
 }
 
 export function serializeState(state, now = Date.now()) {
