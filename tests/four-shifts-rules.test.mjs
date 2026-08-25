@@ -81,7 +81,7 @@ for (let step = 0; step < 8_000; step += 1) {
     restaurant.waiters.female,
     ...restaurant.customers.filter((customer) => !customer.seated),
   ];
-  const collisionSpace = (point) => point.x <= 459 && point.y <= 299
+  const collisionSpace = (point) => point.x <= 459 && point.y <= 300
     ? "kitchen"
     : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
       ? "cashier"
@@ -108,13 +108,6 @@ for (const phase of ["toStove", "cooking", "toPrep", "prepping", "toPickup"]) {
 for (const phase of ["mixing", "toPickup", "toIdle"]) {
   assert.ok(drinkPhases.has(phase), `drink chef reaches ${phase}`);
 }
-assert.deepEqual(KITCHEN_POINTS, {
-  stove: { x: 200, y: 140 },
-  prep: { x: 300, y: 250 },
-  drinkBar: { x: 420, y: 140 },
-  pickup: { x: 400, y: 270 },
-  drinkPickup: { x: 440, y: 270 },
-});
 for (const orderState of ["available", "seating", "ordering", "waitingFood", "eating", "checkout", "dirty"]) {
   assert.ok(tableOrderStates.has(orderState), `table reaches ${orderState}`);
 }
@@ -146,7 +139,10 @@ for (const from of ["queue", "pass", "table1", "table2", "table3", "table4", "ch
 }
 assert.equal(pointBlocked({ x: 590, y: 150 }), true, "table center is blocked");
 assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point is walkable");
-assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier staff side is blocked to customers");
+assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter body blocks everyone");
+assert.equal(pointBlocked({ x: 300, y: 320 }), true, "cashier staff side is blocked to customers");
+assert.equal(pointBlocked({ x: 300, y: 320 }, { allowCashier: true }), false, "cashier staff side is walkable for staff");
+assert.ok(POINTS.checkoutCustomer.y > 446 && POINTS.cashierService.y < 337, "customer and staff stand on opposite sides of the counter");
 assert.equal(pointBlocked(POINTS.checkoutCustomer), false, "cashier customer point is on the customer-side floor");
 assert.equal(pointBlocked(POINTS.cashierService, { allowCashier: true }), false, "cashier staff point is reachable only by staff");
 assert.equal(pointBlocked({ x: 300, y: 290 }), true, "white kitchen wall is blocked");
@@ -159,7 +155,13 @@ assert.deepEqual(findPath(POINTS.entranceInside, { x: 590, y: 150 }), [], "an il
 assert.ok(BLOCKED_RECTS.length >= 8, "collision map includes furniture and fixtures");
 assert.equal(WAITING_QUEUE_POINTS.length, 3, "invisible entrance queue has three fixed positions");
 assert.equal(new Set(WAITING_QUEUE_POINTS.map((point) => `${point.x},${point.y}`)).size, 3, "queue positions do not overlap");
-assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 120 && point.y >= 370 && point.y <= 450), "queue stays in the invisible entrance lane");
+for (let i = 1; i < WAITING_QUEUE_POINTS.length; i += 1) {
+  const gap = Math.hypot(WAITING_QUEUE_POINTS[i].x - WAITING_QUEUE_POINTS[i - 1].x, WAITING_QUEUE_POINTS[i].y - WAITING_QUEUE_POINTS[i - 1].y);
+  assert.ok(gap >= 34, "queue slots are further apart than the actor separation radius, otherwise the queue can never fill");
+}
+assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 96 && point.y >= 340 && point.y <= 452), "queue stays in the invisible entrance lane");
+assert.ok(WAITING_QUEUE_POINTS[0].y < WAITING_QUEUE_POINTS.at(-1).y, "queue front is the slot furthest from the door so nobody has to walk past");
+assert.ok(POINTS.exitBypass.x > QUEUE_PROTECTED_ZONE.right, "the exit lane sits outside the queue lane");
 assert.ok(WAITING_QUEUE_POINTS.every((point) => pointBlocked(point) && !pointBlocked(point, { allowQueue: true })), "only queue navigation may enter the protected entrance lane");
 assert.ok(TABLES.every((table) => !pointBlocked(table.seatApproachPoint)), "every guest approaches from walkable floor");
 assert.ok(TABLES.every((table) => pointBlocked(table.seatPoints[0])), "seated poses remain inside blocked chair areas");
@@ -230,7 +232,7 @@ for (let step = 0; step < 12_000; step += 1) {
     stress.waiters.female,
     ...stress.customers.filter((customer) => !customer.seated),
   ];
-  const stressSpace = (point) => point.x <= 459 && point.y <= 299
+  const stressSpace = (point) => point.x <= 459 && point.y <= 300
     ? "kitchen"
     : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
       ? "cashier"

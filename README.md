@@ -66,9 +66,14 @@ Open `http://127.0.0.1:4181/`.
 
 ```bash
 node tests/site-validation.test.cjs
+node tests/four-shifts-rules.test.mjs
+node tests/four-shifts-art.test.mjs
+node tests/four-shifts-browser.test.mjs
 ```
 
-The test checks public routes, metadata, internal links, Publications migration, private boundary rules, sitemap scope, GitHub destinations, theme behavior, and Apple-device layout safeguards.
+The site test checks public routes, metadata, internal links, Publications migration, private boundary rules, sitemap scope, GitHub destinations, theme behavior, and Apple-device layout safeguards.
+
+The Restaurant Rookie tests split into three layers: `rules` simulates the restaurant headlessly, `art` reconciles the collision map against the pixels actually painted in `pixel-restaurant.png`, and `browser` drives the real page in headless Chrome. The `art` layer exists because a spec-versus-spec validator will happily pass while the screen is wrong — it only proves the declared geometry is self-consistent, not that it matches the artwork.
 
 ## Deployment
 
