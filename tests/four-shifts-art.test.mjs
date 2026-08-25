@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import {
   BLOCKED_RECTS,
   CASHIER_STAFF_ZONE,
+  FRONT_FACES,
   KITCHEN_BLOCKED_RECTS,
   KITCHEN_POINTS,
   KITCHEN_WALKABLE_AREA,
@@ -110,7 +111,16 @@ for (const area of WALKABLE_AREAS) {
 }
 assert.ok(!isDiningFloor(room.at(POINTS.entranceDoor.x, POINTS.entranceDoor.y)), "the entrance door is a painted door, not floor spilling into the void");
 assert.ok(floorRatio(KITCHEN_WALKABLE_AREA, isKitchenFloor, KITCHEN_BLOCKED_RECTS) > 0.9, "kitchen walkable area is painted as kitchen floor");
-assert.ok(floorRatio(CASHIER_STAFF_ZONE, isDiningFloor) > 0.9, "the strip behind the counter is painted as floor, not counter");
+// 店員站的那一格在螢幕上落在櫃體裡（那是背景畫不出來的「櫃台後方」）。
+// 該驗的不是它是不是地板，而是櫃台正面真的會蓋住她——否則就會變成站在櫃體上。
+const cashierFront = FRONT_FACES.find((face) => face.name === "cashier-front");
+assert.ok(cashierFront, "the cashier counter declares a front face");
+assert.ok(
+  CASHIER_STAFF_ZONE.left >= cashierFront.rect.left && CASHIER_STAFF_ZONE.right <= cashierFront.rect.right
+  && CASHIER_STAFF_ZONE.bottom <= cashierFront.baseline,
+  "the staff stand-behind band is fully covered by the counter front face"
+);
+assert.ok(floorRatio({ left: 240, top: 452, right: 350, bottom: 460 }, isDiningFloor) > 0.8, "there is painted floor in front of the counter for customers");
 
 // 2. 每個角色會站上去的互動點，腳底下必須是地板。
 const standingPoints = {
@@ -125,8 +135,6 @@ const standingPoints = {
   checkoutCustomer: POINTS.checkoutCustomer,
   checkoutQueue: POINTS.checkoutQueue,
   checkoutExitApproach: POINTS.checkoutExitApproach,
-  cashierService: POINTS.cashierService,
-  cashierApproach: POINTS.cashierApproach,
 };
 for (const [name, point] of Object.entries(standingPoints)) {
   assert.ok(isDiningFloor(room.at(point.x, point.y)), `${name} stands on painted floor, not on furniture`);

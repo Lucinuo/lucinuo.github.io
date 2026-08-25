@@ -19,17 +19,17 @@ export const POINTS = {
   guestAisleStart: { x: 200, y: 440 },
   guestAisleEnd: { x: 480, y: 440 },
   exit: { x: 136, y: 524 },
-  pickupWaiter: { x: 404, y: 322 },
-  drinkPickupWaiter: { x: 436, y: 322 },
+  pickupWaiter: { x: 396, y: 330 },
+  drinkPickupWaiter: { x: 438, y: 330 },
   // 收銀台改成淺櫃（352–396），上下都留出真的可以站人的地板：
   // 員工站 306–348、客人站 398–460，中間隔著櫃體。
-  checkoutCustomer: { x: 300, y: 436 },
+  checkoutCustomer: { x: 300, y: 456 },
   // 等待結帳的人要停在「客人來的那一側」(東側)，
   // 放到西側的話後面的人得穿過正在結帳的人，兩邊互相等成死鎖。
-  checkoutQueue: { x: 396, y: 436 },
-  checkoutExitApproach: { x: 190, y: 440 },
-  cashierService: { x: 300, y: 344 },
-  cashierApproach: { x: 384, y: 344 },
+  checkoutQueue: { x: 430, y: 452 },
+  checkoutExitApproach: { x: 190, y: 452 },
+  cashierService: { x: 296, y: 416 },
+  cashierApproach: { x: 390, y: 404 },
 };
 
 export const KITCHEN_POINTS = {
@@ -97,12 +97,12 @@ export const TABLES = [
 // baseline = 這個物件在地板上的落腳線；腳底 y 小於它的角色會被它遮住。
 export const FRONT_FACES = [
   { name: "kitchen-rail", rect: { left: 0, top: 252, right: 460, bottom: 304 }, baseline: 303 },
-  { name: "cashier-counter", rect: { left: 218, top: 348, right: 370, bottom: 400 }, baseline: 397 },
+  { name: "cashier-front", rect: { left: 216, top: 390, right: 368, bottom: 454 }, baseline: 450 },
 ];
 
 export const BLOCKED_RECTS = [
   { name: "kitchen-and-front-wall", left: 20, top: 0, right: 459, bottom: 300 },
-  { name: "cashier-counter", left: 222, top: 352, right: 366, bottom: 396 },
+  { name: "cashier-counter", left: 222, top: 337, right: 364, bottom: 450 },
   { name: "table-1", left: 543, top: 112, right: 638, bottom: 198 },
   { name: "table-2", left: 745, top: 112, right: 842, bottom: 198 },
   { name: "table-3", left: 530, top: 308, right: 630, bottom: 400 },
@@ -141,7 +141,9 @@ export const WAITING_QUEUE_POINTS = [
 
 export const QUEUE_PROTECTED_ZONE = { left: 82, top: 330, right: 116, bottom: 452 };
 // 櫃台「後方」那條員工專用地板：上緣是廚房前牆的下緣，下緣是櫃體的上緣。
-export const CASHIER_STAFF_ZONE = { left: 226, top: 306, right: 362, bottom: 348 };
+// 店員站的位置在螢幕上落在櫃體範圍內——那是「櫃台後方的地板」，
+// 平面背景畫不出來。櫃台正面會重畫在她身上，所以看起來是站在櫃台後面。
+export const CASHIER_STAFF_ZONE = { left: 238, top: 404, right: 366, bottom: 436 };
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -171,8 +173,8 @@ export function pointBlocked(point, { allowQueue = false, allowCashier = false }
   if (!inWalkableBounds(point)) return true;
   if (!allowQueue && insideRect(point, QUEUE_PROTECTED_ZONE)) return true;
   if (!allowCashier && insideRect(point, CASHIER_STAFF_ZONE)) return true;
-  // 櫃體本身擋所有人，包含員工——員工是繞到櫃台「後方」，不是穿過櫃台。
-  return BLOCKED_RECTS.some((rect) => insideRect(point, rect));
+  // 櫃體擋所有人；唯一例外是店員站的「櫃台後方」那一格（見 CASHIER_STAFF_ZONE）。
+  return BLOCKED_RECTS.some((rect) => !(allowCashier && rect.name === "cashier-counter" && insideRect(point, CASHIER_STAFF_ZONE)) && insideRect(point, rect));
 }
 
 export function pointBlockedForZone(point, zone = "dining") {
@@ -1061,13 +1063,15 @@ export function validateScene(state = null) {
     object: "cashier staff side",
     suggestion: "把員工點留在 staff-only 區域",
   });
-  const counter = BLOCKED_RECTS.find((rect) => rect.name === "cashier-counter");
-  record("收銀台本體隔開客人與店員", Boolean(counter)
-    && POINTS.cashierService.y < counter.top
-    && POINTS.checkoutCustomer.y > counter.bottom, {
+  // 隔開客人與店員的是櫃台的「正面」：店員在它後面（會被它遮住），客人在它前面。
+  const front = FRONT_FACES.find((face) => face.name === "cashier-front");
+  record("收銀台正面隔開客人與店員", Boolean(front)
+    && POINTS.cashierService.y < front.baseline
+    && POINTS.checkoutCustomer.y > front.baseline
+    && insideRect(POINTS.cashierService, front.rect), {
     coordinate: POINTS.checkoutCustomer,
-    object: "cashier-counter",
-    suggestion: "員工站櫃體上緣之上、客人站下緣之下，中間隔著櫃體",
+    object: "cashier-front",
+    suggestion: "店員腳底要落在櫃台正面的遮擋範圍內，客人要在它的落地線之外",
   });
 
   for (const [name, point] of Object.entries(KITCHEN_POINTS)) legal(`kitchen ${name}`, point, "kitchen", "kitchen");

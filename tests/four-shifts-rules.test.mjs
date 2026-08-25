@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   BLOCKED_RECTS,
   CASHIER_STAFF_ZONE,
+  FRONT_FACES,
   KITCHEN_BLOCKED_RECTS,
   KITCHEN_POINTS,
   POINTS,
@@ -140,10 +141,11 @@ for (const from of ["queue", "pass", "table1", "table2", "table3", "table4", "ch
 assert.equal(pointBlocked({ x: 590, y: 150 }), true, "table center is blocked");
 assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point is walkable");
 assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter body blocks everyone");
-assert.equal(pointBlocked({ x: 300, y: 320 }), true, "cashier staff side is blocked to customers");
-assert.equal(pointBlocked({ x: 300, y: 320 }, { allowCashier: true }), false, "cashier staff side is walkable for staff");
-const counterRect = BLOCKED_RECTS.find((rect) => rect.name === "cashier-counter");
-assert.ok(POINTS.checkoutCustomer.y > counterRect.bottom && POINTS.cashierService.y < counterRect.top, "customer and staff stand on opposite sides of the counter");
+assert.equal(pointBlocked(POINTS.cashierService), true, "cashier staff side is blocked to customers");
+assert.equal(pointBlocked(POINTS.cashierService, { allowCashier: true }), false, "cashier staff side is walkable for staff");
+const counterFront = FRONT_FACES.find((face) => face.name === "cashier-front");
+assert.ok(POINTS.cashierService.y < counterFront.baseline, "staff stand behind the counter front, so it is drawn over them");
+assert.ok(POINTS.checkoutCustomer.y > counterFront.baseline, "customers stand in front of the counter front, so they are drawn over it");
 assert.equal(pointBlocked(POINTS.checkoutCustomer), false, "cashier customer point is on the customer-side floor");
 assert.equal(pointBlocked(POINTS.cashierService, { allowCashier: true }), false, "cashier staff point is reachable only by staff");
 assert.equal(pointBlocked({ x: 300, y: 290 }), true, "white kitchen wall is blocked");
@@ -164,6 +166,45 @@ assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 96 && point.y >= 340
 assert.ok(WAITING_QUEUE_POINTS[0].y < WAITING_QUEUE_POINTS.at(-1).y, "queue front is the slot furthest from the door so nobody has to walk past");
 assert.ok(POINTS.exitBypass.x > QUEUE_PROTECTED_ZONE.right, "the exit lane sits outside the queue lane");
 assert.ok(WAITING_QUEUE_POINTS.every((point) => pointBlocked(point) && !pointBlocked(point, { allowQueue: true })), "only queue navigation may enter the protected entrance lane");
+// 不同角色會同時站著的固定點，彼此距離必須大於 34px 的互斥半徑，
+// 否則其中一個永遠走不到自己的位置——這一類卡死已經重複發生三次。
+const OCCUPIED_POINTS = {
+  cashierStaff: POINTS.cashierService,
+  cashierStaffEntry: POINTS.cashierApproach,
+  checkoutCustomer: POINTS.checkoutCustomer,
+  checkoutQueue: POINTS.checkoutQueue,
+  checkoutExitApproach: POINTS.checkoutExitApproach,
+  foodPass: POINTS.pickupWaiter,
+  drinkPass: POINTS.drinkPickupWaiter,
+  queueHost: POINTS.queueHost,
+  exitBypass: POINTS.exitBypass,
+  ...Object.fromEntries(WAITING_QUEUE_POINTS.map((point, index) => [`queue${index + 1}`, point])),
+  ...Object.fromEntries(TABLES.flatMap((table) => [
+    [`table${table.id}Approach`, table.seatApproachPoint],
+    [`table${table.id}Service`, table.servicePoint],
+  ])),
+};
+// 光是「點跟點不要太近」不夠——店員走進櫃台後方的那條路徑本身
+// 也不能擦過等待結帳的客人，否則她永遠走不進去。
+const staffRoute = [
+  ...findPath(POINTS.cashierApproach, POINTS.cashierService, "staff"),
+  { ...POINTS.cashierApproach },
+];
+for (const step of staffRoute) {
+  for (const name of ["checkoutCustomer", "checkoutQueue"]) {
+    const gap = Math.hypot(step.x - POINTS[name].x, step.y - POINTS[name].y);
+    assert.ok(gap >= 34, `the staff route passes ${gap.toFixed(1)}px from ${name}; the waiting guest would block it permanently`);
+  }
+}
+
+for (const [nameA, a] of Object.entries(OCCUPIED_POINTS)) {
+  for (const [nameB, b] of Object.entries(OCCUPIED_POINTS)) {
+    if (nameA >= nameB) continue;
+    const gap = Math.hypot(a.x - b.x, a.y - b.y);
+    assert.ok(gap >= 34, `${nameA} and ${nameB} are ${gap.toFixed(1)}px apart; closer than the 34px actor radius means one of them can never be reached`);
+  }
+}
+
 assert.ok(TABLES.every((table) => !pointBlocked(table.seatApproachPoint)), "every guest approaches from walkable floor");
 assert.ok(TABLES.every((table) => pointBlocked(table.seatPoints[0])), "seated poses remain inside blocked chair areas");
 assert.ok(TABLES.every((table) => !("spriteOffset" in table.seatPoints[0])), "seat coordinates directly encode the shared foot anchor");
