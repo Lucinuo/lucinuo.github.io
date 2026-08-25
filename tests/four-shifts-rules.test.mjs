@@ -142,7 +142,8 @@ assert.equal(pointBlocked(TABLES[0].servicePoint), false, "table service point i
 assert.equal(pointBlocked({ x: 300, y: 390 }), true, "cashier counter body blocks everyone");
 assert.equal(pointBlocked({ x: 300, y: 320 }), true, "cashier staff side is blocked to customers");
 assert.equal(pointBlocked({ x: 300, y: 320 }, { allowCashier: true }), false, "cashier staff side is walkable for staff");
-assert.ok(POINTS.checkoutCustomer.y > 446 && POINTS.cashierService.y < 337, "customer and staff stand on opposite sides of the counter");
+const counterRect = BLOCKED_RECTS.find((rect) => rect.name === "cashier-counter");
+assert.ok(POINTS.checkoutCustomer.y > counterRect.bottom && POINTS.cashierService.y < counterRect.top, "customer and staff stand on opposite sides of the counter");
 assert.equal(pointBlocked(POINTS.checkoutCustomer), false, "cashier customer point is on the customer-side floor");
 assert.equal(pointBlocked(POINTS.cashierService, { allowCashier: true }), false, "cashier staff point is reachable only by staff");
 assert.equal(pointBlocked({ x: 300, y: 290 }), true, "white kitchen wall is blocked");

@@ -19,16 +19,17 @@ export const POINTS = {
   guestAisleStart: { x: 200, y: 440 },
   guestAisleEnd: { x: 480, y: 440 },
   exit: { x: 136, y: 524 },
-  pickupWaiter: { x: 400, y: 330 },
-  drinkPickupWaiter: { x: 430, y: 330 },
-  // 客人站櫃台「前面」，員工站櫃台「後面」，中間隔著櫃體 222–364 × 337–446。
-  checkoutCustomer: { x: 300, y: 456 },
+  pickupWaiter: { x: 404, y: 322 },
+  drinkPickupWaiter: { x: 436, y: 322 },
+  // 收銀台改成淺櫃（352–396），上下都留出真的可以站人的地板：
+  // 員工站 306–348、客人站 398–460，中間隔著櫃體。
+  checkoutCustomer: { x: 300, y: 436 },
   // 等待結帳的人要停在「客人來的那一側」(東側)，
   // 放到西側的話後面的人得穿過正在結帳的人，兩邊互相等成死鎖。
-  checkoutQueue: { x: 392, y: 452 },
-  checkoutExitApproach: { x: 190, y: 452 },
-  cashierService: { x: 300, y: 330 },
-  cashierApproach: { x: 376, y: 330 },
+  checkoutQueue: { x: 396, y: 436 },
+  checkoutExitApproach: { x: 190, y: 440 },
+  cashierService: { x: 300, y: 344 },
+  cashierApproach: { x: 384, y: 344 },
 };
 
 export const KITCHEN_POINTS = {
@@ -45,6 +46,7 @@ export const KITCHEN_POINTS = {
 export const TABLES = [
   {
     id: 1,
+    chairFrontArea: { left: 616, top: 166, right: 638, bottom: 188 },
     seatApproachPoint: { x: 627, y: 218 },
     seatPoints: [{ x: 627, y: 185, facing: "left" }],
     servicePoint: { x: 590, y: 246 },
@@ -55,6 +57,7 @@ export const TABLES = [
   },
   {
     id: 2,
+    chairFrontArea: { left: 818, top: 168, right: 842, bottom: 190 },
     seatApproachPoint: { x: 830, y: 218 },
     seatPoints: [{ x: 830, y: 185, facing: "left" }],
     servicePoint: { x: 793, y: 246 },
@@ -65,6 +68,7 @@ export const TABLES = [
   },
   {
     id: 3,
+    chairFrontArea: { left: 605, top: 368, right: 630, bottom: 390 },
     seatApproachPoint: { x: 618, y: 420 },
     seatPoints: [{ x: 618, y: 386, facing: "left" }],
     servicePoint: { x: 580, y: 445 },
@@ -75,6 +79,7 @@ export const TABLES = [
   },
   {
     id: 4,
+    chairFrontArea: { left: 820, top: 382, right: 846, bottom: 404 },
     seatApproachPoint: { x: 833, y: 425 },
     seatPoints: [{ x: 833, y: 400, facing: "left" }],
     servicePoint: { x: 795, y: 448 },
@@ -86,9 +91,18 @@ export const TABLES = [
 ];
 
 // 碰撞矩形一律貼齊背景圖上真正畫出來的家具；寬鬆的大方塊會讓互動點落在空地上。
+// 家具的「正面」——會被重畫在角色上面，讓站在後面的人真的被擋住。
+// 這是這個場景之前一直做不對的關鍵：背景是一張平面畫，程式只知道矩形，
+// 不知道櫃台/椅子/圍欄有正面，所以站在後面的人會被畫在家具上面。
+// baseline = 這個物件在地板上的落腳線；腳底 y 小於它的角色會被它遮住。
+export const FRONT_FACES = [
+  { name: "kitchen-rail", rect: { left: 0, top: 252, right: 460, bottom: 304 }, baseline: 303 },
+  { name: "cashier-counter", rect: { left: 218, top: 348, right: 370, bottom: 400 }, baseline: 397 },
+];
+
 export const BLOCKED_RECTS = [
   { name: "kitchen-and-front-wall", left: 20, top: 0, right: 459, bottom: 300 },
-  { name: "cashier-counter", left: 222, top: 337, right: 364, bottom: 446 },
+  { name: "cashier-counter", left: 222, top: 352, right: 366, bottom: 396 },
   { name: "table-1", left: 543, top: 112, right: 638, bottom: 198 },
   { name: "table-2", left: 745, top: 112, right: 842, bottom: 198 },
   { name: "table-3", left: 530, top: 308, right: 630, bottom: 400 },
@@ -127,7 +141,7 @@ export const WAITING_QUEUE_POINTS = [
 
 export const QUEUE_PROTECTED_ZONE = { left: 82, top: 330, right: 116, bottom: 452 };
 // 櫃台「後方」那條員工專用地板：上緣是廚房前牆的下緣，下緣是櫃體的上緣。
-export const CASHIER_STAFF_ZONE = { left: 224, top: 304, right: 362, bottom: 336 };
+export const CASHIER_STAFF_ZONE = { left: 226, top: 306, right: 362, bottom: 348 };
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -730,23 +744,20 @@ function updateMaleWaiter(state, dt) {
     const customer = findCustomer(state, task.customerId);
     if (!customer || customer.state !== "queueing") return finishTask(waiter);
     const table = TABLES[customer.tableId - 1];
-    customer.state = "waitingEscort";
+    // 客人跟服務生「同時」出發，不是等服務生走到桌邊才開始走。
+    customer.state = "seating";
     customer.mood = "normal";
     customer.waitTime = 0;
-    customer.path = [];
+    customer.path = [
+      ...findPath(customer, POINTS.guestAisleStart, "queue"),
+      ...findPath(POINTS.guestAisleStart, POINTS.guestAisleEnd, "queue"),
+      ...findPath(POINTS.guestAisleEnd, table.seatApproachPoint, "queue"),
+    ];
+    customer.walking = true;
     task.phase = "lead";
     waiter.path = findPath(waiter, table.servicePoint);
     state.message = "男服務生帶客人前往第 " + customer.tableId + " 桌。";
   } else if (task.type === "escort") {
-    const customer = findCustomer(state, task.customerId);
-    if (customer && customer.state === "waitingEscort") {
-      customer.state = "seating";
-      customer.path = [
-        ...findPath(customer, POINTS.guestAisleStart, "queue"),
-        ...findPath(POINTS.guestAisleStart, POINTS.guestAisleEnd, "queue"),
-        ...findPath(POINTS.guestAisleEnd, TABLES[customer.tableId - 1].seatApproachPoint, "queue"),
-      ];
-    }
     finishTask(waiter);
   } else if (task.type === "deliver" && task.phase === "pickup") {
     task.phase = "table";

@@ -1,6 +1,7 @@
 import {
   BLOCKED_RECTS,
   CASHIER_STAFF_ZONE,
+  FRONT_FACES,
   KITCHEN_BLOCKED_RECTS,
   KITCHEN_POINTS,
   KITCHEN_WALKABLE_AREA,
@@ -22,7 +23,7 @@ import {
   upgradeCost,
   validateScene,
   waiterSpeed,
-} from "./game-rules.mjs?v=20260825-5";
+} from "./game-rules.mjs?v=20260825-6";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -207,28 +208,41 @@ function draw() {
   context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
   drawLockedTables();
 
-  for (const actor of [
-    { kind: "chef", ...state.kitchen.chef },
-    { kind: "drinkChef", ...state.kitchen.drinkChef },
-  ].sort((first, second) => first.y - second.y)) drawActor(actor);
-  redrawKitchenFront();
+  // 角色與「家具的正面」放進同一個深度排序：腳底 y 小的先畫。
+  // 站在櫃台/椅子/圍欄後面的人因此會被家具擋住，站在前面的人則蓋過家具。
+  // 這是把一張平面背景當成有深度的場景在用——之前少了這層，
+  // 所以人會被畫在櫃體與椅子「上面」，看起來像卡在裡面或浮在旁邊。
+  const layers = [];
+  const actor = (kind, value) => layers.push({ y: value.y + 0.5, paint: () => drawActor({ kind, ...value }) });
+  const frontFace = (rect, baseline) => layers.push({ y: baseline, paint: () => redrawRegion(rect) });
 
-  for (const customer of state.customers.filter((item) => item.seated).sort((first, second) => first.y - second.y)) {
-    drawActor({ kind: "customer", ...customer });
+  actor("chef", state.kitchen.chef);
+  actor("drinkChef", state.kitchen.drinkChef);
+  actor("maleWaiter", state.waiters.male);
+  actor("femaleWaiter", state.waiters.female);
+  for (const customer of state.customers) actor("customer", customer);
+  for (const face of FRONT_FACES) frontFace(face.rect, face.baseline);
+  for (const table of TABLES.slice(0, state.upgrades.tables)) {
+    frontFace(coverRect(table), table.tableBodyArea.bottom);
+    frontFace(table.chairFrontArea, table.chairFrontArea.bottom);
   }
-  for (const table of TABLES.slice(0, state.upgrades.tables)) redrawTableTop(table);
 
-  // 女服務生現在真的站在櫃台「後方」的地板上（y 比櫃體上緣小），
-  // 靠 y 排序自然被櫃體擋住，不需要再把櫃台重畫一次蓋住她。
-  const publicActors = [
-    { kind: "maleWaiter", ...state.waiters.male },
-    { kind: "femaleWaiter", ...state.waiters.female },
-    ...state.customers.filter((customer) => !customer.seated).map((customer) => ({ kind: "customer", ...customer })),
-  ].sort((first, second) => first.y - second.y);
-  for (const actor of publicActors) drawActor(actor);
+  layers.sort((first, second) => first.y - second.y);
+  for (const layer of layers) layer.paint();
+
   drawDirtyTables();
   drawCustomerBubbles();
   if (debugVisible) drawDebugOverlay();
+}
+
+function coverRect(table) {
+  return { left: table.cover.x, top: table.cover.y, right: table.cover.x + table.cover.w, bottom: table.cover.y + table.cover.h };
+}
+
+function redrawRegion(rect) {
+  const width = rect.right - rect.left;
+  const height = rect.bottom - rect.top;
+  context.drawImage(roomImage, rect.left, rect.top, width, height, rect.left, rect.top, width, height);
 }
 
 function drawLockedTables() {
@@ -331,16 +345,6 @@ function spriteMetric(image, column, row) {
   const metric = { centerX: left < cell ? (left + right) / 2 : cell / 2, bottom: bottom || cell };
   spriteMetrics.set(key, metric);
   return metric;
-}
-
-function redrawTableTop(table) {
-  const { x, y, w, h } = table.cover;
-  context.drawImage(roomImage, x, y, w, h, x, y, w, h);
-}
-
-function redrawKitchenFront() {
-  // 只重畫廚房前牆本身（前場地板從 y=302 起），舊版多蓋 13px 會把站在牆前的人腳砍掉。
-  context.drawImage(roomImage, 0, 281, 460, 21, 0, 281, 460, 21);
 }
 
 function drawDebugOverlay() {
