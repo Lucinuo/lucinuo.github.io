@@ -23,6 +23,16 @@ import {
   WAITING_QUEUE_POINTS,
   WALKABLE_AREAS,
 } from "../site/four-shifts/game-rules.mjs";
+import {
+  COLLISION_RECTS as V2_COLLISION_RECTS,
+  FURNITURE as V2_FURNITURE,
+  INTERACTION_POINTS as V2_INTERACTION_POINTS,
+  ROLE_WALKABLE_AREAS as V2_ROLE_WALKABLE_AREAS,
+  TABLE_POINTS as V2_TABLE_POINTS,
+  WORLD as V2_WORLD,
+  pointBlocked as v2PointBlocked,
+  roleWalkable as v2RoleWalkable,
+} from "../site/four-shifts/scene-v2.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -170,4 +180,28 @@ for (const table of TABLES) {
   assert.ok(above.filter((value) => value < 80).length >= 3, `table ${table.id} seat has a painted chair behind it, not bare floor`);
 }
 
-console.log("Restaurant Rookie art/spec reconciliation passed");
+const roomV2 = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2.png"));
+assert.deepEqual({ width: roomV2.width, height: roomV2.height }, { width: V2_WORLD.width, height: V2_WORLD.height }, "v2 scene matches the 960×540 world");
+for (const item of V2_FURNITURE) {
+  for (const value of [item.x, item.y, item.width, item.height]) assert.equal(value % V2_WORLD.grid, 0, `${item.id} aligns to the 20px grid`);
+}
+for (const rect of V2_COLLISION_RECTS) {
+  assert.ok(rect.left >= 0 && rect.top >= 0 && rect.right <= V2_WORLD.width && rect.bottom <= V2_WORLD.height, `${rect.id} stays inside the world`);
+}
+for (const [role, areas] of Object.entries(V2_ROLE_WALKABLE_AREAS)) {
+  assert.ok(areas.length > 0, `${role} has a walkable map`);
+  for (const area of areas) {
+    for (const value of [area.left, area.top, area.right, area.bottom]) assert.equal(value % V2_WORLD.grid, 0, `${role}/${area.id} aligns to the grid`);
+  }
+}
+for (const point of V2_INTERACTION_POINTS) {
+  const isDoor = point.id === "entranceDoor";
+  assert.ok(isDoor || v2RoleWalkable(point.role, point, { doorOpen: true }), `${point.id} is legal for ${point.role}`);
+}
+for (const table of V2_TABLE_POINTS) {
+  assert.ok(v2RoleWalkable("customer", table.approachPoint, { doorOpen: true }), `table ${table.id} approach is walkable`);
+  assert.ok(v2PointBlocked(table.seatPoint), `table ${table.id} seat is seated-only inside the chair collision`);
+  assert.ok(v2RoleWalkable("waiter", table.servicePoint, { doorOpen: true }), `table ${table.id} service point is outside furniture`);
+}
+
+console.log("Restaurant Rookie art/spec reconciliation passed (legacy + static v2)");

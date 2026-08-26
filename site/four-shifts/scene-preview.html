@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17120e">
+  <link rel="icon" href="data:,">
+  <title>餐廳菜鳥｜第一階段靜態場景</title>
+  <style>
+    :root { color-scheme: dark; font-family: "PingFang TC", system-ui, sans-serif; color: #f7ead1; background: #17120e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #17120e; }
+    main { width: min(1180px, 100%); margin: auto; padding: 18px; }
+    header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    h1 { margin: 0; font: 800 clamp(1.3rem, 3vw, 2rem)/1.2 Georgia, "Noto Serif TC", serif; }
+    header p { margin: 5px 0 0; color: #c9b894; }
+    .controls { display: flex; flex-wrap: wrap; gap: 7px; }
+    button { border: 2px solid #d8bd83; padding: 8px 11px; color: #f7ead1; background: #30251c; font: 700 .82rem/1 inherit; cursor: pointer; }
+    button[aria-pressed="true"] { color: #172016; background: #9fc28d; }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .canvas-frame { border: 3px solid #0d0a08; background: #080706; box-shadow: 0 6px 20px #0008; }
+    canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; }
+    .legend { min-height: 2rem; margin: 0; padding: 8px 10px; color: #ead7b1; background: #261d17; font-size: .82rem; }
+    .specs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    section { min-width: 0; border: 2px solid #4b392a; background: #211914; }
+    section h2 { margin: 0; padding: 10px 12px; color: #f0d79e; background: #33251b; font-size: 1rem; }
+    .table-wrap { max-height: 340px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .74rem; }
+    th, td { border-bottom: 1px solid #493629; padding: 7px 9px; text-align: left; white-space: nowrap; }
+    th { position: sticky; top: 0; color: #17120e; background: #d9bd83; }
+    td code { color: #a9d69a; }
+    .full { grid-column: 1 / -1; }
+    @media (max-width: 760px) { header { align-items: stretch; flex-direction: column; } .specs { grid-template-columns: 1fr; } .full { grid-column: auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>餐廳菜鳥｜第一階段靜態場景</h1>
+        <p>960×540 canvas・20×20 grid・無角色、無移動、無營運模擬</p>
+      </div>
+      <nav class="controls" aria-label="場景圖層">
+        <button type="button" data-layer="scene" aria-pressed="true">靜態場景</button>
+        <button type="button" data-layer="collision" aria-pressed="false">Collision</button>
+        <button type="button" data-layer="customer" aria-pressed="false">Customer map</button>
+        <button type="button" data-layer="waiter" aria-pressed="false">Waiter map</button>
+        <button type="button" data-layer="chef" aria-pressed="false">Chef map</button>
+        <button type="button" data-layer="points" aria-pressed="false">Interaction points</button>
+      </nav>
+    </header>
+
+    <div class="canvas-frame">
+      <canvas width="960" height="540" aria-label="第一階段像素餐廳靜態場景"></canvas>
+      <p class="legend" data-legend>靜態美術：無角色、無路線、無動畫。</p>
+    </div>
+
+    <div class="specs">
+      <section>
+        <h2>家具座標表</h2>
+        <div class="table-wrap"><table data-furniture></table></div>
+      </section>
+      <section>
+        <h2>角色 Walkable map</h2>
+        <div class="table-wrap"><table data-walkable></table></div>
+      </section>
+      <section class="full">
+        <h2>Interaction points</h2>
+        <div class="table-wrap"><table data-points></table></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { COLLISION_RECTS, FURNITURE, INTERACTION_POINTS, ROLE_WALKABLE_AREAS, TABLE_POINTS, WORLD, roleWalkable } from "./scene-v2.mjs";
+
+    const canvas = document.querySelector("canvas");
+    const context = canvas.getContext("2d");
+    const legend = document.querySelector("[data-legend]");
+    const image = new Image();
+    image.src = "./assets/pixel-restaurant-v2.png";
+    let layer = "scene";
+
+    const pointColours = { customer: "#ffe06b", waiter: "#76c7ff", chef: "#ff8d7b", table: "#d7a5ff" };
+    const layerLabels = {
+      scene: "靜態美術：無角色、無路線、無動畫。",
+      collision: "紅色＝不可通行；黃色＝第二階段可切換的入口門。",
+      customer: "黃色＝客人可走格；家具與牆仍不可通行。",
+      waiter: "藍色＝服務生可走格；不進廚房。",
+      chef: "橘色＝廚師可走格；只在廚房工作區。",
+      points: "黃＝客人、藍＝服務生、橘＝廚師、紫＝餐桌互動點。",
+    };
+
+    function drawGrid() {
+      context.save();
+      context.strokeStyle = "rgba(255,255,255,.18)";
+      context.lineWidth = 1;
+      for (let x = 0; x <= WORLD.width; x += WORLD.grid) {
+        context.beginPath(); context.moveTo(x + .5, 0); context.lineTo(x + .5, WORLD.height); context.stroke();
+      }
+      for (let y = 0; y <= WORLD.height; y += WORLD.grid) {
+        context.beginPath(); context.moveTo(0, y + .5); context.lineTo(WORLD.width, y + .5); context.stroke();
+      }
+      context.restore();
+    }
+
+    function drawRoleMap(role, colour) {
+      context.save();
+      context.fillStyle = colour;
+      for (let y = 0; y < WORLD.height; y += WORLD.grid) {
+        for (let x = 0; x < WORLD.width; x += WORLD.grid) {
+          const point = { x: x + WORLD.grid / 2, y: y + WORLD.grid / 2 };
+          if (roleWalkable(role, point, { doorOpen: role !== "chef" })) context.fillRect(x + 1, y + 1, WORLD.grid - 2, WORLD.grid - 2);
+        }
+      }
+      context.restore();
+    }
+
+    function drawRect(rect, colour) {
+      context.fillStyle = colour;
+      context.strokeStyle = colour.replace(".35", ".9");
+      context.fillRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+      context.strokeRect(rect.left + .5, rect.top + .5, rect.right - rect.left - 1, rect.bottom - rect.top - 1);
+    }
+
+    const pointLabelOffsets = {
+      foodPickupKitchen: { x: -116, y: -18 },
+      foodPickupWaiter: { x: -108, y: -18 },
+      drinkBarPoint: { x: 7, y: -34 },
+      cashierStaffEntryPoint: { x: 7, y: 16 },
+    };
+
+    function drawPoint(point, label, colour) {
+      const offset = pointLabelOffsets[label] ?? { x: 7, y: -18 };
+      context.save();
+      context.fillStyle = colour;
+      context.strokeStyle = "#17120e";
+      context.lineWidth = 2;
+      context.beginPath(); context.arc(point.x, point.y, 6, 0, Math.PI * 2); context.fill(); context.stroke();
+      context.font = "700 11px system-ui";
+      context.textBaseline = "bottom";
+      const width = context.measureText(label).width + 6;
+      context.fillStyle = "rgba(16,12,9,.86)";
+      context.fillRect(point.x + offset.x, point.y + offset.y, width, 16);
+      context.fillStyle = colour;
+      context.fillText(label, point.x + offset.x + 3, point.y + offset.y + 14);
+      context.restore();
+    }
+
+    function render() {
+      context.clearRect(0, 0, WORLD.width, WORLD.height);
+      context.imageSmoothingEnabled = false;
+      context.drawImage(image, 0, 0, WORLD.width, WORLD.height);
+      if (layer !== "scene") drawGrid();
+      if (layer === "collision") {
+        COLLISION_RECTS.forEach((rect) => drawRect(rect, rect.dynamic ? "rgba(255,205,70,.35)" : "rgba(255,65,65,.35)"));
+      } else if (["customer", "waiter", "chef"].includes(layer)) {
+        drawRoleMap(layer, { customer: "rgba(255,224,107,.42)", waiter: "rgba(84,180,255,.42)", chef: "rgba(255,126,97,.45)" }[layer]);
+        COLLISION_RECTS.forEach((rect) => { context.strokeStyle = "rgba(255,65,65,.7)"; context.strokeRect(rect.left + .5, rect.top + .5, rect.right - rect.left - 1, rect.bottom - rect.top - 1); });
+      } else if (layer === "points") {
+        INTERACTION_POINTS.forEach((point) => drawPoint(point, point.id, pointColours[point.role]));
+        TABLE_POINTS.forEach((table) => {
+          drawPoint(table.approachPoint, `T${table.id} approach`, pointColours.table);
+          drawPoint(table.seatPoint, `T${table.id} seat`, "#f0c7ff");
+          drawPoint(table.servicePoint, `T${table.id} service`, "#bb7cff");
+        });
+      }
+      legend.textContent = layerLabels[layer];
+    }
+
+    document.querySelectorAll("[data-layer]").forEach((button) => button.addEventListener("click", () => {
+      layer = button.dataset.layer;
+      document.querySelectorAll("[data-layer]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      render();
+    }));
+
+    function table(target, headers, rows) {
+      target.innerHTML = `<thead><tr>${headers.map((item) => `<th>${item}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((item) => `<td>${item}</td>`).join("")}</tr>`).join("")}</tbody>`;
+    }
+
+    table(document.querySelector("[data-furniture]"), ["家具", "類型", "x", "y", "w", "h"], FURNITURE.map((item) => [item.label, item.kind, item.x, item.y, item.width, item.height]));
+    table(document.querySelector("[data-walkable]"), ["角色", "區域", "left", "top", "right", "bottom"], Object.entries(ROLE_WALKABLE_AREAS).flatMap(([role, areas]) => areas.map((area) => [role, area.label, area.left, area.top, area.right, area.bottom])));
+    table(document.querySelector("[data-points]"), ["互動點", "角色", "x", "y", "備註"], [
+      ...INTERACTION_POINTS.map((point) => [point.label, point.role, point.x, point.y, point.note || "—"]),
+      ...TABLE_POINTS.flatMap((item) => [
+        [`餐桌 ${item.id} approach`, "customer", item.approachPoint.x, item.approachPoint.y, "入座前站位"],
+        [`餐桌 ${item.id} seat`, "customer", item.seatPoint.x, item.seatPoint.y, `seated-only；面向 ${item.facing}`],
+        [`餐桌 ${item.id} service`, "waiter", item.servicePoint.x, item.servicePoint.y, "桌外服務點"],
+      ]),
+    ]);
+
+    image.addEventListener("load", render, { once: true });
+  </script>
+</body>
+</html>
