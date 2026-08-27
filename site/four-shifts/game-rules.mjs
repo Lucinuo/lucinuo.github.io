@@ -1,149 +1,79 @@
+import {
+  COLLISION_RECTS as SCENE_COLLISION_RECTS,
+  INTERACTION_POINTS as SCENE_POINTS,
+  ROLE_WALKABLE_AREAS,
+  TABLE_POINTS,
+  WORLD as SCENE_WORLD,
+  roleWalkable as sceneRoleWalkable,
+} from "./scene-v2.mjs";
+
 export const SAVE_VERSION = 1;
 export const SAVE_KEY = "restaurant-rookie-idle-v1";
-export const WORLD = { width: 960, height: 540 };
-// 走道最窄處（收銀台後方員工區）只有 20px，格子必須比它細，否則尋路只剩一排格點、一被佔就無解。
-export const GRID_SIZE = 10;
+export const WORLD = { width: SCENE_WORLD.width, height: SCENE_WORLD.height };
+export const GRID_SIZE = SCENE_WORLD.grid;
 
-// Every world position is measured in the canvas's internal 960 x 540 space.
-// Actor x/y values are always the bottom-centre foot anchor, never CSS pixels.
-// 座位是唯一的例外：seatPoints 對齊椅子的落地線，見 TABLES 的註解。
+// 所有座標都使用內部 960×540 canvas；actor x/y 永遠是腳底中央點。
+const scenePoint = (id) => {
+  const point = SCENE_POINTS.find((item) => item.id === id);
+  return { x: point.x, y: point.y };
+};
 
 export const POINTS = {
-  // 入口分成兩條車道：排隊走 x=96，離場走 x=136，只在門口那一格交會。
-  customerSpawn: { x: 136, y: 524 },
-  entranceDoor: { x: 136, y: 472 },
-  entranceInside: { x: 120, y: 440 },
-  queueEntry: { x: 96, y: 440 },
-  exitBypass: { x: 136, y: 440 },
-  queueHost: { x: 150, y: 350 },
-  guestAisleStart: { x: 200, y: 440 },
-  guestAisleEnd: { x: 480, y: 440 },
-  exit: { x: 136, y: 524 },
-  pickupWaiter: { x: 396, y: 330 },
-  drinkPickupWaiter: { x: 438, y: 330 },
-  // 收銀台改成淺櫃（352–396），上下都留出真的可以站人的地板：
-  // 員工站 306–348、客人站 398–460，中間隔著櫃體。
-  checkoutCustomer: { x: 300, y: 456 },
-  // 等待結帳的人要停在「客人來的那一側」(東側)，
-  // 放到西側的話後面的人得穿過正在結帳的人，兩邊互相等成死鎖。
-  checkoutQueue: { x: 430, y: 452 },
-  checkoutExitApproach: { x: 190, y: 452 },
-  cashierService: { x: 296, y: 416 },
-  cashierApproach: { x: 390, y: 404 },
+  customerSpawn: scenePoint("customerSpawn"),
+  entranceDoor: scenePoint("entranceDoor"),
+  entranceInside: scenePoint("entranceInside"),
+  exitDoor: scenePoint("exitDoor"),
+  queueEntry: scenePoint("waitingQueue1"),
+  exitBypass: { x: 510, y: 430 },
+  queueHost: { x: 510, y: 310 },
+  guestAisleStart: { x: 530, y: 410 },
+  guestAisleEnd: { x: 530, y: 290 },
+  exit: { x: 510, y: 530 },
+  pickupWaiter: scenePoint("foodPickupWaiter"),
+  drinkPickupWaiter: scenePoint("drinkPickupWaiter"),
+  checkoutCustomer: scenePoint("cashierCustomer"),
+  checkoutQueue: scenePoint("cashierQueue"),
+  checkoutExitApproach: { x: 410, y: 430 },
+  cashierService: scenePoint("cashierStaff"),
+  cashierApproach: scenePoint("cashierStaffEntry"),
 };
 
 export const KITCHEN_POINTS = {
-  stove: { x: 200, y: 145 },
-  prep: { x: 300, y: 240 },
-  drinkBar: { x: 400, y: 145 },
-  pickup: { x: 356, y: 236 },
-  drinkPickup: { x: 412, y: 236 },
+  stove: scenePoint("stovePoint"),
+  prep: scenePoint("prepPoint"),
+  drinkBar: scenePoint("drinkBar"),
+  pickup: scenePoint("foodPickupKitchen"),
+  drinkPickup: scenePoint("drinkPickupKitchen"),
 };
 
-// 每張桌子的數字都是從 pixel-restaurant.png 量出來的家具實際範圍，不是估的。
-// seatPoint = 右椅的視覺中心 x + 椅腳落地線 y；坐姿影格一樣是底部對齊，
-// 所以只要這兩個數字對得上椅子，人就會坐在椅子上而不是飄在旁邊。
-export const TABLES = [
-  {
-    id: 1,
-    chairFrontArea: { left: 616, top: 166, right: 638, bottom: 188 },
-    seatApproachPoint: { x: 627, y: 218 },
-    seatPoints: [{ x: 627, y: 185, facing: "left" }],
-    servicePoint: { x: 590, y: 246 },
-    tableBodyArea: { left: 566, top: 112, right: 616, bottom: 198 },
-    chairBlockedArea: { left: 616, top: 122, right: 638, bottom: 188 },
-    cover: { x: 567, y: 113, w: 48, h: 50 },
-    lockRect: { x: 543, y: 112, w: 95, h: 86 },
-  },
-  {
-    id: 2,
-    chairFrontArea: { left: 818, top: 168, right: 842, bottom: 190 },
-    seatApproachPoint: { x: 830, y: 218 },
-    seatPoints: [{ x: 830, y: 185, facing: "left" }],
-    servicePoint: { x: 793, y: 246 },
-    tableBodyArea: { left: 768, top: 112, right: 818, bottom: 198 },
-    chairBlockedArea: { left: 818, top: 122, right: 842, bottom: 190 },
-    cover: { x: 769, y: 113, w: 48, h: 50 },
-    lockRect: { x: 745, y: 112, w: 97, h: 86 },
-  },
-  {
-    id: 3,
-    chairFrontArea: { left: 605, top: 368, right: 630, bottom: 390 },
-    seatApproachPoint: { x: 618, y: 420 },
-    seatPoints: [{ x: 618, y: 386, facing: "left" }],
-    servicePoint: { x: 580, y: 445 },
-    tableBodyArea: { left: 553, top: 308, right: 606, bottom: 400 },
-    chairBlockedArea: { left: 605, top: 318, right: 630, bottom: 390 },
-    cover: { x: 554, y: 309, w: 51, h: 50 },
-    lockRect: { x: 530, y: 308, w: 100, h: 92 },
-  },
-  {
-    id: 4,
-    chairFrontArea: { left: 820, top: 382, right: 846, bottom: 404 },
-    seatApproachPoint: { x: 833, y: 425 },
-    seatPoints: [{ x: 833, y: 400, facing: "left" }],
-    servicePoint: { x: 795, y: 448 },
-    tableBodyArea: { left: 768, top: 312, right: 820, bottom: 405 },
-    chairBlockedArea: { left: 820, top: 322, right: 846, bottom: 404 },
-    cover: { x: 769, y: 313, w: 50, h: 50 },
-    lockRect: { x: 745, y: 312, w: 101, h: 93 },
-  },
-];
+export const TABLES = TABLE_POINTS.map((table) => {
+  const left = table.id % 2 ? 560 : 740;
+  const top = table.id <= 2 ? 140 : 300;
+  return {
+    id: table.id,
+    chairFrontArea: { left, top: top + 30, right: left + 22, bottom: top + 90 },
+    seatApproachPoint: { ...table.approachPoint },
+    seatPoints: [{ ...table.seatPoint, facing: table.facing }],
+    servicePoint: { ...table.servicePoint },
+    tableBodyArea: { left: left + 20, top, right: left + 78, bottom: top + 90 },
+    chairBlockedArea: { left, top, right: left + 100, bottom: top + 100 },
+    cover: { x: left + 20, y: top, w: 58, h: 90 },
+    lockRect: { x: left, y: top, w: 100, h: 100 },
+  };
+});
 
-// 碰撞矩形一律貼齊背景圖上真正畫出來的家具；寬鬆的大方塊會讓互動點落在空地上。
-// 家具的「正面」——會被重畫在角色上面，讓站在後面的人真的被擋住。
-// 這是這個場景之前一直做不對的關鍵：背景是一張平面畫，程式只知道矩形，
-// 不知道櫃台/椅子/圍欄有正面，所以站在後面的人會被畫在家具上面。
-// baseline = 這個物件在地板上的落腳線；腳底 y 小於它的角色會被它遮住。
 export const FRONT_FACES = [
-  { name: "kitchen-rail", rect: { left: 0, top: 252, right: 460, bottom: 304 }, baseline: 303 },
-  { name: "cashier-front", rect: { left: 216, top: 390, right: 368, bottom: 454 }, baseline: 450 },
+  { name: "kitchen-rail", rect: { left: 40, top: 220, right: 500, bottom: 280 }, baseline: 280 },
+  { name: "cashier-front", rect: { left: 160, top: 360, right: 320, bottom: 420 }, baseline: 420 },
 ];
 
-export const BLOCKED_RECTS = [
-  { name: "kitchen-and-front-wall", left: 20, top: 0, right: 459, bottom: 300 },
-  { name: "cashier-counter", left: 222, top: 337, right: 364, bottom: 450 },
-  { name: "table-1", left: 543, top: 112, right: 638, bottom: 198 },
-  { name: "table-2", left: 745, top: 112, right: 842, bottom: 198 },
-  { name: "table-3", left: 530, top: 308, right: 630, bottom: 400 },
-  { name: "table-4", left: 745, top: 312, right: 846, bottom: 405 },
-  { name: "left-plant", left: 20, top: 365, right: 75, bottom: 470 },
-  { name: "right-plant", left: 880, top: 424, right: 906, bottom: 470 },
-];
-
-export const WALKABLE_AREAS = [
-  { name: "dining-floor", left: 460, top: 100, right: 906, bottom: 460 },
-  { name: "front-floor", left: 150, top: 304, right: 460, bottom: 460 },
-  { name: "entrance-hall", left: 82, top: 340, right: 150, bottom: 460 },
-  { name: "door-lane", left: 86, top: 460, right: 146, bottom: 530 },
-];
-
-// 廚房灰地磚實測 x 92–443、y 121–253，走動範圍留一格邊。
-export const KITCHEN_WALKABLE_AREA = { name: "kitchen-floor", left: 100, top: 132, right: 436, bottom: 248 };
-
-export const KITCHEN_BLOCKED_RECTS = [
-  { name: "back-counter", left: 20, top: 20, right: 443, bottom: 122 },
-  { name: "left-storage", left: 20, top: 122, right: 90, bottom: 270 },
-  { name: "prep-island", left: 218, top: 138, right: 348, bottom: 228 },
-  { name: "kitchen-plant-left", left: 144, top: 236, right: 168, bottom: 258 },
-  { name: "kitchen-plant-right", left: 368, top: 236, right: 393, bottom: 258 },
-];
-
-// 排隊往上排（背對門），離場走另一條車道往下，兩者方向相反不對撞。
-// index 0 是隊伍最前面，必須是「離門最遠」的那一格：
-// 反過來的話，後到的客人得穿過前面的人才排得進去，會卡死。
-// 間距必須大於角色互不重疊的 34px，否則後面的人永遠走不到自己的格子。
-export const WAITING_QUEUE_POINTS = [
-  { x: 96, y: 348 },
-  { x: 96, y: 400 },
-  { x: 96, y: 452 },
-];
-
-export const QUEUE_PROTECTED_ZONE = { left: 82, top: 330, right: 116, bottom: 452 };
-// 櫃台「後方」那條員工專用地板：上緣是廚房前牆的下緣，下緣是櫃體的上緣。
-// 店員站的位置在螢幕上落在櫃體範圍內——那是「櫃台後方的地板」，
-// 平面背景畫不出來。櫃台正面會重畫在她身上，所以看起來是站在櫃台後面。
-export const CASHIER_STAFF_ZONE = { left: 238, top: 404, right: 366, bottom: 436 };
+export const BLOCKED_RECTS = SCENE_COLLISION_RECTS.map((rect) => ({ ...rect, name: rect.id }));
+export const WALKABLE_AREAS = ROLE_WALKABLE_AREAS.customer.map((area) => ({ ...area, name: area.id }));
+export const KITCHEN_WALKABLE_AREA = { ...ROLE_WALKABLE_AREAS.chef[0], name: ROLE_WALKABLE_AREAS.chef[0].id };
+export const KITCHEN_BLOCKED_RECTS = BLOCKED_RECTS.filter((rect) => rect.left < 500 && rect.top < 280);
+export const WAITING_QUEUE_POINTS = [scenePoint("waitingQueue3"), scenePoint("waitingQueue2"), scenePoint("waitingQueue1")];
+export const QUEUE_PROTECTED_ZONE = { left: 440, top: 310, right: 500, bottom: 430 };
+export const CASHIER_STAFF_ZONE = { left: 160, top: 280, right: 320, bottom: 340 };
 const BASE_COSTS = { chef: 70, waiter: 60, income: 90 };
 const TABLE_COSTS = [120, 320, 760];
 const MAX_CUSTOMERS = 8;
@@ -170,33 +100,25 @@ export function restaurantLevel(upgrades) {
 }
 
 export function pointBlocked(point, { allowQueue = false, allowCashier = false } = {}) {
-  if (!inWalkableBounds(point)) return true;
-  if (!allowQueue && insideRect(point, QUEUE_PROTECTED_ZONE)) return true;
-  if (!allowCashier && insideRect(point, CASHIER_STAFF_ZONE)) return true;
-  // 櫃體擋所有人；唯一例外是店員站的「櫃台後方」那一格（見 CASHIER_STAFF_ZONE）。
-  return BLOCKED_RECTS.some((rect) => !(allowCashier && rect.name === "cashier-counter" && insideRect(point, CASHIER_STAFF_ZONE)) && insideRect(point, rect));
+  if (!sceneRoleWalkable(allowCashier ? "waiter" : "customer", point, { doorOpen: true })) return true;
+  return !allowQueue && insideRect(point, QUEUE_PROTECTED_ZONE);
 }
 
 export function pointBlockedForZone(point, zone = "dining") {
-  if (zone === "kitchen") return kitchenPointBlocked(point);
-  return pointBlocked(point, { allowQueue: zone === "queue", allowCashier: zone === "staff" });
+  const role = zone === "kitchen" ? "chef" : zone === "staff" ? "waiter" : "customer";
+  if (!sceneRoleWalkable(role, point, { doorOpen: true })) return true;
+  return zone !== "queue" && insideRect(point, QUEUE_PROTECTED_ZONE);
 }
 
 export function kitchenPointBlocked(point) {
-  const inKitchen = insideRect(point, KITCHEN_WALKABLE_AREA);
-  if (!inKitchen) return true;
-  return KITCHEN_BLOCKED_RECTS.some((rect) => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom);
-}
-
-function inWalkableBounds(point) {
-  return WALKABLE_AREAS.some((area) => insideRect(point, area)) || insideRect(point, CASHIER_STAFF_ZONE);
+  return !sceneRoleWalkable("chef", point, { doorOpen: true });
 }
 
 export function findPath(start, end, zone = "dining") {
   const isBlocked = (point) => pointBlockedForZone(point, zone);
   if (isBlocked(end)) return [];
   const startCell = nearestWalkableCell(start, isBlocked);
-  const endCell = { x: Math.round(end.x / GRID_SIZE), y: Math.round(end.y / GRID_SIZE) };
+  const endCell = pointCell(end);
   if (!startCell || isBlocked(cellPoint(endCell))) return [];
   const startKey = cellKey(startCell);
   const endKey = cellKey(endCell);
@@ -242,7 +164,7 @@ function segmentIsLegal(start, end, isBlocked) {
 }
 
 function nearestWalkableCell(point, isBlocked) {
-  const origin = { x: Math.round(point.x / GRID_SIZE), y: Math.round(point.y / GRID_SIZE) };
+  const origin = pointCell(point);
   for (let radius = 0; radius <= 6; radius += 1) {
     for (let dx = -radius; dx <= radius; dx += 1) {
       const dy = radius - Math.abs(dx);
@@ -273,7 +195,11 @@ function directionBetween(first, second) {
 }
 
 function cellPoint(cell) {
-  return { x: cell.x * GRID_SIZE, y: cell.y * GRID_SIZE };
+  return { x: cell.x * GRID_SIZE + GRID_SIZE / 2, y: cell.y * GRID_SIZE + GRID_SIZE / 2 };
+}
+
+function pointCell(point) {
+  return { x: Math.floor(point.x / GRID_SIZE), y: Math.floor(point.y / GRID_SIZE) };
 }
 
 function cellKey(cell) {
@@ -328,7 +254,7 @@ export function freshState(now = Date.now()) {
       drinkChef: { key: "chef-drink", x: KITCHEN_POINTS.drinkBar.x, y: KITCHEN_POINTS.drinkBar.y, path: [], walking: false, navigationZone: "kitchen" },
     },
     waiters: {
-      male: { key: "waiter-male", x: 880, y: 340, path: [], task: null, walking: false, idlePoint: { x: 880, y: 340 }, navigationZone: "dining" },
+      male: { key: "waiter-male", x: 890, y: 270, path: [], task: null, walking: false, idlePoint: { x: 890, y: 270 }, navigationZone: "dining" },
       female: {
         key: "waiter-female",
         x: POINTS.cashierService.x,
@@ -441,6 +367,10 @@ function updateCustomers(state, dt) {
     }
 
     if (["entering", "seating", "toCheckoutQueue", "toCheckout", "toExitApproach", "leaving"].includes(customer.state)) {
+      if (customer.state === "seating" && customer.escortLeader) {
+        const leader = state.waiters.male;
+        if (leader.path.length && distance(customer, leader) < 44) continue;
+      }
       customer.walking = customer.path.length > 0;
       const reached = moveAlongPath(customer, waiterSpeed(state.upgrades.waiter) * 0.82, dt, state);
       customer.walkFrame = Math.floor(state.elapsed * 6) % 2;
@@ -493,6 +423,7 @@ function seatCustomer(state, customer) {
     to: { x: seat.x, y: seat.y },
   };
   customer.direction = seat.facing;
+  customer.escortLeader = null;
   customer.walking = false;
 }
 
@@ -511,7 +442,8 @@ function updateSeatTransition(state, customer, dt) {
 }
 
 function sendToCheckout(state, customer) {
-  if (staffTrafficBusy(state)) return;
+  // 收銀台前只有一條窄走道；上一位客人離開前，下一位維持坐姿等待。
+  if (staffTrafficBusy(state) || checkoutBusy(state, customer)) return;
   const table = TABLES[customer.tableId - 1];
   const approach = table.seatApproachPoint;
   if (positionOccupied(state, customer, approach)) return;
@@ -528,24 +460,10 @@ function sendToCheckout(state, customer) {
 function updateStandingTransition(state, customer, dt) {
   updateTransitionPosition(customer, dt);
   if (customer.transition) return;
-  const cashierOccupied = checkoutBusy(state, customer);
-  const queueOccupied = state.customers.some((item) => item !== customer && ["toCheckoutQueue", "waitingCheckoutSlot"].includes(item.state));
-  if (cashierOccupied && queueOccupied) {
-    const seat = TABLES[customer.tableId - 1].seatPoints[0];
-    customer.state = "seatingTransition";
-    customer.afterSeatState = "eating";
-    customer.transition = {
-      elapsed: 0,
-      duration: 0.22,
-      from: { x: customer.x, y: customer.y },
-      to: { ...seat },
-    };
-    return;
-  }
   customer.seated = false;
-  customer.state = cashierOccupied ? "toCheckoutQueue" : "toCheckout";
+  customer.state = "toCheckout";
   customer.navigationZone = "dining";
-  customer.path = findPath(customer, cashierOccupied ? POINTS.checkoutQueue : POINTS.checkoutCustomer);
+  customer.path = findPath(customer, POINTS.checkoutCustomer);
   customer.walking = true;
 }
 
@@ -602,7 +520,7 @@ function payAndLeave(state, customer) {
 }
 
 function checkoutBusy(state, customer) {
-  return state.customers.some((item) => item !== customer && ["toCheckout", "waitingPayment", "toExitApproach"].includes(item.state));
+  return state.customers.some((item) => item !== customer && ["standingTransition", "toCheckout", "waitingPayment", "toExitApproach", "leaving"].includes(item.state));
 }
 
 // 排隊與離場已經是兩條分開的車道，只有門口那一格會重疊；
@@ -632,7 +550,7 @@ function startDoorExit(state, customer, fromQueue) {
     : [...findPath(customer, POINTS.exitBypass, "queue")];
   customer.state = "leaving";
   customer.navigationZone = "queue";
-  customer.path = [...routeToLane, { ...POINTS.entranceDoor }, { ...POINTS.exit }];
+  customer.path = [...routeToLane, { ...POINTS.exitDoor }, { ...POINTS.exit }];
   customer.walking = true;
 }
 
@@ -746,21 +664,21 @@ function updateMaleWaiter(state, dt) {
     const customer = findCustomer(state, task.customerId);
     if (!customer || customer.state !== "queueing") return finishTask(waiter);
     const table = TABLES[customer.tableId - 1];
-    // 客人跟服務生「同時」出發，不是等服務生走到桌邊才開始走。
+    // 客人跟在男服務生後方；距離太近時客人停一步，不與帶位者互穿。
     customer.state = "seating";
     customer.mood = "normal";
     customer.waitTime = 0;
-    customer.path = [
-      ...findPath(customer, POINTS.guestAisleStart, "queue"),
-      ...findPath(POINTS.guestAisleStart, POINTS.guestAisleEnd, "queue"),
-      ...findPath(POINTS.guestAisleEnd, table.seatApproachPoint, "queue"),
-    ];
+    customer.escortLeader = waiter.key;
+    customer.path = findPath(customer, table.seatApproachPoint, "queue");
     customer.walking = true;
     task.phase = "lead";
     waiter.path = findPath(waiter, table.servicePoint);
     state.message = "男服務生帶客人前往第 " + customer.tableId + " 桌。";
+  } else if (task.type === "escort" && task.phase === "lead") {
+    task.phase = "waitingCustomer";
   } else if (task.type === "escort") {
-    finishTask(waiter);
+    const customer = findCustomer(state, task.customerId);
+    if (!customer || ["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)) finishTask(waiter);
   } else if (task.type === "deliver" && task.phase === "pickup") {
     task.phase = "table";
     waiter.path = findPath(waiter, TABLES[task.tableId - 1].servicePoint);
@@ -973,13 +891,15 @@ function moveAlongPath(actor, speed, dt, state = null) {
 }
 
 function reserveFootCell(state, actor, point) {
-  const key = Math.round(point.x / GRID_SIZE) + "," + Math.round(point.y / GRID_SIZE);
+  const cell = pointCell(point);
+  const key = cellKey(cell);
   const owner = state.reservations.get(key);
   if (owner && owner.owner !== actor.key) return false;
+  const center = cellPoint(cell);
   state.reservations.set(key, {
     owner: actor.key,
-    x: Math.round(point.x / GRID_SIZE) * GRID_SIZE,
-    y: Math.round(point.y / GRID_SIZE) * GRID_SIZE,
+    x: center.x,
+    y: center.y,
     zone: actor.navigationZone || "dining",
   });
   return true;
@@ -991,7 +911,7 @@ function positionOccupied(state, actor, point) {
 }
 
 function collisionSpace(point) {
-  if (point.x <= 459 && point.y <= 300) return "kitchen";
+  if (point.x < 500 && point.y < 220) return "kitchen";
   if (insideRect(point, CASHIER_STAFF_ZONE)) return "cashier";
   return "public";
 }
@@ -1068,7 +988,8 @@ export function validateScene(state = null) {
   record("收銀台正面隔開客人與店員", Boolean(front)
     && POINTS.cashierService.y < front.baseline
     && POINTS.checkoutCustomer.y > front.baseline
-    && insideRect(POINTS.cashierService, front.rect), {
+    && POINTS.cashierService.x >= front.rect.left
+    && POINTS.cashierService.x <= front.rect.right, {
     coordinate: POINTS.checkoutCustomer,
     object: "cashier-front",
     suggestion: "店員腳底要落在櫃台正面的遮擋範圍內，客人要在它的落地線之外",

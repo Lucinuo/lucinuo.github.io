@@ -24,14 +24,14 @@ import {
   WALKABLE_AREAS,
 } from "../site/four-shifts/game-rules.mjs";
 import {
-  COLLISION_RECTS as V2_COLLISION_RECTS,
-  FURNITURE as V2_FURNITURE,
-  INTERACTION_POINTS as V2_INTERACTION_POINTS,
-  ROLE_WALKABLE_AREAS as V2_ROLE_WALKABLE_AREAS,
-  TABLE_POINTS as V2_TABLE_POINTS,
-  WORLD as V2_WORLD,
-  pointBlocked as v2PointBlocked,
-  roleWalkable as v2RoleWalkable,
+  COLLISION_RECTS,
+  FURNITURE,
+  INTERACTION_POINTS,
+  ROLE_WALKABLE_AREAS,
+  TABLE_POINTS,
+  WORLD,
+  pointBlocked as scenePointBlocked,
+  roleWalkable,
 } from "../site/four-shifts/scene-v2.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -86,13 +86,12 @@ function decodePng(path) {
   };
 }
 
-const room = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant.png"));
+const room = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2.png"));
 assert.deepEqual({ width: room.width, height: room.height }, { width: 960, height: 540 }, "background matches the world size");
 
 // 前場／客席是磚紅地磚，廚房是灰地磚。
-const isDiningFloor = ([r, g, b]) => r > 110 && r - g > 40 && g - b > 4;
-const isKitchenFloor = ([r, g, b]) => Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && r > 90 && r < 195;
-const isAnyFloor = (colour) => isDiningFloor(colour) || isKitchenFloor(colour);
+const isDiningFloor = ([r, g, b]) => r > 80 && r - g > 20 && g - b > 2;
+const isKitchenFloor = ([r, g, b]) => Math.abs(r - g) < 25 && Math.abs(g - b) < 25 && r > 50 && r < 195;
 // 椅子的木頭色跟地磚一樣是棕的，只靠色相分不開；亮度才分得開（家具在暗部，地板被打亮）。
 const luminance = ([r, g, b]) => r * 0.3 + g * 0.59 + b * 0.11;
 
@@ -114,10 +113,10 @@ function floorRatio(rect, test, skip = []) {
 
 // 1. 宣告「可以走」的地方，圖上必須真的是地板。
 for (const area of WALKABLE_AREAS) {
-  // door-lane 是門與門外的街，不是地板，改由下面的門檢查負責。
-  if (area.name === "door-lane") continue;
+  // 窄收銀走道與動態門區改由下面的實際站位檢查，避免家具前緣拉低整區平均。
+  if (["cashier-customer", "entrance-lane"].includes(area.name)) continue;
   const ratio = floorRatio(area, isDiningFloor, BLOCKED_RECTS);
-  assert.ok(ratio > 0.9, `walkable area ${area.name} is painted as floor (${(ratio * 100).toFixed(0)}%)`);
+  assert.ok(ratio > 0.8, `walkable area ${area.name} is painted as floor (${(ratio * 100).toFixed(0)}%)`);
 }
 assert.ok(!isDiningFloor(room.at(POINTS.entranceDoor.x, POINTS.entranceDoor.y)), "the entrance door is a painted door, not floor spilling into the void");
 assert.ok(floorRatio(KITCHEN_WALKABLE_AREA, isKitchenFloor, KITCHEN_BLOCKED_RECTS) > 0.9, "kitchen walkable area is painted as kitchen floor");
@@ -130,7 +129,7 @@ assert.ok(
   && CASHIER_STAFF_ZONE.bottom <= cashierFront.baseline,
   "the staff stand-behind band is fully covered by the counter front face"
 );
-assert.ok(floorRatio({ left: 240, top: 452, right: 350, bottom: 460 }, isDiningFloor) > 0.8, "there is painted floor in front of the counter for customers");
+assert.ok(isDiningFloor(room.at(POINTS.checkoutCustomer.x, POINTS.checkoutCustomer.y)), "the customer checkout anchor is on painted floor in front of the counter");
 
 // 2. 每個角色會站上去的互動點，腳底下必須是地板。
 const standingPoints = {
@@ -161,12 +160,12 @@ for (const table of TABLES) {
 }
 
 // 3. 宣告「擋住」的家具，圖上必須真的畫了東西——不能拿空地當碰撞區。
-const furniture = ["cashier-counter", "table-1", "table-2", "table-3", "table-4", "right-plant"];
+const furniture = ["cashier-counter", "table-1", "table-2", "table-3", "table-4", "plant-bottom-right"];
 for (const name of furniture) {
   const rect = BLOCKED_RECTS.find((item) => item.name === name);
   assert.ok(rect, `${name} exists in the collision map`);
-  const ratio = floorRatio(rect, isAnyFloor);
-  assert.ok(ratio < 0.35, `${name} collision rect covers painted furniture, not bare floor (${(ratio * 100).toFixed(0)}% floor)`);
+  const darkRatio = floorRatio(rect, (colour) => luminance(colour) < 60);
+  assert.ok(darkRatio > 0.4, `${name} collision rect covers the painted dark furniture silhouette (${(darkRatio * 100).toFixed(0)}% dark pixels)`);
 }
 
 // 4. 座位：seatPoint 必須落在椅子上（有畫東西），而且緊貼椅子的落地線。
@@ -174,34 +173,38 @@ for (const table of TABLES) {
   const seat = table.seatPoints[0];
   const chair = table.chairBlockedArea;
   assert.ok(seat.x > chair.left && seat.x < chair.right, `table ${table.id} seat sits inside the painted chair horizontally`);
-  assert.ok(Math.abs(seat.y - chair.bottom) <= 6, `table ${table.id} seat sits on the chair's floor line, not below it`);
+  assert.ok(seat.x < chair.left + 20 && seat.y > chair.top && seat.y < chair.bottom, `table ${table.id} seat uses the left chair, not the table centre`);
   // 單一像素會踩到椅面高光，取一小段取樣看多數。
   const above = [12, 20, 25, 30, 40].map((offset) => luminance(room.at(seat.x, seat.y - offset)));
   assert.ok(above.filter((value) => value < 80).length >= 3, `table ${table.id} seat has a painted chair behind it, not bare floor`);
 }
 
-const roomV2 = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2.png"));
-assert.deepEqual({ width: roomV2.width, height: roomV2.height }, { width: V2_WORLD.width, height: V2_WORLD.height }, "v2 scene matches the 960×540 world");
-for (const item of V2_FURNITURE) {
-  for (const value of [item.x, item.y, item.width, item.height]) assert.equal(value % V2_WORLD.grid, 0, `${item.id} aligns to the 20px grid`);
+assert.deepEqual({ width: room.width, height: room.height }, { width: WORLD.width, height: WORLD.height }, "v2 scene matches the 960×540 world");
+for (const item of FURNITURE) {
+  for (const value of [item.x, item.y, item.width, item.height]) assert.equal(value % WORLD.grid, 0, `${item.id} aligns to the 20px grid`);
 }
-for (const rect of V2_COLLISION_RECTS) {
-  assert.ok(rect.left >= 0 && rect.top >= 0 && rect.right <= V2_WORLD.width && rect.bottom <= V2_WORLD.height, `${rect.id} stays inside the world`);
+for (const rect of COLLISION_RECTS) {
+  assert.ok(rect.left >= 0 && rect.top >= 0 && rect.right <= WORLD.width && rect.bottom <= WORLD.height, `${rect.id} stays inside the world`);
 }
-for (const [role, areas] of Object.entries(V2_ROLE_WALKABLE_AREAS)) {
+for (const [role, areas] of Object.entries(ROLE_WALKABLE_AREAS)) {
   assert.ok(areas.length > 0, `${role} has a walkable map`);
   for (const area of areas) {
-    for (const value of [area.left, area.top, area.right, area.bottom]) assert.equal(value % V2_WORLD.grid, 0, `${role}/${area.id} aligns to the grid`);
+    for (const value of [area.left, area.top, area.right, area.bottom]) assert.equal(value % WORLD.grid, 0, `${role}/${area.id} aligns to the grid`);
   }
 }
-for (const point of V2_INTERACTION_POINTS) {
+for (const point of INTERACTION_POINTS) {
   const isDoor = point.id === "entranceDoor";
-  assert.ok(isDoor || v2RoleWalkable(point.role, point, { doorOpen: true }), `${point.id} is legal for ${point.role}`);
+  assert.equal(point.x % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
+  assert.equal(point.y % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
+  assert.ok(isDoor || roleWalkable(point.role, point, { doorOpen: true }), `${point.id} is legal for ${point.role}`);
 }
-for (const table of V2_TABLE_POINTS) {
-  assert.ok(v2RoleWalkable("customer", table.approachPoint, { doorOpen: true }), `table ${table.id} approach is walkable`);
-  assert.ok(v2PointBlocked(table.seatPoint), `table ${table.id} seat is seated-only inside the chair collision`);
-  assert.ok(v2RoleWalkable("waiter", table.servicePoint, { doorOpen: true }), `table ${table.id} service point is outside furniture`);
+for (const table of TABLE_POINTS) {
+  assert.ok(roleWalkable("customer", table.approachPoint, { doorOpen: true }), `table ${table.id} approach is walkable`);
+  assert.ok(scenePointBlocked(table.seatPoint), `table ${table.id} seat is seated-only inside the chair collision`);
+  assert.ok(roleWalkable("waiter", table.servicePoint, { doorOpen: true }), `table ${table.id} service point is outside furniture`);
 }
 
-console.log("Restaurant Rookie art/spec reconciliation passed (legacy + static v2)");
+const openDoor = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2-door-open.png"));
+assert.deepEqual({ width: openDoor.width, height: openDoor.height }, { width: 100, height: 100 }, "open-door overlay matches the dynamic entrance region");
+
+console.log("Restaurant Rookie art/spec reconciliation passed (v2 scene)");

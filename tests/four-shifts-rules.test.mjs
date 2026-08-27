@@ -82,7 +82,7 @@ for (let step = 0; step < 8_000; step += 1) {
     restaurant.waiters.female,
     ...restaurant.customers.filter((customer) => !customer.seated),
   ];
-  const collisionSpace = (point) => point.x <= 459 && point.y <= 300
+  const collisionSpace = (point) => point.x < 500 && point.y < 220
     ? "kitchen"
     : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
       ? "cashier"
@@ -162,7 +162,7 @@ for (let i = 1; i < WAITING_QUEUE_POINTS.length; i += 1) {
   const gap = Math.hypot(WAITING_QUEUE_POINTS[i].x - WAITING_QUEUE_POINTS[i - 1].x, WAITING_QUEUE_POINTS[i].y - WAITING_QUEUE_POINTS[i - 1].y);
   assert.ok(gap >= 34, "queue slots are further apart than the actor separation radius, otherwise the queue can never fill");
 }
-assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 96 && point.y >= 340 && point.y <= 452), "queue stays in the invisible entrance lane");
+assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 470 && point.y >= 330 && point.y <= 410), "queue stays in the invisible entrance lane");
 assert.ok(WAITING_QUEUE_POINTS[0].y < WAITING_QUEUE_POINTS.at(-1).y, "queue front is the slot furthest from the door so nobody has to walk past");
 assert.ok(POINTS.exitBypass.x > QUEUE_PROTECTED_ZONE.right, "the exit lane sits outside the queue lane");
 assert.ok(WAITING_QUEUE_POINTS.every((point) => pointBlocked(point) && !pointBlocked(point, { allowQueue: true })), "only queue navigation may enter the protected entrance lane");
@@ -274,7 +274,7 @@ for (let step = 0; step < 12_000; step += 1) {
     stress.waiters.female,
     ...stress.customers.filter((customer) => !customer.seated),
   ];
-  const stressSpace = (point) => point.x <= 459 && point.y <= 300
+  const stressSpace = (point) => point.x < 500 && point.y < 220
     ? "kitchen"
     : point.x >= CASHIER_STAFF_ZONE.left && point.x <= CASHIER_STAFF_ZONE.right && point.y >= CASHIER_STAFF_ZONE.top && point.y <= CASHIER_STAFF_ZONE.bottom
       ? "cashier"

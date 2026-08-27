@@ -68,7 +68,7 @@ check(uaStoryExperienceCss.includes("prefers-reduced-motion"), "Urolithin A stor
 const restaurantRookieCss = fs.readFileSync(path.join(root, "four-shifts/styles.css"), "utf8");
 const restaurantRookieModules = ["game.js", "game-rules.mjs"].map((file) => fs.readFileSync(path.join(root, "four-shifts", file), "utf8"));
 check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io/four-shifts/"'), "Restaurant Rookie has the wrong canonical URL");
-check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant.png"'), "Restaurant Rookie is missing its social image");
+check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant-v2.png"'), "Restaurant Rookie is missing its social image");
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
 check(restaurantRookie.includes('data-canvas width="960" height="540"'), "Restaurant Rookie is missing the fixed-resolution game canvas");
 check(restaurantRookie.includes("data-toggle") && restaurantRookie.includes("data-reset") && restaurantRookie.includes("data-debug"), "Restaurant Rookie is missing start, reset, or scene-check controls");
@@ -91,7 +91,7 @@ check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
-for (const asset of ["pixel-restaurant.png", "pixel-atlas.png", "female-waiter.png"]) {
+for (const asset of ["pixel-restaurant-v2.png", "pixel-restaurant-v2-door-open.png", "pixel-atlas.png", "female-waiter.png"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing production asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 2 * 1024 * 1024, `Restaurant Rookie production asset exceeds 2 MB: ${asset}`);

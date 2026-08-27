@@ -23,7 +23,7 @@ import {
   upgradeCost,
   validateScene,
   waiterSpeed,
-} from "./game-rules.mjs?v=20260825-6";
+} from "./game-rules.mjs?v=20260826-2";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -46,13 +46,15 @@ const elements = {
 };
 
 const images = {
-  room: loadImage("./assets/pixel-restaurant.png"),
+  room: loadImage("./assets/pixel-restaurant-v2.png"),
+  doorOpen: loadImage("./assets/pixel-restaurant-v2-door-open.png"),
   atlas: loadImage("./assets/pixel-atlas.png"),
   femaleWaiter: loadImage("./assets/female-waiter.png"),
 };
 
 let state = loadState();
 let roomImage;
+let doorOpenImage;
 let atlasImage;
 let femaleWaiterImage;
 let previousTime = performance.now();
@@ -206,6 +208,7 @@ function draw() {
   }
 
   context.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
+  if (doorOpenImage && doorIsOpen()) context.drawImage(doorOpenImage, 420, 440, 100, 100);
   drawLockedTables();
 
   // 角色與「家具的正面」放進同一個深度排序：腳底 y 小的先畫。
@@ -237,6 +240,10 @@ function draw() {
 
 function coverRect(table) {
   return { left: table.cover.x, top: table.cover.y, right: table.cover.x + table.cover.w, bottom: table.cover.y + table.cover.h };
+}
+
+function doorIsOpen() {
+  return state.customers.some((customer) => ["entering", "leaving"].includes(customer.state) && customer.y >= 430);
 }
 
 function redrawRegion(rect) {
@@ -499,9 +506,10 @@ document.addEventListener("visibilitychange", () => {
 });
 setInterval(saveState, 5_000);
 
-Promise.all([images.room, images.atlas, images.femaleWaiter])
-  .then(([room, atlas, femaleWaiter]) => {
+Promise.all([images.room, images.doorOpen, images.atlas, images.femaleWaiter])
+  .then(([room, doorOpen, atlas, femaleWaiter]) => {
     roomImage = room;
+    doorOpenImage = doorOpen;
     atlasImage = atlas;
     femaleWaiterImage = femaleWaiter;
     updateUi();

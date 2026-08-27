@@ -33,7 +33,8 @@ export const COLLISION_RECTS = FURNITURE.map(({ id, label, x, y, width, height, 
 export const ROLE_WALKABLE_AREAS = {
   customer: [
     { id: "dining-upper", label: "右側客席", left: 500, top: 100, right: 920, bottom: 440 },
-    { id: "dining-lower", label: "下方公共區", left: 40, top: 280, right: 920, bottom: 440 },
+    { id: "dining-lower", label: "下方公共區", left: 320, top: 280, right: 920, bottom: 440 },
+    { id: "cashier-customer", label: "收銀台顧客側", left: 160, top: 420, right: 420, bottom: 440 },
     { id: "entrance-lane", label: "中央入口通道", left: 420, top: 420, right: 520, bottom: 540 },
   ],
   waiter: [
@@ -47,9 +48,10 @@ export const ROLE_WALKABLE_AREAS = {
 };
 
 export const INTERACTION_POINTS = [
-  { id: "customerSpawn", label: "客人生成", role: "customer", x: 470, y: 530, note: "門外" },
-  { id: "entranceDoor", label: "入口門", role: "customer", x: 470, y: 490, note: "第二階段才加入開門狀態" },
-  { id: "entranceInside", label: "入口內側", role: "customer", x: 470, y: 430 },
+  { id: "customerSpawn", label: "客人生成", role: "customer", x: 450, y: 530, note: "門外進場線" },
+  { id: "entranceDoor", label: "入口門", role: "customer", x: 450, y: 490, note: "進出時切換開門圖層" },
+  { id: "entranceInside", label: "入口內側", role: "customer", x: 450, y: 430 },
+  { id: "exitDoor", label: "離場門線", role: "customer", x: 510, y: 490, note: "與進場線分流" },
   { id: "waitingQueue1", label: "候位 1", role: "customer", x: 470, y: 410 },
   { id: "waitingQueue2", label: "候位 2", role: "customer", x: 470, y: 370 },
   { id: "waitingQueue3", label: "候位 3", role: "customer", x: 470, y: 330 },
@@ -68,10 +70,10 @@ export const INTERACTION_POINTS = [
 ];
 
 export const TABLE_POINTS = [
-  { id: 1, approachPoint: { x: 530, y: 190 }, seatPoint: { x: 570, y: 210 }, servicePoint: { x: 610, y: 250 }, facing: "right" },
-  { id: 2, approachPoint: { x: 710, y: 190 }, seatPoint: { x: 750, y: 210 }, servicePoint: { x: 790, y: 250 }, facing: "right" },
-  { id: 3, approachPoint: { x: 530, y: 350 }, seatPoint: { x: 570, y: 370 }, servicePoint: { x: 610, y: 410 }, facing: "right" },
-  { id: 4, approachPoint: { x: 710, y: 350 }, seatPoint: { x: 750, y: 370 }, servicePoint: { x: 790, y: 410 }, facing: "right" },
+  { id: 1, approachPoint: { x: 530, y: 190 }, seatPoint: { x: 570, y: 210 }, servicePoint: { x: 670, y: 190 }, facing: "right" },
+  { id: 2, approachPoint: { x: 710, y: 190 }, seatPoint: { x: 750, y: 210 }, servicePoint: { x: 850, y: 190 }, facing: "right" },
+  { id: 3, approachPoint: { x: 530, y: 350 }, seatPoint: { x: 570, y: 370 }, servicePoint: { x: 670, y: 350 }, facing: "right" },
+  { id: 4, approachPoint: { x: 710, y: 350 }, seatPoint: { x: 750, y: 370 }, servicePoint: { x: 850, y: 350 }, facing: "right" },
 ];
 
 export function insideRect(point, rect) {
