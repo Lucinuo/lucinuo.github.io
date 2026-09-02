@@ -86,6 +86,66 @@ function decodePng(path) {
   };
 }
 
+function decodeIndexedPng(path) {
+  const file = readFileSync(path);
+  const width = file.readUInt32BE(16);
+  const height = file.readUInt32BE(20);
+  assert.equal(file[24], 8, `${path} is 8-bit`);
+  assert.equal(file[25], 3, `${path} is indexed PNG-8`);
+  assert.equal(file[28], 0, `${path} is not interlaced`);
+
+  const parts = [];
+  let palette;
+  let transparency = Buffer.alloc(0);
+  for (let offset = 8; offset < file.length;) {
+    const length = file.readUInt32BE(offset);
+    const type = file.toString("ascii", offset + 4, offset + 8);
+    const data = file.subarray(offset + 8, offset + 8 + length);
+    if (type === "IDAT") parts.push(data);
+    if (type === "PLTE") palette = data;
+    if (type === "tRNS") transparency = data;
+    offset += 12 + length;
+  }
+  assert.ok(palette, `${path} has a palette`);
+
+  const raw = inflateSync(Buffer.concat(parts));
+  const pixels = Buffer.alloc(width * height);
+  for (let y = 0; y < height; y += 1) {
+    const filter = raw[y * (width + 1)];
+    const line = raw.subarray(y * (width + 1) + 1, (y + 1) * (width + 1));
+    for (let x = 0; x < width; x += 1) {
+      const a = x > 0 ? pixels[y * width + x - 1] : 0;
+      const b = y > 0 ? pixels[(y - 1) * width + x] : 0;
+      const c = x > 0 && y > 0 ? pixels[(y - 1) * width + x - 1] : 0;
+      let value = line[x];
+      if (filter === 1) value += a;
+      else if (filter === 2) value += b;
+      else if (filter === 3) value += (a + b) >> 1;
+      else if (filter === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - b);
+        const pc = Math.abs(p - c);
+        value += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      pixels[y * width + x] = value & 0xff;
+    }
+  }
+
+  return {
+    width,
+    height,
+    palette,
+    pixels,
+    alpha(index) {
+      return index < transparency.length ? transparency[index] : 255;
+    },
+    colour(index) {
+      return palette.subarray(index * 3, index * 3 + 3);
+    },
+  };
+}
+
 const room = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2.png"));
 assert.deepEqual({ width: room.width, height: room.height }, { width: 960, height: 540 }, "background matches the world size");
 
@@ -206,5 +266,67 @@ for (const table of TABLE_POINTS) {
 
 const openDoor = decodePng(join(here, "../site/four-shifts/assets/pixel-restaurant-v2-door-open.png"));
 assert.deepEqual({ width: openDoor.width, height: openDoor.height }, { width: 100, height: 100 }, "open-door overlay matches the dynamic entrance region");
+
+const spriteSpecs = [
+  { name: "pixel-atlas-v3.png", width: 576, height: 320, rows: 4 },
+  { name: "female-waiter-v3.png", width: 576, height: 80, rows: 1 },
+];
+const sprites = spriteSpecs.map((spec) => ({
+  ...spec,
+  path: join(here, `../site/four-shifts/assets/${spec.name}`),
+  image: decodeIndexedPng(join(here, `../site/four-shifts/assets/${spec.name}`)),
+}));
+assert.ok(sprites.every(({ path }) => readFileSync(path).length <= 60 * 1024), "sprite atlases stay under 60 KB");
+assert.deepEqual(sprites[0].image.palette, sprites[1].image.palette, "sprite atlases share one palette");
+
+const usedColours = new Set();
+for (const { name, width, height, rows, image } of sprites) {
+  assert.deepEqual({ width: image.width, height: image.height }, { width, height }, `${name} matches its A-phase dimensions`);
+  const runs = new Map();
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width;) {
+      const index = image.pixels[y * width + x];
+      const alpha = image.alpha(index);
+      assert.ok(alpha === 0 || alpha === 255, `${name} uses hard transparency`);
+      if (alpha === 0) {
+        x += 1;
+        continue;
+      }
+      usedColours.add(Buffer.from(image.colour(index)).toString("hex"));
+      const [red, green, blue] = image.colour(index);
+      assert.ok(!(red > 180 && blue > 180 && green < 80), `${name} has no visible magenta fringe`);
+      let end = x + 1;
+      while (end < width && image.pixels[y * width + end] === index) end += 1;
+      runs.set(end - x, (runs.get(end - x) || 0) + 1);
+      x = end;
+    }
+  }
+  assert.equal(runs.get(1) || 0, 0, `${name} uses deliberate pixel blocks instead of single-pixel colour noise`);
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < 12; column += 1) {
+      let left = 48;
+      let right = 0;
+      let bottom = 0;
+      for (let y = 0; y < 80; y += 1) {
+        for (let x = 0; x < 48; x += 1) {
+          const index = image.pixels[(row * 80 + y) * width + column * 48 + x];
+          if (image.alpha(index) === 0) continue;
+          left = Math.min(left, x);
+          right = Math.max(right, x + 1);
+          bottom = Math.max(bottom, y + 1);
+        }
+      }
+      if (column < 4) {
+        assert.ok(right > left, `${name} row ${row} column ${column} contains its A-phase pose`);
+        assert.equal(bottom, 80, `${name} row ${row} column ${column} places feet on the cell bottom`);
+        assert.ok(Math.abs((left + right) / 2 - 24) <= 1, `${name} row ${row} column ${column} is horizontally centred`);
+      } else {
+        assert.equal(right, 0, `${name} row ${row} column ${column} stays empty until phase B or C`);
+      }
+    }
+  }
+}
+assert.ok(usedColours.size <= 32, `sprite atlases use at most 32 visible colours (${usedColours.size})`);
 
 console.log("Restaurant Rookie art/spec reconciliation passed (v2 scene)");

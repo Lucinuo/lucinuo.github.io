@@ -48,8 +48,8 @@ const elements = {
 const images = {
   room: loadImage("./assets/pixel-restaurant-v2.png"),
   doorOpen: loadImage("./assets/pixel-restaurant-v2-door-open.png"),
-  atlas: loadImage("./assets/pixel-atlas.png"),
-  femaleWaiter: loadImage("./assets/female-waiter.png"),
+  atlas: loadImage("./assets/pixel-atlas-v3.png"),
+  femaleWaiter: loadImage("./assets/female-waiter-v3.png"),
 };
 
 let state = loadState();
@@ -64,6 +64,8 @@ let resetArmed = false;
 let resetTimer;
 let debugVisible = false;
 const spriteMetrics = new Map();
+const CELL_W = 48;
+const CELL_H = 80;
 const metricCanvas = document.createElement("canvas");
 const metricContext = metricCanvas.getContext("2d", { willReadFrequently: true });
 saveState();
@@ -319,37 +321,45 @@ function drawAtlas(column, row, x, y, size, flip = false) {
 }
 
 function drawSpriteFrame(image, column, row, x, y, size, flip) {
-  const cell = 256;
   const metric = spriteMetric(image, column, row);
-  const scale = size / cell;
+  const scale = size / CELL_H;
   context.save();
   context.translate(Math.round(x), Math.round(y));
   if (flip) context.scale(-1, 1);
-  context.drawImage(image, column * cell, row * cell, cell, cell, -metric.centerX * scale, -metric.bottom * scale, size, size);
+  context.drawImage(
+    image,
+    column * CELL_W,
+    row * CELL_H,
+    CELL_W,
+    CELL_H,
+    -metric.centerX * scale,
+    -metric.bottom * scale,
+    CELL_W * scale,
+    size
+  );
   context.restore();
 }
 
 function spriteMetric(image, column, row) {
   const key = `${image.src}:${column}:${row}`;
   if (spriteMetrics.has(key)) return spriteMetrics.get(key);
-  const cell = 256;
-  metricCanvas.width = cell;
-  metricCanvas.height = cell;
-  metricContext.clearRect(0, 0, cell, cell);
-  metricContext.drawImage(image, column * cell, row * cell, cell, cell, 0, 0, cell, cell);
-  const pixels = metricContext.getImageData(0, 0, cell, cell).data;
-  let left = cell;
+  metricCanvas.width = CELL_W;
+  metricCanvas.height = CELL_H;
+  metricContext.clearRect(0, 0, CELL_W, CELL_H);
+  metricContext.drawImage(image, column * CELL_W, row * CELL_H, CELL_W, CELL_H, 0, 0, CELL_W, CELL_H);
+  const pixels = metricContext.getImageData(0, 0, CELL_W, CELL_H).data;
+  let left = CELL_W;
   let right = 0;
   let bottom = 0;
-  for (let pixel = 0; pixel < cell * cell; pixel += 1) {
+  for (let pixel = 0; pixel < CELL_W * CELL_H; pixel += 1) {
     if (pixels[pixel * 4 + 3] < 10) continue;
-    const px = pixel % cell;
-    const py = Math.floor(pixel / cell);
+    const px = pixel % CELL_W;
+    const py = Math.floor(pixel / CELL_W);
     left = Math.min(left, px);
     right = Math.max(right, px + 1);
     bottom = Math.max(bottom, py + 1);
   }
-  const metric = { centerX: left < cell ? (left + right) / 2 : cell / 2, bottom: bottom || cell };
+  const metric = { centerX: left < CELL_W ? (left + right) / 2 : CELL_W / 2, bottom: bottom || CELL_H };
   spriteMetrics.set(key, metric);
   return metric;
 }

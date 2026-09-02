@@ -83,6 +83,18 @@ try {
   };
 
   await waitFor("document.readyState === 'complete' && document.querySelector('[data-toggle]') && document.querySelector('[data-canvas]').clientWidth > 500");
+  assert.deepEqual(await evaluate(`Promise.all([
+    ["pixel-atlas-v3.png", 576, 320],
+    ["female-waiter-v3.png", 576, 80],
+  ].map(([name]) => new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve({ name, width: image.naturalWidth, height: image.naturalHeight });
+    image.onerror = () => resolve({ name, error: true });
+    image.src = \`./assets/\${name}?qa=\${Date.now()}\`;
+  })))`), [
+    { name: "pixel-atlas-v3.png", width: 576, height: 320 },
+    { name: "female-waiter-v3.png", width: 576, height: 80 },
+  ], "production sprite atlases load and decode at their A-phase dimensions");
   assert.deepEqual(await evaluate("(() => { const canvas = document.querySelector('[data-canvas]'); return { width: canvas.width, height: canvas.height }; })()"), { width: 960, height: 540 }, "canvas keeps 960 x 540 internal coordinates");
   assert.equal(await evaluate("document.querySelector('[data-coins]').textContent"), "160");
   await evaluate("document.querySelector('[data-upgrade=chef]').click()");

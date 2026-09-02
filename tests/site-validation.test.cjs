@@ -91,10 +91,13 @@ check(!/<script[^>]+src="https?:\/\//.test(restaurantRookie), "Restaurant Rookie
 for (const bannedNetworkApi of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon"]) {
   check(!restaurantRookieModules.some((source) => source.includes(bannedNetworkApi)), `Restaurant Rookie contains prohibited network API: ${bannedNetworkApi}`);
 }
-for (const asset of ["pixel-restaurant-v2.png", "pixel-restaurant-v2-door-open.png", "pixel-atlas.png", "female-waiter.png"]) {
+for (const asset of ["pixel-restaurant-v2.png", "pixel-restaurant-v2-door-open.png", "pixel-atlas-v3.png", "female-waiter-v3.png"]) {
   const assetPath = path.join(root, "four-shifts/assets", asset);
   check(fs.existsSync(assetPath), `Restaurant Rookie is missing production asset: ${asset}`);
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 2 * 1024 * 1024, `Restaurant Rookie production asset exceeds 2 MB: ${asset}`);
+}
+for (const asset of ["pixel-atlas-v3.png", "female-waiter-v3.png"]) {
+  check(restaurantRookieModules[0].includes(`"./assets/${asset}"`), `Restaurant Rookie does not load its production sprite asset: ${asset}`);
 }
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
