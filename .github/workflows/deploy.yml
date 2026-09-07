@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "codex/restaurant-rookie-live"]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify game rules, art, and public pages
+        run: |
+          node tests/four-shifts-rules.test.mjs
+          node tests/four-shifts-art.test.mjs
+          node tests/site-validation.test.cjs
+
+      - name: Play through the game in Chrome
+        timeout-minutes: 5
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          SCREENSHOT_DIR: ${{ runner.temp }}
+        run: node tests/four-shifts-browser.test.mjs
+
+      - name: Save browser test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restaurant-rookie-browser-checks
+          path: ${{ runner.temp }}/restaurant-rookie-*.png
+          if-no-files-found: ignore
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
@@ -30,6 +56,7 @@ jobs:
           path: ./site
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

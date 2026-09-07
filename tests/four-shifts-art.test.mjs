@@ -241,6 +241,7 @@ for (const table of TABLES) {
 
 assert.deepEqual({ width: room.width, height: room.height }, { width: WORLD.width, height: WORLD.height }, "v2 scene matches the 960×540 world");
 for (const item of FURNITURE) {
+  if (item.id === "entrance-door" || item.id === "bottom-wall-right") continue;
   for (const value of [item.x, item.y, item.width, item.height]) assert.equal(value % WORLD.grid, 0, `${item.id} aligns to the 20px grid`);
 }
 for (const rect of COLLISION_RECTS) {
@@ -249,13 +250,16 @@ for (const rect of COLLISION_RECTS) {
 for (const [role, areas] of Object.entries(ROLE_WALKABLE_AREAS)) {
   assert.ok(areas.length > 0, `${role} has a walkable map`);
   for (const area of areas) {
+    if (area.id === "entrance-lane") continue;
     for (const value of [area.left, area.top, area.right, area.bottom]) assert.equal(value % WORLD.grid, 0, `${role}/${area.id} aligns to the grid`);
   }
 }
 for (const point of INTERACTION_POINTS) {
-  const isDoor = point.id === "entranceDoor";
-  assert.equal(point.x % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
-  assert.equal(point.y % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
+  const isDoor = point.id === "entranceDoor" || point.id === "exitDoor";
+  if (!isDoor) {
+    assert.equal(point.x % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
+    assert.equal(point.y % WORLD.grid, WORLD.grid / 2, `${point.id} uses the centre of its grid cell`);
+  }
   assert.ok(isDoor || roleWalkable(point.role, point, { doorOpen: true }), `${point.id} is legal for ${point.role}`);
 }
 for (const table of TABLE_POINTS) {

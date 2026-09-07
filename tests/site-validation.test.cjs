@@ -71,7 +71,7 @@ check(restaurantRookie.includes('rel="canonical" href="https://lucinuo.github.io
 check(restaurantRookie.includes('property="og:image" content="https://lucinuo.github.io/four-shifts/assets/pixel-restaurant-v2.png"'), "Restaurant Rookie is missing its social image");
 check(restaurantRookie.includes('href="/projects/"'), "Restaurant Rookie has no return path to Projects");
 check(restaurantRookie.includes('data-canvas width="960" height="540"'), "Restaurant Rookie is missing the fixed-resolution game canvas");
-check(restaurantRookie.includes("data-toggle") && restaurantRookie.includes("data-reset") && restaurantRookie.includes("data-debug"), "Restaurant Rookie is missing start, reset, or scene-check controls");
+check(restaurantRookie.includes("data-toggle") && restaurantRookie.includes("data-reset"), "Restaurant Rookie is missing start or reset controls");
 for (const upgrade of ["chef", "waiter", "tables", "income"]) {
   check(restaurantRookie.includes(`data-upgrade="${upgrade}"`), `Restaurant Rookie is missing the ${upgrade} upgrade`);
 }
@@ -97,7 +97,8 @@ for (const asset of ["pixel-restaurant-v2.png", "pixel-restaurant-v2-door-open.p
   if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 2 * 1024 * 1024, `Restaurant Rookie production asset exceeds 2 MB: ${asset}`);
 }
 for (const asset of ["pixel-atlas-v3.png", "female-waiter-v3.png"]) {
-  check(restaurantRookieModules[0].includes(`"./assets/${asset}"`), `Restaurant Rookie does not load its production sprite asset: ${asset}`);
+  const assetUrls = [...restaurantRookieModules[0].matchAll(/loadImage\("([^"]+)"\)/g)].map((match) => match[1].split("?")[0]);
+  check(assetUrls.includes(`./assets/${asset}`), `Restaurant Rookie does not load its production sprite asset: ${asset}`);
 }
 
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");

@@ -23,7 +23,7 @@ import {
   upgradeCost,
   validateScene,
   waiterSpeed,
-} from "./game-rules.mjs?v=20260826-2";
+} from "./game-rules.mjs?v=20260907-1";
 
 const canvas = document.querySelector("[data-canvas]");
 const context = canvas.getContext("2d");
@@ -38,9 +38,6 @@ const elements = {
   live: document.querySelector("[data-live]"),
   offline: document.querySelector("[data-offline]"),
   toggle: document.querySelector("[data-toggle]"),
-  debug: document.querySelector("[data-debug]"),
-  sceneReport: document.querySelector("[data-scene-report]"),
-  sceneReportOutput: document.querySelector("[data-scene-report-output]"),
   reset: document.querySelector("[data-reset]"),
   upgrades: [...document.querySelectorAll("[data-upgrade]")],
 };
@@ -48,11 +45,12 @@ const elements = {
 const images = {
   room: loadImage("./assets/pixel-restaurant-v2.png"),
   doorOpen: loadImage("./assets/pixel-restaurant-v2-door-open.png"),
-  atlas: loadImage("./assets/pixel-atlas-v3.png"),
+  atlas: loadImage("./assets/pixel-atlas-v3.png?v=20260907-1"),
   femaleWaiter: loadImage("./assets/female-waiter-v3.png"),
 };
 
 let state = loadState();
+window.__game_state__ = state;
 let roomImage;
 let doorOpenImage;
 let atlasImage;
@@ -133,6 +131,7 @@ function resetGame() {
   clearTimeout(resetTimer);
   localStorage.removeItem(SAVE_KEY);
   state = freshState();
+  window.__game_state__ = state;
   elements.offline.hidden = true;
   elements.reset.textContent = "重置";
   updateUi();
@@ -149,11 +148,8 @@ function buyUpgrade(event) {
 
 function toggleDebugOverlay() {
   debugVisible = !debugVisible;
-  elements.debug.setAttribute("aria-pressed", String(debugVisible));
-  elements.debug.textContent = debugVisible ? "關閉檢查" : "場景檢查";
-  elements.sceneReport.hidden = !debugVisible;
-  if (debugVisible) updateSceneReport();
 }
+window.__toggleDebug = toggleDebugOverlay;
 
 function updateUi() {
   elements.coins.textContent = Math.floor(state.coins).toLocaleString("zh-TW");
@@ -166,7 +162,7 @@ function updateUi() {
   const effects = {
     chef: `每餐 ${chefSeconds(state.upgrades.chef).toFixed(1)} 秒`,
     waiter: `移動 ${Math.round(waiterSpeed(state.upgrades.waiter))} px／秒`,
-    tables: `同時接待 ${state.upgrades.tables} 位客人`,
+    tables: `同時接待 ${state.upgrades.tables * 2} 位客人`,
     income: `每位客人 ${incomePerGuest(state.upgrades.income)} 金幣`,
   };
   for (const button of elements.upgrades) {
@@ -181,21 +177,6 @@ function updateUi() {
   const queue = state.customers.filter((customer) => customer.state === "queueing" || customer.state === "entering").length;
   const dining = state.customers.filter((customer) => ["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)).length;
   elements.live.textContent = `店內 ${state.customers.length} 位客人，${queue} 位等候，${dining} 位入座，已完成 ${state.served} 單。`;
-  if (debugVisible) updateSceneReport();
-}
-
-function updateSceneReport() {
-  const report = validateScene(state);
-  elements.sceneReport.dataset.result = report.status;
-  const lines = [
-    `${report.status} — ${report.passed}/${report.total} 項通過`,
-    report.failures.length ? "" : "所有互動點、腳底座標、路徑與下一格預約均合法。",
-  ];
-  for (const failure of report.failures) {
-    const coordinate = failure.coordinate ? `(${Math.round(failure.coordinate.x)}, ${Math.round(failure.coordinate.y)})` : "—";
-    lines.push(`FAIL｜${failure.name}｜座標 ${coordinate}｜角色 ${failure.actor}｜物件 ${failure.object}｜建議 ${failure.suggestion}`);
-  }
-  elements.sceneReportOutput.textContent = lines.filter((line, index) => line || index === 1).join("\n");
 }
 
 function draw() {
@@ -215,8 +196,6 @@ function draw() {
 
   // 角色與「家具的正面」放進同一個深度排序：腳底 y 小的先畫。
   // 站在櫃台/椅子/圍欄後面的人因此會被家具擋住，站在前面的人則蓋過家具。
-  // 這是把一張平面背景當成有深度的場景在用——之前少了這層，
-  // 所以人會被畫在櫃體與椅子「上面」，看起來像卡在裡面或浮在旁邊。
   const layers = [];
   const actor = (kind, value) => layers.push({ y: value.y + 0.5, paint: () => drawActor({ kind, ...value }) });
   const frontFace = (rect, baseline) => layers.push({ y: baseline, paint: () => redrawRegion(rect) });
@@ -229,14 +208,17 @@ function draw() {
   for (const face of FRONT_FACES) frontFace(face.rect, face.baseline);
   for (const table of TABLES.slice(0, state.upgrades.tables)) {
     frontFace(coverRect(table), table.tableBodyArea.bottom);
-    frontFace(table.chairFrontArea, table.chairFrontArea.bottom);
+    if (table.chairFrontLeft) frontFace(table.chairFrontLeft, table.chairFrontLeft.bottom);
+    if (table.chairFrontRight) frontFace(table.chairFrontRight, table.chairFrontRight.bottom);
+    else if (table.chairFrontArea) frontFace(table.chairFrontArea, table.chairFrontArea.bottom);
   }
 
   layers.sort((first, second) => first.y - second.y);
   for (const layer of layers) layer.paint();
 
-  drawDirtyTables();
+  drawTableFood();
   drawCustomerBubbles();
+  drawCashierBubble();
   if (debugVisible) drawDebugOverlay();
 }
 
@@ -270,6 +252,80 @@ function drawLockedTables() {
   context.restore();
 }
 
+const customerVariants = [];
+
+function buildCustomerVariants(atlas) {
+  customerVariants.length = 0;
+  for (let v = 0; v < 6; v += 1) {
+    const c = document.createElement("canvas");
+    c.width = 576;
+    c.height = CELL_H;
+    c.dataset.key = `customer-variant-${v}`;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = false;
+    const sourceRow = (v % 2 === 0) ? 2 : 3;
+    ctx.drawImage(atlas, 0, sourceRow * CELL_H, 576, CELL_H, 0, 0, 576, CELL_H);
+
+    if (v >= 2) {
+      const imgData = ctx.getImageData(0, 0, 576, CELL_H);
+      const data = imgData.data;
+      const swapMap = new Map();
+      const rgbKey = (r, g, b) => `${r},${g},${b}`;
+
+      if (v === 2) {
+        // Male variant A: Green jacket -> Navy Blue jacket
+        swapMap.set(rgbKey(97, 112, 73), [68, 92, 138]);
+        swapMap.set(rgbKey(53, 67, 68), [40, 58, 92]);
+        swapMap.set(rgbKey(28, 44, 49), [24, 36, 60]);
+        swapMap.set(rgbKey(83, 85, 78), [58, 80, 115]);
+      } else if (v === 3) {
+        // Female variant A: Amber sweater -> Crimson/Coral sweater
+        swapMap.set(rgbKey(234, 159, 72), [214, 58, 72]);
+        swapMap.set(rgbKey(162, 83, 33), [168, 42, 54]);
+        swapMap.set(rgbKey(74, 36, 25), [118, 28, 38]);
+      } else if (v === 4) {
+        // Male variant B: Green jacket -> Burgundy coat
+        swapMap.set(rgbKey(97, 112, 73), [128, 62, 78]);
+        swapMap.set(rgbKey(53, 67, 68), [88, 38, 54]);
+        swapMap.set(rgbKey(28, 44, 49), [56, 24, 38]);
+        swapMap.set(rgbKey(83, 85, 78), [108, 52, 70]);
+      } else if (v === 5) {
+        // Female variant B: Amber sweater -> Teal/Emerald sweater
+        swapMap.set(rgbKey(234, 159, 72), [38, 148, 132]);
+        swapMap.set(rgbKey(162, 83, 33), [28, 112, 100]);
+        swapMap.set(rgbKey(74, 36, 25), [20, 80, 72]);
+      }
+
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 12) continue;
+        const key = rgbKey(data[i], data[i + 1], data[i + 2]);
+        const replacement = swapMap.get(key);
+        if (replacement) {
+          data[i] = replacement[0];
+          data[i + 1] = replacement[1];
+          data[i + 2] = replacement[2];
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+    customerVariants.push(c);
+  }
+}
+
+function getCharacterFrame(actor, moving, carrying, seated, dir) {
+  if (seated) {
+    return 3;
+  }
+  if (carrying) {
+    return 3;
+  }
+  const walkIndex = actor.walkFrame ?? (Math.floor((actor.distanceWalked || 0) / 24) % 2);
+  if (!moving) {
+    return 0;
+  }
+  return walkIndex === 0 ? 1 : 2;
+}
+
 function drawActor(actor) {
   if (actor.kind === "chef") {
     const frames = { cooking: 2, prepping: 1, toPickup: 3 };
@@ -288,28 +344,50 @@ function drawActor(actor) {
   }
 
   const next = actor.path?.[0];
-  const facingLeft = next ? next.x < actor.x : false;
   const moving = Boolean(actor.walking && actor.path?.length);
-  const bob = moving ? Math.sin(state.elapsed * 12) * 2 : 0;
+
+  // Direction determination (§4.1)
+  let dir = actor.direction || "down";
+  if (moving && next) {
+    const dx = next.x - actor.x;
+    const dy = next.y - actor.y;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      dir = dx < 0 ? "left" : "right";
+    } else {
+      dir = dy < 0 ? "up" : "down";
+    }
+    actor.direction = dir;
+  }
+
+  const flip = dir === "left";
 
   if (actor.kind === "maleWaiter") {
     const carrying = actor.task?.type === "deliver" && actor.task.phase === "table";
-    const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
-    drawAtlas(frame, 0, actor.x, actor.y + bob, 80, facingLeft);
+    const frame = getCharacterFrame(actor, moving, carrying, false, dir);
+    drawAtlas(frame, 0, actor.x, actor.y, 80, flip);
     return;
   }
 
   if (actor.kind === "femaleWaiter") {
     const carrying = actor.task?.type === "drink" && actor.task.phase === "toTable";
-    const frame = carrying ? 3 : moving ? 1 + Math.floor(state.elapsed * 7) % 2 : 0;
-    drawFemaleWaiter(frame, actor.x, actor.y + bob, 80, facingLeft);
+    const frame = getCharacterFrame(actor, moving, carrying, false, dir);
+    drawFemaleWaiter(frame, actor.x, actor.y, 80, flip);
     return;
   }
 
+  // Customer (§4.2, §4.3, §4.6, §4.7 ②)
   const seated = Boolean(actor.seated);
-  const frame = seated ? 3 : moving ? 1 + actor.walkFrame : 0;
-  const seatFacingLeft = seated && actor.direction === "left";
-  drawAtlas(frame, actor.variant ? 3 : 2, actor.x, actor.y + bob, seated ? 90 : 82, seated ? seatFacingLeft : facingLeft);
+  const customerDir = seated ? (actor.direction || "right") : dir;
+  const customerFlip = customerDir === "left";
+  const frame = getCharacterFrame(actor, moving, false, seated, customerDir);
+  drawCustomer(actor.variant, frame, actor.x, actor.y, seated ? 90 : 82, customerFlip);
+}
+
+function drawCustomer(variant, column, x, y, size, flip) {
+  const v = Math.abs(variant ?? 0) % 6;
+  const image = customerVariants[v] || atlasImage;
+  const row = customerVariants[v] ? 0 : (v % 2 === 0 ? 2 : 3);
+  drawSpriteFrame(image, column, row, x, y, size, flip);
 }
 
 function drawFemaleWaiter(column, x, y, size, flip) {
@@ -341,7 +419,7 @@ function drawSpriteFrame(image, column, row, x, y, size, flip) {
 }
 
 function spriteMetric(image, column, row) {
-  const key = `${image.src}:${column}:${row}`;
+  const key = `${image.src || image.dataset?.key || "canvas"}:${column}:${row}`;
   if (spriteMetrics.has(key)) return spriteMetrics.get(key);
   metricCanvas.width = CELL_W;
   metricCanvas.height = CELL_H;
@@ -452,14 +530,52 @@ function drawDebugAnchor(actor, label) {
   context.fillText(label, actor.x + 7, actor.y + 1);
 }
 
-function drawDirtyTables() {
-  context.save();
-  context.fillStyle = "#8c3f24";
-  for (const tableState of state.tables.filter((table) => table.dirty)) {
+function drawTableFood() {
+  for (const tableState of state.tables.slice(0, state.upgrades.tables)) {
     const table = TABLES[tableState.id - 1];
-    context.fillRect(table.cover.x + 18, table.cover.y + 24, 5, 3);
-    context.fillRect(table.cover.x + 43, table.cover.y + 35, 4, 3);
+    const cx = Math.round(table.cover.x + table.cover.w / 2);
+    const cy = Math.round(table.cover.y + table.cover.h / 2);
+
+    // Seat 0 (left seat)
+    const cust0 = state.customers.find((c) => c.tableId === tableState.id && c.seated && (c.seatIndex === 0 || c.seatIndex === undefined));
+    const food0 = tableState.seats?.[0]?.hasFood || (cust0 && cust0.state === "eating") || (!tableState.seats && tableState.hasFood);
+    if (food0) {
+      drawPlateAndDish(cx - 12, cy);
+    }
+
+    // Seat 1 (right seat)
+    const cust1 = state.customers.find((c) => c.tableId === tableState.id && c.seated && c.seatIndex === 1);
+    const food1 = tableState.seats?.[1]?.hasFood || (cust1 && cust1.state === "eating");
+    if (food1) {
+      drawPlateAndDish(cx + 12, cy);
+    }
   }
+}
+
+function drawPlateAndDish(cx, cy) {
+  context.save();
+  // Dish plate
+  context.fillStyle = "#fff2d3";
+  context.strokeStyle = "#17130f";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.ellipse(cx, cy, 8, 5, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  // Food items
+  context.fillStyle = "#a63e32";
+  context.fillRect(cx - 4, cy - 2, 4, 3);
+  context.fillStyle = "#587c42";
+  context.fillRect(cx + 1, cy - 2, 3, 3);
+  context.fillStyle = "#f1a419";
+  context.fillRect(cx - 1, cy, 3, 2);
+
+  // Steam
+  const steam = Math.floor(state.elapsed * 4) % 3;
+  context.fillStyle = "rgba(255, 255, 255, 0.8)";
+  context.fillRect(cx - 2, cy - 6 - steam, 2, 2);
+  context.fillRect(cx + 2, cy - 7 - steam, 2, 2);
   context.restore();
 }
 
@@ -467,6 +583,10 @@ function drawCustomerBubbles() {
   for (const customer of state.customers) {
     if (customer.state === "queueing" && !customer.walking && customer.path.length === 0 && customer.mood !== "normal") {
       drawWaitingMood(customer);
+    } else if (customer.state === "ordering") {
+      drawOrderingBubble(customer);
+    } else if (customer.satisfaction && (state.elapsed - customer.satisfaction.time) < 1.0) {
+      drawSatisfactionBubble(customer);
     }
   }
 }
@@ -490,6 +610,138 @@ function drawWaitingMood(customer) {
   }
 }
 
+function drawOrderingBubble(customer) {
+  const x = Math.round(customer.x);
+  const y = Math.round(customer.y - 72);
+
+  context.save();
+  // Thought bubble circles
+  context.fillStyle = "#fff2d3";
+  context.strokeStyle = "#17130f";
+  context.lineWidth = 1.5;
+
+  context.beginPath();
+  context.arc(x - 4, y + 17, 2, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  context.beginPath();
+  context.arc(x - 1, y + 13, 3, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+
+  // Main bubble
+  const bw = 28;
+  const bh = 20;
+  const bx = x - bw / 2;
+  const by = y - bh / 2;
+  context.fillRect(bx, by, bw, bh);
+  context.strokeRect(bx, by, bw, bh);
+
+  // Mini food icon inside bubble
+  context.fillStyle = "#fff2d3";
+  context.beginPath();
+  context.ellipse(x, y + 2, 6, 3.5, 0, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = "#5a3a22";
+  context.lineWidth = 1;
+  context.stroke();
+
+  context.fillStyle = "#a63e32";
+  context.fillRect(x - 3, y, 3, 2);
+  context.fillStyle = "#587c42";
+  context.fillRect(x + 1, y, 2, 2);
+  context.fillStyle = "#f1a419";
+  context.fillRect(x - 1, y + 1, 2, 1);
+
+  context.restore();
+}
+
+function drawSatisfactionBubble(customer) {
+  const age = state.elapsed - customer.satisfaction.time;
+  if (age < 0 || age >= 1.0) return;
+  const alpha = Math.max(0, 1 - age / 1.0);
+  const x = Math.round(customer.x);
+  const y = Math.round(customer.y - 70 - age * 8);
+
+  context.save();
+  context.globalAlpha = alpha;
+
+  const bw = 24;
+  const bh = 20;
+  const bx = x - bw / 2;
+  const by = y - bh / 2;
+
+  context.fillStyle = "#fff2d3";
+  context.strokeStyle = "#17130f";
+  context.lineWidth = 1.5;
+  context.fillRect(bx, by, bw, bh);
+  context.strokeRect(bx, by, bw, bh);
+
+  // Pointer
+  context.beginPath();
+  context.moveTo(x - 3, by + bh);
+  context.lineTo(x, by + bh + 3);
+  context.lineTo(x + 3, by + bh);
+  context.fill();
+
+  if (customer.satisfaction.happy) {
+    context.fillStyle = "#3d7a36";
+    context.font = "bold 11px monospace";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("^ ▽ ^", x, y);
+  } else {
+    context.fillStyle = "#8a5c24";
+    context.font = "bold 11px monospace";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("- _ -", x, y);
+  }
+  context.restore();
+}
+
+function drawCashierBubble() {
+  if (!state.cashierCoinEffect) return;
+  const age = state.elapsed - state.cashierCoinEffect.time;
+  if (age < 0 || age > 0.85) return;
+
+  const alpha = Math.max(0, 1 - age / 0.85);
+  const floatY = age * 18;
+  const x = 250;
+  const y = 430 - 35 - floatY;
+
+  context.save();
+  context.globalAlpha = alpha;
+  const text = `+● ${state.cashierCoinEffect.amount}`;
+  context.font = "bold 13px monospace";
+  const metrics = context.measureText(text);
+  const bw = Math.round(metrics.width + 16);
+  const bh = 22;
+  const bx = Math.round(x - bw / 2);
+  const by = Math.round(y - bh / 2);
+
+  context.fillStyle = "#fff2d3";
+  context.strokeStyle = "#17130f";
+  context.lineWidth = 2;
+  context.fillRect(bx, by, bw, bh);
+  context.strokeRect(bx, by, bw, bh);
+
+  // Tiny pointer
+  context.fillStyle = "#fff2d3";
+  context.beginPath();
+  context.moveTo(x - 4, by + bh);
+  context.lineTo(x, by + bh + 4);
+  context.lineTo(x + 4, by + bh);
+  context.fill();
+
+  context.fillStyle = "#b47a18";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, x, y);
+  context.restore();
+}
+
 function frame(time) {
   const delta = Math.min(0.25, (time - previousTime) / 1_000);
   previousTime = time;
@@ -507,7 +759,6 @@ function frame(time) {
 }
 
 elements.toggle.addEventListener("click", toggleRestaurant);
-elements.debug.addEventListener("click", toggleDebugOverlay);
 elements.reset.addEventListener("click", resetGame);
 elements.upgrades.forEach((button) => button.addEventListener("click", buyUpgrade));
 window.addEventListener("pagehide", saveState);
@@ -522,6 +773,7 @@ Promise.all([images.room, images.doorOpen, images.atlas, images.femaleWaiter])
     doorOpenImage = doorOpen;
     atlasImage = atlas;
     femaleWaiterImage = femaleWaiter;
+    buildCustomerVariants(atlas);
     updateUi();
     requestAnimationFrame(frame);
   })

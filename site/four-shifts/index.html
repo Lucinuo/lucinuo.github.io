@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="./styles.css?v=20260825-6">
-  <script type="module" src="./game.js?v=20260826-2"></script>
+  <script type="module" src="./game.js?v=20260907-1"></script>
 </head>
 <body>
   <main class="game-shell" data-game>
@@ -26,7 +26,6 @@
       </div>
       <div class="header-actions">
         <button class="start-button" type="button" data-toggle>開始營業</button>
-        <button class="debug-button" type="button" data-debug aria-pressed="false">場景檢查</button>
         <button class="reset-button" type="button" data-reset>重置</button>
         <a href="/projects/">返回作品</a>
       </div>
@@ -47,10 +46,6 @@
           你的瀏覽器不支援 Canvas，請更新瀏覽器後再試。
         </canvas>
         <p class="event-message" data-message aria-live="polite">按下開始，像素小館就會自動營運。</p>
-        <section class="scene-report" data-scene-report data-result="PASS" aria-live="polite" hidden>
-          <h2>場景檢查結果</h2>
-          <pre data-scene-report-output></pre>
-        </section>
         <p class="sr-only" data-live aria-live="polite"></p>
       </div>
 

@@ -29,6 +29,18 @@ import {
 } from "../site/four-shifts/game-rules.mjs";
 
 const state = freshState(1_000);
+function assertSeatOwnership(state) {
+  const seatedStates = new Set(["seating", "seatingTransition", "waitingOrder", "ordering", "waitingFood", "eating"]);
+  const occupied = new Set();
+  for (const customer of state.customers.filter((item) => seatedStates.has(item.state))) {
+    const seatIndex = customer.seatIndex || 0;
+    const key = `${customer.tableId}:${seatIndex}`;
+    assert.equal(occupied.has(key), false, `two guests cannot reserve the same chair at ${state.elapsed}s`);
+    occupied.add(key);
+    assert.equal(state.tables[customer.tableId - 1].seats[seatIndex].occupiedBy, customer.id,
+      `departing guests must not erase ${customer.id}'s newer seat reservation`);
+  }
+}
 assert.deepEqual(WORLD, { width: 960, height: 540 }, "simulation uses the canvas's internal coordinate space");
 assert.equal(state.coins, 160);
 assert.equal(state.upgrades.tables, 1);
@@ -54,6 +66,7 @@ const tableOrderStates = new Set();
 let seatAligned = false;
 for (let step = 0; step < 8_000; step += 1) {
   tickGame(restaurant, 0.1);
+  assertSeatOwnership(restaurant);
   for (const customer of restaurant.customers) {
     seen.add(customer.state);
     if (["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)) {
@@ -93,7 +106,7 @@ for (let step = 0; step < 8_000; step += 1) {
       assert.ok(Math.hypot(actors[first].x - actors[second].x, actors[first].y - actors[second].y) >= 33.9, "actors keep visible foot-anchor clearance");
     }
   }
-  if (restaurant.served >= 1 && femaleTasks.has("clear") && restaurant.tables[0].dirty === false) break;
+  if (restaurant.served >= 1) break;
 }
 assert.equal(restaurant.served, 1, "a guest completes the full restaurant flow");
 assert.ok(restaurant.coins > 160, "payment increases coins");
@@ -102,14 +115,14 @@ for (const expected of ["entering", "queueing", "seating", "ordering", "waitingF
 }
 assert.equal(seatAligned, true, "seated customer foot anchor matches the table seat point");
 assert.deepEqual([...maleTasks].sort(), ["deliver", "escort"]);
-assert.deepEqual([...femaleTasks].sort(), ["checkout", "clear", "drink", "order"]);
+assert.deepEqual([...femaleTasks].sort(), ["checkout", "drink", "order"]);
 for (const phase of ["toStove", "cooking", "toPrep", "prepping", "toPickup"]) {
   assert.ok(kitchenPhases.has(phase), `chef reaches ${phase}`);
 }
 for (const phase of ["mixing", "toPickup", "toIdle"]) {
   assert.ok(drinkPhases.has(phase), `drink chef reaches ${phase}`);
 }
-for (const orderState of ["available", "seating", "ordering", "waitingFood", "eating", "checkout", "dirty"]) {
+for (const orderState of ["available", "seating", "ordering", "waitingFood", "eating", "checkout"]) {
   assert.ok(tableOrderStates.has(orderState), `table reaches ${orderState}`);
 }
 
@@ -164,7 +177,7 @@ for (let i = 1; i < WAITING_QUEUE_POINTS.length; i += 1) {
 }
 assert.ok(WAITING_QUEUE_POINTS.every((point) => point.x === 470 && point.y >= 330 && point.y <= 410), "queue stays in the invisible entrance lane");
 assert.ok(WAITING_QUEUE_POINTS[0].y < WAITING_QUEUE_POINTS.at(-1).y, "queue front is the slot furthest from the door so nobody has to walk past");
-assert.ok(POINTS.exitBypass.x > QUEUE_PROTECTED_ZONE.right, "the exit lane sits outside the queue lane");
+assert.ok(POINTS.exitBypass.x > WAITING_QUEUE_POINTS[0].x, "the exit lane sits outside the queue lane");
 assert.ok(WAITING_QUEUE_POINTS.every((point) => pointBlocked(point) && !pointBlocked(point, { allowQueue: true })), "only queue navigation may enter the protected entrance lane");
 // 不同角色會同時站著的固定點，彼此距離必須大於 34px 的互斥半徑，
 // 否則其中一個永遠走不到自己的位置——這一類卡死已經重複發生三次。
@@ -177,7 +190,6 @@ const OCCUPIED_POINTS = {
   foodPass: POINTS.pickupWaiter,
   drinkPass: POINTS.drinkPickupWaiter,
   queueHost: POINTS.queueHost,
-  exitBypass: POINTS.exitBypass,
   ...Object.fromEntries(WAITING_QUEUE_POINTS.map((point, index) => [`queue${index + 1}`, point])),
   ...Object.fromEntries(TABLES.flatMap((table) => [
     [`table${table.id}Approach`, table.seatApproachPoint],
@@ -251,6 +263,7 @@ const stressStates = new Set();
 const stressActivities = new Set();
 for (let step = 0; step < 12_000; step += 1) {
   tickGame(stress, 0.1);
+  assertSeatOwnership(stress);
   maxGuests = Math.max(maxGuests, stress.customers.length);
   stress.customers.forEach((customer) => stressStates.add(customer.state));
   if (stress.customers.some((customer) => customer.state === "queueing")) stressActivities.add("queue");

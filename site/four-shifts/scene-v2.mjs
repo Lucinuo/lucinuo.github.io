@@ -4,8 +4,8 @@ export const FURNITURE = [
   { id: "outer-wall-left", label: "左側牆體", kind: "wall", x: 0, y: 0, width: 40, height: 540 },
   { id: "outer-wall-right", label: "右側牆體", kind: "wall", x: 920, y: 0, width: 40, height: 540 },
   { id: "bottom-wall-left", label: "入口左側牆體", kind: "wall", x: 0, y: 440, width: 420, height: 100 },
-  { id: "bottom-wall-right", label: "入口右側牆體", kind: "wall", x: 520, y: 440, width: 440, height: 100 },
-  { id: "entrance-door", label: "中央入口門", kind: "door", x: 420, y: 440, width: 100, height: 80, dynamic: true },
+  { id: "bottom-wall-right", label: "入口右側牆體", kind: "wall", x: 508, y: 440, width: 452, height: 100 },
+  { id: "entrance-door", label: "中央入口門", kind: "door", x: 420, y: 440, width: 88, height: 80, dynamic: true },
   { id: "kitchen-backline", label: "廚房設備列", kind: "kitchen", x: 40, y: 20, width: 420, height: 120 },
   { id: "kitchen-divider", label: "廚房右側隔牆", kind: "wall", x: 460, y: 20, width: 40, height: 220 },
   { id: "service-counter", label: "廚房出餐櫃", kind: "counter", x: 40, y: 200, width: 380, height: 80 },
@@ -35,12 +35,12 @@ export const ROLE_WALKABLE_AREAS = {
     { id: "dining-upper", label: "右側客席", left: 500, top: 100, right: 920, bottom: 440 },
     { id: "dining-lower", label: "下方公共區", left: 320, top: 280, right: 920, bottom: 440 },
     { id: "cashier-customer", label: "收銀台顧客側", left: 160, top: 420, right: 420, bottom: 440 },
-    { id: "entrance-lane", label: "中央入口通道", left: 420, top: 420, right: 520, bottom: 540 },
+    { id: "entrance-lane", label: "中央入口通道", left: 420, top: 420, right: 508, bottom: 540 },
   ],
   waiter: [
     { id: "dining-upper", label: "右側客席", left: 500, top: 100, right: 920, bottom: 440 },
     { id: "service-floor", label: "服務與收銀區", left: 40, top: 280, right: 920, bottom: 440 },
-    { id: "entrance-lane", label: "入口帶位通道", left: 420, top: 420, right: 520, bottom: 540 },
+    { id: "entrance-lane", label: "入口帶位通道", left: 420, top: 420, right: 508, bottom: 540 },
   ],
   chef: [
     { id: "kitchen-floor", label: "廚房工作區", left: 40, top: 140, right: 460, bottom: 200 },
@@ -51,7 +51,7 @@ export const INTERACTION_POINTS = [
   { id: "customerSpawn", label: "客人生成", role: "customer", x: 450, y: 530, note: "門外進場線" },
   { id: "entranceDoor", label: "入口門", role: "customer", x: 450, y: 490, note: "進出時切換開門圖層" },
   { id: "entranceInside", label: "入口內側", role: "customer", x: 450, y: 430 },
-  { id: "exitDoor", label: "離場門線", role: "customer", x: 510, y: 490, note: "與進場線分流" },
+  { id: "exitDoor", label: "離場門線", role: "customer", x: 486, y: 490, note: "與進場線分流" },
   { id: "waitingQueue1", label: "候位 1", role: "customer", x: 470, y: 410 },
   { id: "waitingQueue2", label: "候位 2", role: "customer", x: 470, y: 370 },
   { id: "waitingQueue3", label: "候位 3", role: "customer", x: 470, y: 330 },
@@ -70,10 +70,50 @@ export const INTERACTION_POINTS = [
 ];
 
 export const TABLE_POINTS = [
-  { id: 1, approachPoint: { x: 530, y: 190 }, seatPoint: { x: 570, y: 210 }, servicePoint: { x: 670, y: 190 }, facing: "right" },
-  { id: 2, approachPoint: { x: 710, y: 190 }, seatPoint: { x: 750, y: 210 }, servicePoint: { x: 850, y: 190 }, facing: "right" },
-  { id: 3, approachPoint: { x: 530, y: 350 }, seatPoint: { x: 570, y: 370 }, servicePoint: { x: 670, y: 350 }, facing: "right" },
-  { id: 4, approachPoint: { x: 710, y: 350 }, seatPoint: { x: 750, y: 370 }, servicePoint: { x: 850, y: 350 }, facing: "right" },
+  {
+    id: 1,
+    approachPoint: { x: 530, y: 190 },
+    seatPoint: { x: 570, y: 210 },
+    servicePoint: { x: 670, y: 190 },
+    facing: "right",
+    seats: [
+      { id: 0, approachPoint: { x: 530, y: 190 }, seatPoint: { x: 570, y: 210 }, servicePoint: { x: 670, y: 190 }, facing: "right" },
+      { id: 1, approachPoint: { x: 670, y: 230 }, seatPoint: { x: 650, y: 210 }, servicePoint: { x: 670, y: 190 }, facing: "left" },
+    ],
+  },
+  {
+    id: 2,
+    approachPoint: { x: 710, y: 190 },
+    seatPoint: { x: 750, y: 210 },
+    servicePoint: { x: 850, y: 190 },
+    facing: "left",
+    seats: [
+      { id: 0, approachPoint: { x: 710, y: 190 }, seatPoint: { x: 750, y: 210 }, servicePoint: { x: 850, y: 190 }, facing: "right" },
+      { id: 1, approachPoint: { x: 850, y: 230 }, seatPoint: { x: 830, y: 210 }, servicePoint: { x: 850, y: 190 }, facing: "left" },
+    ],
+  },
+  {
+    id: 3,
+    approachPoint: { x: 530, y: 350 },
+    seatPoint: { x: 570, y: 370 },
+    servicePoint: { x: 670, y: 350 },
+    facing: "right",
+    seats: [
+      { id: 0, approachPoint: { x: 530, y: 350 }, seatPoint: { x: 570, y: 370 }, servicePoint: { x: 670, y: 350 }, facing: "right" },
+      { id: 1, approachPoint: { x: 670, y: 390 }, seatPoint: { x: 650, y: 370 }, servicePoint: { x: 670, y: 350 }, facing: "left" },
+    ],
+  },
+  {
+    id: 4,
+    approachPoint: { x: 710, y: 350 },
+    seatPoint: { x: 750, y: 370 },
+    servicePoint: { x: 850, y: 350 },
+    facing: "left",
+    seats: [
+      { id: 0, approachPoint: { x: 710, y: 350 }, seatPoint: { x: 750, y: 370 }, servicePoint: { x: 850, y: 350 }, facing: "right" },
+      { id: 1, approachPoint: { x: 850, y: 390 }, seatPoint: { x: 830, y: 370 }, servicePoint: { x: 850, y: 350 }, facing: "left" },
+    ],
+  },
 ];
 
 export function insideRect(point, rect) {

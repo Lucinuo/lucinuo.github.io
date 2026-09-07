@@ -5,7 +5,7 @@ import {
   TABLE_POINTS,
   WORLD as SCENE_WORLD,
   roleWalkable as sceneRoleWalkable,
-} from "./scene-v2.mjs";
+} from "./scene-v2.mjs?v=20260907-1";
 
 export const SAVE_VERSION = 1;
 export const SAVE_KEY = "restaurant-rookie-idle-v1";
@@ -28,7 +28,7 @@ export const POINTS = {
   queueHost: { x: 510, y: 310 },
   guestAisleStart: { x: 530, y: 410 },
   guestAisleEnd: { x: 530, y: 290 },
-  exit: { x: 510, y: 530 },
+  exit: { x: 486, y: 530 },
   pickupWaiter: scenePoint("foodPickupWaiter"),
   drinkPickupWaiter: scenePoint("drinkPickupWaiter"),
   checkoutCustomer: scenePoint("cashierCustomer"),
@@ -49,11 +49,17 @@ export const KITCHEN_POINTS = {
 export const TABLES = TABLE_POINTS.map((table) => {
   const left = table.id % 2 ? 560 : 740;
   const top = table.id <= 2 ? 140 : 300;
+  const seatPoints = table.seats
+    ? table.seats.map((s) => ({ ...s.seatPoint, facing: s.facing, approach: s.approachPoint, servicePoint: s.servicePoint }))
+    : [{ ...table.seatPoint, facing: table.facing, approach: table.approachPoint, servicePoint: table.servicePoint }];
   return {
     id: table.id,
-    chairFrontArea: { left, top: top + 30, right: left + 22, bottom: top + 90 },
+    chairFrontArea: { left, top: top + 72, right: left + 22, bottom: top + 90 },
+    chairFrontLeft: { left, top: top + 72, right: left + 22, bottom: top + 90 },
+    chairFrontRight: { left: left + 78, top: top + 72, right: left + 100, bottom: top + 90 },
     seatApproachPoint: { ...table.approachPoint },
-    seatPoints: [{ ...table.seatPoint, facing: table.facing }],
+    seatPoints,
+    seats: table.seats || [],
     servicePoint: { ...table.servicePoint },
     tableBodyArea: { left: left + 20, top, right: left + 78, bottom: top + 90 },
     chairBlockedArea: { left, top, right: left + 100, bottom: top + 100 },
@@ -237,8 +243,17 @@ export function freshState(now = Date.now()) {
     spawnTimer: 0.8,
     elapsed: 0,
     customers: [],
-    tables: TABLES.map((table) => ({ id: table.id, occupiedBy: null, dirty: false, orderState: "available" })),
-    reservations: new Map(),
+    tables: TABLES.map((table) => ({
+      id: table.id,
+      occupiedBy: null,
+      dirty: false,
+      orderState: "available",
+      hasFood: false,
+      seats: [
+        { id: 0, occupiedBy: null, hasFood: false, orderState: "available" },
+        { id: 1, occupiedBy: null, hasFood: false, orderState: "available" },
+      ],
+    })),
     kitchen: {
       queue: [],
       active: null,
@@ -268,6 +283,7 @@ export function freshState(now = Date.now()) {
     },
     message: "按下開始，像素小館就會自動營運。",
     lastIncome: 0,
+    cashierCoinEffect: null,
   };
 }
 
@@ -293,7 +309,7 @@ export function tickGame(state, dt) {
   state.reservations = new Map();
   state.elapsed += step;
   state.spawnTimer -= step;
-  const guestLimit = Math.min(MAX_CUSTOMERS, state.upgrades.tables + 3);
+  const guestLimit = Math.min(MAX_CUSTOMERS, state.upgrades.tables * 2 + 3);
   const waitingCount = state.customers.filter((customer) => ["entering", "queueing", "waitingEscort", "waitingQueueExit"].includes(customer.state)).length;
   if (state.spawnTimer <= 0 && state.customers.length < guestLimit && waitingCount < WAITING_QUEUE_POINTS.length && !entranceBusy(state)) {
     spawnCustomer(state);
@@ -319,7 +335,7 @@ function spawnCustomer(state) {
   state.customers.push({
     key: "customer-" + id,
     id,
-    variant: id % 2,
+    variant: Math.floor(Math.random() * 6),
     state: "entering",
     x: POINTS.customerSpawn.x,
     y: POINTS.customerSpawn.y,
@@ -373,7 +389,7 @@ function updateCustomers(state, dt) {
       }
       customer.walking = customer.path.length > 0;
       const reached = moveAlongPath(customer, waiterSpeed(state.upgrades.waiter) * 0.82, dt, state);
-      customer.walkFrame = Math.floor(state.elapsed * 6) % 2;
+      customer.walkFrame = Math.floor((customer.distanceWalked || 0) / 24) % 2;
       if (!reached) continue;
       if (customer.state === "entering") {
         customer.state = "queueing";
@@ -391,7 +407,7 @@ function updateCustomers(state, dt) {
       if (customer.path.length) {
         customer.walking = true;
         moveAlongPath(customer, waiterSpeed(state.upgrades.waiter) * 0.82, dt, state);
-        customer.walkFrame = Math.floor(state.elapsed * 6) % 2;
+        customer.walkFrame = Math.floor((customer.distanceWalked || 0) / 24) % 2;
         continue;
       }
       if (customer.tableId !== null) {
@@ -413,7 +429,9 @@ function updateCustomers(state, dt) {
 }
 
 function seatCustomer(state, customer) {
-  const seat = TABLES[customer.tableId - 1].seatPoints[0];
+  const table = TABLES[customer.tableId - 1];
+  const seatIdx = customer.seatIndex || 0;
+  const seat = table.seatPoints[seatIdx] || table.seatPoints[0];
   customer.state = "seatingTransition";
   customer.seated = true;
   customer.transition = {
@@ -437,7 +455,13 @@ function updateSeatTransition(state, customer, dt) {
     return;
   }
   customer.state = "waitingOrder";
-  state.tables[customer.tableId - 1].orderState = "waitingOrder";
+  const tableState = state.tables[customer.tableId - 1];
+  if (tableState) {
+    tableState.orderState = "waitingOrder";
+    if (tableState.seats?.[customer.seatIndex || 0]) {
+      tableState.seats[customer.seatIndex || 0].orderState = "waitingOrder";
+    }
+  }
   state.message = "第 " + customer.tableId + " 桌已入座，等待點餐。";
 }
 
@@ -445,8 +469,21 @@ function sendToCheckout(state, customer) {
   // 收銀台前只有一條窄走道；上一位客人離開前，下一位維持坐姿等待。
   if (staffTrafficBusy(state) || checkoutBusy(state, customer)) return;
   const table = TABLES[customer.tableId - 1];
-  const approach = table.seatApproachPoint;
+  const seatIdx = customer.seatIndex || 0;
+  const seatInfo = table.seatPoints[seatIdx] || table.seatPoints[0];
+  const approach = seatInfo.approach || table.seatApproachPoint;
   if (positionOccupied(state, customer, approach)) return;
+  customer.satisfaction = { time: state.elapsed, happy: customer.waitTime < 15 };
+  const tableState = state.tables[customer.tableId - 1];
+  if (tableState) {
+    if (tableState.seats?.[seatIdx]) {
+      tableState.seats[seatIdx].hasFood = false;
+      tableState.seats[seatIdx].occupiedBy = null;
+      tableState.seats[seatIdx].orderState = "checkout";
+    }
+    tableState.hasFood = tableState.seats ? tableState.seats.some((s) => s.hasFood) : false;
+    tableState.orderState = "checkout";
+  }
   customer.state = "standingTransition";
   customer.transition = {
     elapsed: 0,
@@ -454,7 +491,6 @@ function sendToCheckout(state, customer) {
     from: { x: customer.x, y: customer.y },
     to: { ...approach },
   };
-  state.tables[customer.tableId - 1].orderState = "checkout";
 }
 
 function updateStandingTransition(state, customer, dt) {
@@ -516,6 +552,7 @@ function payAndLeave(state, customer) {
   state.coins += income;
   state.served += 1;
   state.lastIncome = income;
+  state.cashierCoinEffect = { time: state.elapsed, amount: income };
   state.message = "客人結帳，獲得 " + income + " 金幣。";
 }
 
@@ -526,11 +563,9 @@ function checkoutBusy(state, customer) {
 // 排隊與離場已經是兩條分開的車道，只有門口那一格會重疊；
 // 舊版把整個入口當成一把鎖，進場與離場會互相等成死鎖。
 function entranceBusy(state, customer = null) {
-  // 佔用判斷的範圍是「整條門道」（門檻到店外生成點），不是只有門那一格：
-  // 只看門的話，新客人會生成在剛走出去的人身上。
+  // 入口單人通行：進場或離場互斥，徹底杜絕窄門對撞與死鎖。
   return state.customers.some((item) => item !== customer
-    && ["entering", "leaving"].includes(item.state)
-    && item.y > 452);
+    && ["entering", "leaving"].includes(item.state));
 }
 
 function requestDoorExit(state, customer, fromQueue) {
@@ -544,10 +579,10 @@ function requestDoorExit(state, customer, fromQueue) {
 }
 
 function startDoorExit(state, customer, fromQueue) {
-  // 離場一律走 exitBypass 那條車道，不從排隊車道穿出去。
+  // 離場：隊伍放棄走走道；結帳客人切至 x=425, y=445 繞行通過入口通道，再由右門扇離場。
   const routeToLane = fromQueue
-    ? [{ x: POINTS.exitBypass.x, y: customer.y }, { ...POINTS.exitBypass }]
-    : [...findPath(customer, POINTS.exitBypass, "queue")];
+    ? [{ x: 510, y: customer.y }, { x: 500, y: 430 }, { x: POINTS.exitDoor.x, y: 445 }]
+    : [{ x: 425, y: 430 }, { x: 425, y: 445 }, { x: POINTS.exitDoor.x, y: 445 }];
   customer.state = "leaving";
   customer.navigationZone = "queue";
   customer.path = [...routeToLane, { ...POINTS.exitDoor }, { ...POINTS.exit }];
@@ -664,15 +699,18 @@ function updateMaleWaiter(state, dt) {
     const customer = findCustomer(state, task.customerId);
     if (!customer || customer.state !== "queueing") return finishTask(waiter);
     const table = TABLES[customer.tableId - 1];
-    // 客人跟在男服務生後方；距離太近時客人停一步，不與帶位者互穿。
+    const seatIdx = customer.seatIndex || 0;
+    const seatInfo = table.seatPoints[seatIdx] || table.seatPoints[0];
+    const approach = seatInfo.approach || table.seatApproachPoint;
+    const servicePoint = seatInfo.servicePoint || table.servicePoint;
     customer.state = "seating";
     customer.mood = "normal";
     customer.waitTime = 0;
     customer.escortLeader = waiter.key;
-    customer.path = findPath(customer, table.seatApproachPoint, "queue");
+    customer.path = findPath(customer, approach, "queue");
     customer.walking = true;
     task.phase = "lead";
-    waiter.path = findPath(waiter, table.servicePoint);
+    waiter.path = findPath(waiter, servicePoint);
     state.message = "男服務生帶客人前往第 " + customer.tableId + " 桌。";
   } else if (task.type === "escort" && task.phase === "lead") {
     task.phase = "waitingCustomer";
@@ -681,11 +719,22 @@ function updateMaleWaiter(state, dt) {
     if (!customer || ["waitingOrder", "ordering", "waitingFood", "eating"].includes(customer.state)) finishTask(waiter);
   } else if (task.type === "deliver" && task.phase === "pickup") {
     task.phase = "table";
-    waiter.path = findPath(waiter, TABLES[task.tableId - 1].servicePoint);
+    const customer = findCustomer(state, task.customerId);
+    const table = TABLES[task.tableId - 1];
+    const seatIdx = customer?.seatIndex || 0;
+    const servicePoint = table.seatPoints[seatIdx]?.servicePoint || table.servicePoint;
+    waiter.path = findPath(waiter, servicePoint);
   } else if (task.type === "deliver") {
     const customer = findCustomer(state, task.customerId);
     if (customer && customer.state === "waitingFood") {
       customer.foodDelivered = true;
+      const tableState = state.tables[customer.tableId - 1];
+      if (tableState) {
+        tableState.hasFood = true;
+        if (tableState.seats?.[customer.seatIndex || 0]) {
+          tableState.seats[customer.seatIndex || 0].hasFood = true;
+        }
+      }
       state.message = "男服務生把主餐送到第 " + customer.tableId + " 桌。";
       beginEatingIfReady(state, customer);
     }
@@ -697,13 +746,30 @@ function assignMaleTask(state) {
   const waiter = state.waiters.male;
   // ponytail: one moving staff member owns the narrow public aisle; replace with cooperative multi-agent pathing only if concurrent staff traffic becomes a gameplay requirement.
   if (waiter.task || state.waiters.female.task || state.waiters.female.path.length || publicGuestMoving(state)) return;
-  const freeTable = state.tables.find((table) => table.id <= state.upgrades.tables && table.occupiedBy === null && !table.dirty);
+
+  let freeTable = null;
+  let freeSeatIndex = -1;
+  for (const table of state.tables.slice(0, state.upgrades.tables)) {
+    if (table.occupiedBy !== null && (!table.seats || table.seats.every((s) => s.occupiedBy === null))) continue;
+    const seatIdx = table.seats ? table.seats.findIndex((s) => s.occupiedBy === null) : (table.occupiedBy === null ? 0 : -1);
+    if (seatIdx !== -1) {
+      freeTable = table;
+      freeSeatIndex = seatIdx;
+      break;
+    }
+  }
+
   const customer = state.customers.find((item) => item.state === "queueing" && item.tableId === null);
   if (freeTable && customer) {
+    if (freeTable.seats) {
+      freeTable.seats[freeSeatIndex].occupiedBy = customer.id;
+      freeTable.seats[freeSeatIndex].orderState = "seating";
+    }
     freeTable.occupiedBy = customer.id;
     freeTable.orderState = "seating";
     customer.tableId = freeTable.id;
-    waiter.task = { type: "escort", phase: "pickup", customerId: customer.id, tableId: freeTable.id };
+    customer.seatIndex = freeSeatIndex;
+    waiter.task = { type: "escort", phase: "pickup", customerId: customer.id, tableId: freeTable.id, seatIndex: freeSeatIndex };
     waiter.path = findPath(waiter, POINTS.queueHost);
     return;
   }
@@ -740,7 +806,11 @@ function updateFemaleWaiter(state, dt) {
     task.timer = 0.8;
   } else if (task.type === "drink" && task.phase === "pickup") {
     task.phase = "toTable";
-    waiter.path = findPath(waiter, TABLES[task.tableId - 1].servicePoint, "staff");
+    const customer = findCustomer(state, task.customerId);
+    const table = TABLES[task.tableId - 1];
+    const seatIdx = customer?.seatIndex || 0;
+    const servicePoint = table.seatPoints[seatIdx]?.servicePoint || table.servicePoint;
+    waiter.path = findPath(waiter, servicePoint, "staff");
   } else if (task.type === "drink") {
     const customer = findCustomer(state, task.customerId);
     if (customer && customer.state === "waitingFood") {
@@ -751,7 +821,7 @@ function updateFemaleWaiter(state, dt) {
     finishTask(waiter);
   } else {
     task.phase = "working";
-    task.timer = task.type === "clear" ? 1.1 : 0.8;
+    task.timer = 0.8;
   }
 }
 
@@ -768,14 +838,6 @@ function completeFemaleWork(state, waiter, task) {
   } else if (task.type === "checkout") {
     const customer = findCustomer(state, task.customerId);
     if (customer && customer.state === "waitingPayment") payAndLeave(state, customer);
-    finishTask(waiter);
-  } else if (task.type === "clear") {
-    const table = state.tables.find((item) => item.id === task.tableId);
-    if (table) {
-      table.dirty = false;
-      table.orderState = "available";
-    }
-    state.message = "女服務生完成第 " + task.tableId + " 桌收桌。";
     finishTask(waiter);
   }
 }
@@ -795,9 +857,12 @@ function assignFemaleTask(state) {
   const order = state.customers.find((customer) => customer.state === "waitingOrder");
   if (order) {
     order.state = "ordering";
+    const table = TABLES[order.tableId - 1];
+    const seatIdx = order.seatIndex || 0;
+    const servicePoint = table.seatPoints[seatIdx]?.servicePoint || table.servicePoint;
     state.tables[order.tableId - 1].orderState = "ordering";
-    waiter.task = { type: "order", phase: "moving", customerId: order.id, tableId: order.tableId };
-    waiter.path = findPath(waiter, TABLES[order.tableId - 1].servicePoint, "staff");
+    waiter.task = { type: "order", phase: "moving", customerId: order.id, tableId: order.tableId, seatIndex: seatIdx };
+    waiter.path = findPath(waiter, servicePoint, "staff");
     return;
   }
   const readyDrinkId = state.kitchen.drinkReady.find((id) => {
@@ -807,14 +872,12 @@ function assignFemaleTask(state) {
   if (readyDrinkId) {
     state.kitchen.drinkReady = state.kitchen.drinkReady.filter((id) => id !== readyDrinkId);
     const customer = findCustomer(state, readyDrinkId);
-    waiter.task = { type: "drink", phase: "pickup", customerId: readyDrinkId, tableId: customer.tableId };
+    const table = TABLES[customer.tableId - 1];
+    const seatIdx = customer.seatIndex || 0;
+    const servicePoint = table.seatPoints[seatIdx]?.servicePoint || table.servicePoint;
+    waiter.task = { type: "drink", phase: "pickup", customerId: readyDrinkId, tableId: customer.tableId, seatIndex: seatIdx };
     waiter.path = findPath(waiter, POINTS.drinkPickupWaiter, "staff");
     return;
-  }
-  const dirty = state.tables.find((table) => table.dirty);
-  if (dirty) {
-    waiter.task = { type: "clear", phase: "moving", tableId: dirty.id };
-    waiter.path = findPath(waiter, TABLES[dirty.id - 1].servicePoint, "staff");
   }
 }
 
@@ -831,6 +894,7 @@ function staffTrafficBusy(state) {
 function publicGuestMoving(state) {
   return state.customers.some((customer) => [
     "seating",
+    "standingTransition",
     "toCheckoutQueue",
     "toCheckout",
     "toExitApproach",
@@ -843,9 +907,19 @@ function removeFinishedCustomers(state) {
   for (const customer of finished) {
     const table = state.tables.find((item) => item.id === customer.tableId);
     if (table) {
-      table.occupiedBy = null;
-      table.dirty = true;
-      table.orderState = "dirty";
+      const seatIdx = customer.seatIndex || 0;
+      // The seat may have been reassigned since this guest stood up to pay.
+      // Leaving the restaurant must never clear a newer guest's reservation.
+      if (table.seats?.[seatIdx]?.occupiedBy === customer.id) {
+        table.seats[seatIdx].occupiedBy = null;
+        table.seats[seatIdx].hasFood = false;
+        table.seats[seatIdx].orderState = "available";
+      }
+      const remainingSeat = table.seats ? table.seats.find((s) => s.occupiedBy !== null) : null;
+      table.occupiedBy = remainingSeat ? remainingSeat.occupiedBy : null;
+      table.orderState = remainingSeat ? remainingSeat.orderState : "available";
+      table.hasFood = table.seats?.some((seat) => seat.hasFood) ?? false;
+      table.dirty = false;
     }
   }
   state.customers = state.customers.filter((customer) => customer.state !== "done");
@@ -876,6 +950,16 @@ function moveAlongPath(actor, speed, dt, state = null) {
       actor.walking = false;
       return false;
     }
+    if (length > 0.001) {
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        actor.direction = dx < 0 ? "left" : "right";
+      } else {
+        actor.direction = dy < 0 ? "up" : "down";
+      }
+    }
+    const actualTravel = length <= remaining + 0.001 ? length : remaining;
+    actor.distanceWalked = (actor.distanceWalked || 0) + actualTravel;
+    actor.walkFrame = Math.floor(actor.distanceWalked / 24) % 2;
     if (length <= remaining + 0.001) {
       actor.x = target.x;
       actor.y = target.y;
@@ -1065,9 +1149,10 @@ function sceneActors(state) {
 function validSeatedAnchor(customer) {
   const table = TABLES[customer.tableId - 1];
   if (!table) return false;
-  const seat = table.seatPoints[0];
+  const seatIdx = customer.seatIndex || 0;
+  const seat = table.seatPoints[seatIdx] || table.seatPoints[0];
   if (!customer.transition) return distance(customer, seat) < 0.5;
-  const approach = table.seatApproachPoint;
+  const approach = seat.approach || table.seatApproachPoint;
   const corridor = {
     left: Math.min(seat.x, approach.x) - 4,
     right: Math.max(seat.x, approach.x) + 4,
