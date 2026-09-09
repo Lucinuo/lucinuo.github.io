@@ -38,6 +38,8 @@ const elements = {
   live: document.querySelector("[data-live]"),
   offline: document.querySelector("[data-offline]"),
   toggle: document.querySelector("[data-toggle]"),
+  sound: document.querySelector("[data-sound]"),
+  bgm: document.querySelector("[data-bgm]"),
   reset: document.querySelector("[data-reset]"),
   upgrades: [...document.querySelectorAll("[data-upgrade]")],
 };
@@ -61,11 +63,13 @@ let lastUiUpdate = 0;
 let resetArmed = false;
 let resetTimer;
 let debugVisible = false;
+let soundEnabled = true;
 const spriteMetrics = new Map();
 const CELL_W = 48;
 const CELL_H = 80;
 const metricCanvas = document.createElement("canvas");
 const metricContext = metricCanvas.getContext("2d", { willReadFrequently: true });
+elements.bgm.volume = 0.25;
 saveState();
 
 function loadImage(source) {
@@ -112,8 +116,20 @@ function saveState() {
 function toggleRestaurant() {
   state.running = !state.running;
   state.message = state.running ? "開始營業！客人會自動進店。" : "小館暫停營業，進度已保存。";
+  syncMusic();
   saveState();
   updateUi();
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  syncMusic();
+  updateUi();
+}
+
+function syncMusic() {
+  if (state.running && soundEnabled) elements.bgm.play().catch(() => {});
+  else elements.bgm.pause();
 }
 
 function resetGame() {
@@ -132,6 +148,7 @@ function resetGame() {
   localStorage.removeItem(SAVE_KEY);
   state = freshState();
   window.__game_state__ = state;
+  syncMusic();
   elements.offline.hidden = true;
   elements.reset.textContent = "重置";
   updateUi();
@@ -157,6 +174,9 @@ function updateUi() {
   elements.level.textContent = restaurantLevel(state.upgrades);
   elements.state.textContent = state.running ? "營業中" : "休息中";
   elements.toggle.textContent = state.running ? "暫停營業" : state.served ? "繼續營業" : "開始營業";
+  elements.sound.textContent = soundEnabled ? "音樂：開" : "音樂：關";
+  elements.sound.setAttribute("aria-pressed", String(soundEnabled));
+  elements.sound.setAttribute("aria-label", soundEnabled ? "關閉背景音樂" : "播放背景音樂");
   elements.message.textContent = state.message;
 
   const effects = {
@@ -759,6 +779,7 @@ function frame(time) {
 }
 
 elements.toggle.addEventListener("click", toggleRestaurant);
+elements.sound.addEventListener("click", toggleSound);
 elements.reset.addEventListener("click", resetGame);
 elements.upgrades.forEach((button) => button.addEventListener("click", buyUpgrade));
 window.addEventListener("pagehide", saveState);

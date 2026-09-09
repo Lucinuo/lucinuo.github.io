@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="./styles.css?v=20260825-6">
-  <script type="module" src="./game.js?v=20260907-1"></script>
+  <script type="module" src="./game.js?v=20260909-1"></script>
 </head>
 <body>
   <main class="game-shell" data-game>
@@ -26,6 +26,7 @@
       </div>
       <div class="header-actions">
         <button class="start-button" type="button" data-toggle>開始營業</button>
+        <button class="sound-button" type="button" data-sound aria-pressed="true" aria-label="關閉背景音樂">音樂：開</button>
         <button class="reset-button" type="button" data-reset>重置</button>
         <a href="/projects/">返回作品</a>
       </div>
@@ -78,5 +79,6 @@
       </aside>
     </section>
   </main>
+  <audio data-bgm loop preload="none" src="./assets/restaurant-bgm.mp3"></audio>
 </body>
 </html>
