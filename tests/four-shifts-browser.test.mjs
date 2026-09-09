@@ -65,6 +65,7 @@ try {
   profile = await mkdtemp(join(tmpdir(), "restaurant-rookie-chrome-"));
   chrome = spawn(chromePath, [
     "--headless", "--disable-gpu", "--hide-scrollbars",
+    ...(process.platform === "linux" ? ["--no-sandbox"] : []),
     "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0",
     `--user-data-dir=${profile}`, "about:blank",
   ], { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
