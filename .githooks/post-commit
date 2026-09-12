@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# .githooks/post-commit
+
+# commit 完提醒「本機領先 GitHub 幾筆」。只提醒，不自動推。
+
+#
+
+# 為什麼放在 repo 層而不是各家 AI 自己的 hook：
+
+# .claude/hooks 只有 CC 吃、.codex/hooks.json 只有 CD 吃，
+
+# 但 CC／CD／AG 與 Lucille 手動下指令全都走 git，這裡是唯一的共同強制層。
+
+# 修的坑：
+
+# 2026-07 桌面副本落後 origin 6 個 commit，CC 讀到舊版寫出對不上的計畫。
+
+# 2026-09-03 AG 的產出從未推上 GitHub，兩個 agent 花五天找一份不存在的東西。
+
+# 刻意不自動 push：2026-08-06 稽核抓到共用 hook 搶寫 git，已禁。抓非寫。
+
+up=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) || exit 0
+[ -z "$up" ] && exit 0
+
+ahead=$(git rev-list --count "$up..HEAD" 2>/dev/null || echo 0)
+if [ "${ahead:-0}" -gt 0 ]; then
+echo "⬆️  本機領先 GitHub $ahead 筆——換機器或收工前要推，否則另一台看不到。"
+fi
+
+exit 0
