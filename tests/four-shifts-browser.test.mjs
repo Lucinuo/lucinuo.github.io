@@ -66,26 +66,26 @@ try {
   chrome = spawn(chromePath, [
     "--headless", "--disable-gpu", "--hide-scrollbars",
     ...(process.platform === "linux" ? ["--no-sandbox"] : []),
-    "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0",
+    "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=9222",
     `--user-data-dir=${profile}`, "about:blank",
   ], { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
   chrome.on("error", (error) => { chromeError = error; });
   chrome.stderr.on("data", (chunk) => { chromeStderr = (chromeStderr + chunk).slice(-8000); });
   console.log(`Browser test serving current checkout at ${siteUrl}`);
   let browserEndpoint;
-  for (let attempt = 0; attempt < 100 && !browserEndpoint; attempt += 1) {
+  for (let attempt = 0; attempt < 300 && !browserEndpoint; attempt += 1) {
     if (chromeError || chrome.exitCode !== null) {
       throw new Error(`Chrome failed to start (${chromePath}): ${chromeError?.message || `exit ${chrome.exitCode}`}\n${chromeStderr}`);
     }
     try {
-      const [port, endpoint] = (await readFile(join(profile, "DevToolsActivePort"), "utf8")).trim().split(/\r?\n/);
-      if (/^\d+$/.test(port) && endpoint?.startsWith("/devtools/browser/")) browserEndpoint = `ws://127.0.0.1:${port}${endpoint}`;
+      const response = await fetch("http://127.0.0.1:9222/json/version");
+      if (response.ok) browserEndpoint = (await response.json()).webSocketDebuggerUrl;
     } catch {
-      // Chrome writes this file when its own random debugging port is ready.
+      // Chrome's local debugging endpoint is not ready yet.
     }
     if (!browserEndpoint) await delay(100);
   }
-  assert.ok(browserEndpoint, `Chrome debugging endpoint starts within 10 seconds\n${chromeStderr}`);
+  assert.ok(browserEndpoint, `Chrome debugging endpoint starts within 30 seconds\n${chromeStderr}`);
   socket = new WebSocket(browserEndpoint);
   await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error("Chrome WebSocket connection timed out")), 10_000);
