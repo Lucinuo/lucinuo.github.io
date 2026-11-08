@@ -140,7 +140,8 @@ check(!home.includes("FeCl") && !home.includes("arterial occlusion"), "home over
 check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not clearly state that the website was self-built with JavaScript");
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes('href="/research/urolithin-a/story/"'), "home still links to the retired Urolithin A research story");
-check(home.includes('href="/four-shifts/"') && home.includes("Restaurant Rookie") && home.includes("餐廳菜鳥"), "home does not expose Restaurant Rookie");
+check(home.includes('href="/projects/"') && home.includes("Lucinuo Website System") && home.includes("網站系統"), "home selected work does not include Lucinuo Website System");
+check(!home.includes('class="project-card"><a class="project-card-media" href="/four-shifts/"'), "home still features Restaurant Rookie instead of the agreed mature representative");
 check(!home.includes("Trace Isle") && !home.includes("trace-isle"), "home still exposes Trace Isle");
 check(sitemap.includes("<loc>https://lucinuo.github.io/four-shifts/</loc>"), "sitemap is missing Restaurant Rookie");
 check(!sitemap.includes("trace-isle"), "sitemap still exposes Trace Isle");
@@ -221,6 +222,9 @@ check(siteCss.includes("@media (max-width: 1080px)"), "iPad-width navigation doe
 check(siteCss.includes("safe-area-inset-top"), "site header does not account for Apple safe areas");
 check(siteCss.includes(':root[data-theme="dark"]'), "shared design system is missing dark mode tokens");
 check(siteCss.includes(".plain-link") && siteCss.includes("text-decoration: none"), "shared design system is missing the no-underline contact link style");
+check(/\.project-card h3 a\s*\{[^}]*min-height:\s*44px/s.test(siteCss), "selected-card title links do not meet the 44px touch target");
+check(/\.facts \.plain-link\s*\{[^}]*min-height:\s*44px/s.test(siteCss), "About contact links do not meet the 44px touch target");
+check(/\.footer-private\s*\{[^}]*min-height:\s*44px/s.test(siteCss), "Private workspace footer link does not meet the 44px touch target");
 const siteScript = fs.readFileSync(path.join(root, "assets/site.js"), "utf8");
 check(siteScript.includes('matchMedia("(prefers-color-scheme: dark)")'), "theme does not default to the system setting");
 check(siteScript.includes("data-theme-toggle"), "theme script does not manage the icon toggle");
