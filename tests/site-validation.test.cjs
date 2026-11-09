@@ -141,6 +141,12 @@ check(home.includes("HTML、CSS 和 JavaScript 自己做的"), "home does not cl
 check(home.includes('class="project-gallery"') && home.includes("phase-shift-arena.webp"), "home is missing the image-led project gallery or Phase Shift visual");
 check(!home.includes('href="/research/urolithin-a/story/"'), "home still links to the retired Urolithin A research story");
 check(home.includes('href="/projects/"') && home.includes("Lucinuo Website System") && home.includes("網站系統"), "home selected work does not include Lucinuo Website System");
+const selectedWork = home.slice(home.indexOf('id="selected"'), home.indexOf('</section>', home.indexOf('id="selected"')));
+const selectedCards = [...selectedWork.matchAll(/<article class="project-card">([\s\S]*?)<\/article>/g)].map((match) => match[1]);
+check(selectedCards.length === 3, "home selected work does not contain exactly three cards");
+check(selectedCards[0]?.includes('href="/ink-current/"') && selectedCards[0]?.includes("Ink Current"), "home recent experiment is not Ink Current");
+check(selectedCards[1]?.includes("Phase Shift") && selectedCards[2]?.includes("Lucinuo Website System"), "home mature representatives changed order or identity");
+check(!selectedWork.includes("Lighthouse"), "home still features Lighthouse after Ink Current cleared the replacement threshold");
 check(!home.includes('class="project-card"><a class="project-card-media" href="/four-shifts/"'), "home still features Restaurant Rookie instead of the agreed mature representative");
 check(!home.includes("Trace Isle") && !home.includes("trace-isle"), "home still exposes Trace Isle");
 check(sitemap.includes("<loc>https://lucinuo.github.io/four-shifts/</loc>"), "sitemap is missing Restaurant Rookie");
@@ -164,6 +170,31 @@ check(projects.includes("lucinuo-homepage-preview.png"), "Projects is missing th
 check(projects.includes("Plain HTML, CSS, and JavaScript") && projects.includes("No framework"), "Projects does not name the website implementation stack");
 check(projects.includes("就是這個網站。自己做的，把上面這些東西收在一起。"), "Projects does not use the approved Lucinuo Website System description");
 check(projects.includes('href="https://github.com/Lucinuo/lucinuo.github.io"'), "Projects does not link to the public source repository");
+check(projects.includes('id="ink-current-project"'), "Projects is missing Ink Current");
+check(projects.includes('href="/ink-current/"'), "Projects does not link to the Ink Current interaction");
+check(projects.includes("ink-current-preview"), "Projects is missing Ink Current visual evidence");
+
+const inkCurrent = fs.readFileSync(path.join(root, "ink-current/index.html"), "utf8");
+const inkCurrentCss = fs.readFileSync(path.join(root, "ink-current/styles.css"), "utf8");
+const inkCurrentScript = fs.readFileSync(path.join(root, "ink-current/ink-current.js"), "utf8");
+check(/<title>[^<]+<\/title>/.test(inkCurrent), "Ink Current is missing a title");
+check(/<meta name="description" content="[^"]+">/.test(inkCurrent), "Ink Current is missing a description");
+check(/property="og:image" content="https:\/\/lucinuo\.github\.io\/[^\"]+"/.test(inkCurrent), "Ink Current is missing a local social image");
+check(inkCurrent.includes('rel="canonical" href="https://lucinuo.github.io/ink-current/"'), "Ink Current has the wrong canonical URL");
+check(inkCurrent.includes("data-ink-canvas"), "Ink Current is missing its interactive canvas");
+check(inkCurrent.includes("data-reset") && inkCurrent.includes("data-save") && inkCurrent.includes("data-sound"), "Ink Current is missing reset, save, or sound controls");
+check(inkCurrent.includes('aria-live="polite"'), "Ink Current is missing an accessible status region");
+check(inkCurrentCss.includes("prefers-reduced-motion"), "Ink Current does not respect reduced motion");
+check(inkCurrentCss.includes("touch-action: none"), "Ink Current does not protect drawing gestures from page scrolling");
+check(inkCurrentScript.includes("pointerdown") && inkCurrentScript.includes("pointermove") && inkCurrentScript.includes("pointerup"), "Ink Current is missing pointer drawing controls");
+check(inkCurrentScript.includes("toBlob") && inkCurrentScript.includes("download"), "Ink Current cannot save the resolved composition");
+check(!inkCurrentScript.includes("fetch(") && !inkCurrentScript.includes("XMLHttpRequest") && !inkCurrentScript.includes("WebSocket"), "Ink Current contains a prohibited network API");
+check(sitemap.includes("<loc>https://lucinuo.github.io/ink-current/</loc>"), "sitemap is missing Ink Current");
+for (const asset of ["paper-texture.webp", "dry-brush.webp", "wet-bloom.webp"]) {
+  const assetPath = path.join(root, "ink-current/assets", asset);
+  check(fs.existsSync(assetPath), `Ink Current is missing production asset: ${asset}`);
+  if (fs.existsSync(assetPath)) check(fs.statSync(assetPath).size < 250 * 1024, `Ink Current production asset exceeds 250 KB: ${asset}`);
+}
 
 const phaseShiftCase = fs.readFileSync(path.join(root, "projects/phase-shift/index.html"), "utf8");
 check(phaseShiftCase.includes("Clear the field. Change the phase."), "Phase Shift case study is missing its product statement");

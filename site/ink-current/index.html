@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f5ee">
+  <meta name="description" content="Tap, draw, and discover the hidden rules inside a living field of ink.">
+  <meta name="robots" content="index, follow">
+  <title>Ink Current — Lucinuo</title>
+  <link rel="canonical" href="https://lucinuo.github.io/ink-current/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lucinuo.github.io/ink-current/">
+  <meta property="og:site_name" content="Lucinuo">
+  <meta property="og:title" content="Ink Current — Lucinuo">
+  <meta property="og:description" content="Tap once. Draw a line. Let ink reveal the rule beneath it.">
+  <meta property="og:image" content="https://lucinuo.github.io/images/ink-current-preview.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./ink-current.js"></script>
+</head>
+<body>
+  <main class="experience" data-experience>
+    <h1 class="visually-hidden">Ink Current</h1>
+    <header class="topbar">
+      <a class="wordmark" href="/projects/" aria-label="Back to Lucinuo projects">Ink Current</a>
+      <div class="controls" aria-label="Ink Current controls">
+        <button class="control" type="button" data-reset>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 8.2A8 8 0 1 1 4 14"/><path d="M5 3v5.5h5.5"/></svg>
+          <span data-copy="en">Restart</span><span data-copy="zh">重新開始</span>
+        </button>
+        <button class="control" type="button" data-save disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7.5 11 4.5 4.5 4.5-4.5"/><path d="M5 19h14"/></svg>
+          <span data-copy="en">Save</span><span data-copy="zh">儲存</span>
+        </button>
+        <button class="control sound-control" type="button" data-sound aria-pressed="false">
+          <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="m18 9 4 4M22 9l-4 4"/></svg>
+          <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="M17 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/></svg>
+          <span data-sound-label><span data-copy="en">Sound off</span><span data-copy="zh">聲音關閉</span></span>
+        </button>
+      </div>
+    </header>
+
+    <canvas
+      class="ink-canvas"
+      data-ink-canvas
+      tabindex="0"
+      aria-label="Interactive ink paper"
+      aria-describedby="ink-instructions"
+    ></canvas>
+
+    <p class="visually-hidden" id="ink-instructions">
+      Tap or click to place ink. Drag to draw a current. With the canvas focused, press Enter or Space to place ink at the keyboard cursor, use arrow keys to move it, and hold Shift with an arrow key to draw.
+    </p>
+
+    <div class="intro" data-intro aria-hidden="true">
+      <p><span data-copy="en">Tap once. Draw a line.</span><span data-copy="zh">點一下，畫一筆。</span></p>
+    </div>
+
+    <div class="finale" data-finale hidden>
+      <p data-finale-copy><span data-copy="en">The current has settled.</span><span data-copy="zh">墨流已定。</span></p>
+    </div>
+
+    <div class="keyboard-cursor" data-keyboard-cursor aria-hidden="true"></div>
+    <p class="status" data-status aria-live="polite">
+      <span data-copy="en">The paper is waiting.</span><span data-copy="zh">紙正在等你。</span>
+    </p>
+  </main>
+</body>
+</html>

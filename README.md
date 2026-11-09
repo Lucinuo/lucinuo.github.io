@@ -17,6 +17,7 @@ Lucinuo is Lucille Huang's public digital studio. It brings research context, fo
 | `/projects/bearing/` | Public case study for the private Bearing application; private login is planned outside the public site, with no app access or personal data exposed here |
 | `/projects/lighthouse/` | Public case study for the Lighthouse companionship application concept prototype |
 | `/lighthouse/` | Self-contained public interaction demonstration for Lighthouse |
+| `/ink-current/` | One-page generative ink interaction with a saveable final composition |
 | `/about/` | Direct introduction, current work, academic context, and contact |
 | `/notes/` | Compatibility redirect to `/publications/` |
 | `/workspace/` | Non-indexed public boundary page; it does not expose the private application |
@@ -69,6 +70,8 @@ node tests/site-validation.test.cjs
 node tests/four-shifts-rules.test.mjs
 node tests/four-shifts-art.test.mjs
 node tests/four-shifts-browser.test.mjs
+node tests/ink-current.test.mjs
+node tests/ink-current-browser.test.mjs
 ```
 
 The site test checks public routes, metadata, internal links, Publications migration, private boundary rules, sitemap scope, GitHub destinations, theme behavior, and Apple-device layout safeguards.
